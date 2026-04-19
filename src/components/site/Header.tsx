@@ -2,6 +2,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Menu, ShoppingBag, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import afpLogo from "@/assets/afp-logo.png";
 
 const nav = [
   { to: "/shop/men", label: "Men" },
@@ -44,8 +45,15 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
           <Menu className="w-5 h-5" />
         </button>
 
-        <Link to="/" className="font-display text-xl md:text-2xl tracking-tight">
-          AFP<span className="text-lime">.</span>
+        <Link to="/" aria-label="Alo Fitness Pro — Home" className="flex items-center">
+          <img
+            src={afpLogo}
+            alt="Alo Fitness Pro"
+            className={cn(
+              "h-8 md:h-10 w-auto transition-[filter] duration-300",
+              solid ? "invert" : "invert"
+            )}
+          />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
@@ -82,8 +90,8 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
       {open && (
         <div className="fixed inset-0 z-50 bg-ink text-bone md:hidden animate-fade-up">
           <div className="container flex items-center justify-between h-14">
-            <Link to="/" className="font-display text-xl">
-              AFP<span className="text-lime">.</span>
+            <Link to="/" aria-label="Alo Fitness Pro — Home" className="flex items-center">
+              <img src={afpLogo} alt="Alo Fitness Pro" className="h-8 w-auto invert" />
             </Link>
             <button aria-label="Close menu" onClick={() => setOpen(false)} className="p-2 -mr-2">
               <X className="w-6 h-6" />

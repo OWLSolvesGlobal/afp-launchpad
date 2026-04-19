@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Instagram } from "lucide-react";
+import afpLogo from "@/assets/afp-logo.png";
 
 const cols = [
   {
@@ -51,8 +52,8 @@ export const Footer = () => {
 
       <div className="container py-16 grid grid-cols-2 md:grid-cols-5 gap-10">
         <div className="col-span-2">
-          <Link to="/" className="font-display text-3xl">
-            AFP<span className="text-lime">.</span>
+          <Link to="/" aria-label="Alo Fitness Pro — Home" className="inline-flex items-center">
+            <img src={afpLogo} alt="Alo Fitness Pro" className="h-12 w-auto invert" />
           </Link>
           <p className="mt-4 max-w-xs text-sm text-bone/70 leading-relaxed">
             Performance fitness apparel built for athletes who don't quit.
