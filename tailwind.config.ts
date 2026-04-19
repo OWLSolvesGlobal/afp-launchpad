@@ -12,8 +12,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Archivo Black"', "Archivo", "system-ui", "sans-serif"],
-        heading: ["Archivo", "system-ui", "sans-serif"],
+        display: ["Oswald", "Impact", "system-ui", "sans-serif"],
+        stencil: ['"Stardos Stencil"', "Oswald", "system-ui", "sans-serif"],
+        heading: ["Oswald", "system-ui", "sans-serif"],
         body: ["Inter", "system-ui", "sans-serif"],
       },
       colors: {
@@ -26,11 +27,13 @@ export default {
           DEFAULT: "hsl(var(--ink))",
           soft: "hsl(var(--ink-soft))",
         },
+        steel: "hsl(var(--steel))",
         graphite: "hsl(var(--graphite))",
         bone: "hsl(var(--bone))",
-        lime: {
-          DEFAULT: "hsl(var(--lime))",
-          deep: "hsl(var(--lime-deep))",
+        chalk: "hsl(var(--chalk))",
+        safety: {
+          DEFAULT: "hsl(var(--safety))",
+          deep: "hsl(var(--safety-deep))",
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -79,7 +82,7 @@ export default {
       boxShadow: {
         card: "var(--shadow-card)",
         "card-hover": "var(--shadow-card-hover)",
-        lime: "var(--shadow-lime)",
+        safety: "var(--shadow-safety)",
       },
       transitionTimingFunction: {
         "out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
@@ -103,6 +106,7 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-up": "fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "plate-spin": "plate-spin 1.4s linear infinite",
       },
     },
   },

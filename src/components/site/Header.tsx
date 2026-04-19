@@ -63,7 +63,7 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
               to={n.to}
               className={({ isActive }) =>
                 cn(
-                  "eyebrow link-lime transition-opacity",
+                  "eyebrow link-safety transition-opacity",
                   isActive ? "opacity-100" : "opacity-80 hover:opacity-100"
                 )
               }
@@ -74,12 +74,12 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
         </nav>
 
         <div className="flex items-center gap-1 md:gap-2">
-          <button aria-label="Search" className="p-2 hover:text-lime transition-colors">
+          <button aria-label="Search" className="p-2 hover:text-safety transition-colors">
             <Search className="w-5 h-5" />
           </button>
-          <button aria-label="Cart" className="p-2 hover:text-lime transition-colors relative">
+          <button aria-label="Cart" className="p-2 hover:text-safety transition-colors relative">
             <ShoppingBag className="w-5 h-5" />
-            <span className="absolute -top-0.5 -right-0.5 bg-lime text-ink text-[10px] font-display w-4 h-4 grid place-items-center rounded-full">
+            <span className="absolute -top-0.5 -right-0.5 bg-safety text-bone text-[10px] font-stencil w-4 h-4 grid place-items-center rounded-full">
               0
             </span>
           </button>

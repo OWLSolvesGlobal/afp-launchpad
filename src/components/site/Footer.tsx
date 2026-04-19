@@ -41,8 +41,8 @@ export const Footer = () => {
             <div key={i} className="flex items-center gap-8 pr-8">
               {Array.from({ length: 6 }).map((_, j) => (
                 <span key={j} className="flex items-center gap-8">
-                  Engineered for the grind
-                  <span className="text-lime">●</span>
+                  Iron over everything
+                  <span className="text-safety">●</span>
                 </span>
               ))}
             </div>
@@ -56,14 +56,14 @@ export const Footer = () => {
             <img src={afpLogo} alt="Alo Fitness Pro" className="h-12 w-auto invert" />
           </Link>
           <p className="mt-4 max-w-xs text-sm text-bone/70 leading-relaxed">
-            Performance fitness apparel built for athletes who don't quit.
-            Worldwide shipping.
+            Strength-built apparel for the rack and the platform.
+            Shipped worldwide.
           </p>
           <a
             href="https://instagram.com/alofitnesspro"
             target="_blank"
             rel="noreferrer"
-            className="mt-6 inline-flex items-center gap-2 eyebrow link-lime"
+            className="mt-6 inline-flex items-center gap-2 eyebrow link-safety"
           >
             <Instagram className="w-4 h-4" /> @alofitnesspro
           </a>
@@ -75,7 +75,7 @@ export const Footer = () => {
             <ul className="space-y-3">
               {c.links.map((l) => (
                 <li key={l.label}>
-                  <Link to={l.to} className="text-sm hover:text-lime transition-colors">
+                  <Link to={l.to} className="text-sm hover:text-safety transition-colors">
                     {l.label}
                   </Link>
                 </li>
