@@ -27,21 +27,21 @@ export const FeaturedCarousel = () => {
       <div className="container">
         <div className="flex items-end justify-between mb-8 md:mb-12">
           <div>
-            <div className="eyebrow text-lime mb-3">02 — Featured</div>
-            <h2 className="display-md">Built for Battle.</h2>
+            <div className="eyebrow text-safety mb-3">02 — The Kit</div>
+            <h2 className="display-md">New Iron.</h2>
           </div>
           <div className="flex gap-2">
             <button
               aria-label="Previous"
               onClick={() => scrollBy(-1)}
-              className="w-10 h-10 grid place-items-center border border-bone/30 hover:border-lime hover:text-lime transition-colors"
+              className="w-10 h-10 grid place-items-center border border-bone/30 hover:border-safety hover:text-safety transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               aria-label="Next"
               onClick={() => scrollBy(1)}
-              className="w-10 h-10 grid place-items-center border border-bone/30 hover:border-lime hover:text-lime transition-colors"
+              className="w-10 h-10 grid place-items-center border border-bone/30 hover:border-safety hover:text-safety transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

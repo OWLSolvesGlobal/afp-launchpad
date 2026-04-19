@@ -2,15 +2,16 @@ import { Instagram } from "lucide-react";
 import { motion } from "framer-motion";
 
 // 9-up Instagram feed grid. Using product imagery as placeholder until IG Graph API connects.
-import a from "@/assets/category-men.jpg";
-import b from "@/assets/category-women.jpg";
-import c from "@/assets/product-mens-tee.jpg";
-import d from "@/assets/product-womens-leggings.jpg";
-import e from "@/assets/product-mens-hoodie.jpg";
-import f from "@/assets/product-womens-bra.jpg";
-import g from "@/assets/product-mens-shorts.jpg";
-import h from "@/assets/product-womens-tee.jpg";
-import i from "@/assets/hero-athlete.jpg";
+// [PLACEHOLDER — REPLACE WITH AFP INSTAGRAM CONTENT]
+import a from "@/assets/hero-iron.jpg";
+import b from "@/assets/category-men.jpg";
+import c from "@/assets/category-women.jpg";
+import d from "@/assets/product-mens-tee.jpg";
+import e from "@/assets/product-womens-leggings.jpg";
+import f from "@/assets/product-mens-hoodie.jpg";
+import g from "@/assets/product-womens-bra.jpg";
+import h from "@/assets/product-mens-shorts.jpg";
+import i from "@/assets/product-womens-tee.jpg";
 
 const tiles = [a, b, c, d, e, f, g, h, i];
 
@@ -20,14 +21,14 @@ export const InstagramGrid = () => {
       <div className="container">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-12">
           <div>
-            <div className="eyebrow text-graphite mb-3">03 — From the Feed</div>
-            <h2 className="display-md">Tag <span className="text-lime">@alofitnesspro</span></h2>
+            <div className="eyebrow text-graphite mb-3">03 — From the Platform</div>
+            <h2 className="display-md">Tag <span className="text-safety">@alofitnesspro</span></h2>
           </div>
           <a
             href="https://instagram.com/alofitnesspro"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 eyebrow link-lime"
+            className="inline-flex items-center gap-2 eyebrow link-safety"
           >
             <Instagram className="w-4 h-4" /> Follow on Instagram
           </a>

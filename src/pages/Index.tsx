@@ -9,12 +9,12 @@ import { EmailCapture } from "@/components/site/EmailCapture";
 
 const Index = () => {
   useEffect(() => {
-    document.title = "Alo Fitness Pro — Engineered for the Grind";
+    document.title = "Alo Fitness Pro — Iron Over Everything";
     const meta = document.querySelector('meta[name="description"]');
     if (meta) {
       meta.setAttribute(
         "content",
-        "Performance fitness apparel for athletes who don't quit. Worldwide shipping. Shop AFP men's & women's training gear."
+        "Strength-built apparel for the rack, the platform, and everything in between. Lifting tees, squat shorts, seamless sets, accessories. Shipped worldwide."
       );
     }
   }, []);
