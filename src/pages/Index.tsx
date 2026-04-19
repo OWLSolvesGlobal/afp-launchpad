@@ -1,16 +1,37 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useEffect } from "react";
+import { Header } from "@/components/site/Header";
+import { Footer } from "@/components/site/Footer";
+import { Hero } from "@/components/site/Hero";
+import { CategoryTiles } from "@/components/site/CategoryTiles";
+import { FeaturedCarousel } from "@/components/site/FeaturedCarousel";
+import { InstagramGrid } from "@/components/site/InstagramGrid";
+import { EmailCapture } from "@/components/site/EmailCapture";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  useEffect(() => {
+    document.title = "Alo Fitness Pro — Engineered for the Grind";
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) {
+      meta.setAttribute(
+        "content",
+        "Performance fitness apparel for athletes who don't quit. Worldwide shipping. Shop AFP men's & women's training gear."
+      );
+    }
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="bg-background text-foreground">
+      <Header transparent />
+      <main>
+        <Hero />
+        <CategoryTiles />
+        <FeaturedCarousel />
+        <InstagramGrid />
+        <EmailCapture />
+      </main>
+      <Footer />
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
