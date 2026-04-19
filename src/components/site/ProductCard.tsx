@@ -42,10 +42,10 @@ export const ProductCard = ({ product, index = 0 }: Props) => {
           {product.badge && (
             <span
               className={cn(
-                "absolute top-2 right-2 font-display uppercase text-[10px] tracking-wider px-2 py-1",
-                product.badge === "NEW" && "bg-lime text-ink",
+                "absolute top-2 right-2 font-stencil uppercase text-[10px] tracking-wider px-2 py-1",
+                product.badge === "NEW" && "bg-bone text-ink",
                 product.badge === "BESTSELLER" && "bg-ink text-bone",
-                product.badge === "LOW STOCK" && "bg-destructive text-bone"
+                product.badge === "LOW STOCK" && "bg-safety text-bone"
               )}
             >
               {product.badge}
@@ -60,7 +60,7 @@ export const ProductCard = ({ product, index = 0 }: Props) => {
                 e.preventDefault();
                 // hook add-to-cart here
               }}
-              className="w-full bg-ink text-bone py-3 eyebrow flex items-center justify-center gap-2 hover:bg-lime hover:text-ink transition-colors"
+              className="w-full bg-ink text-bone py-3 eyebrow flex items-center justify-center gap-2 hover:bg-safety hover:text-bone transition-colors"
             >
               <Plus className="w-3.5 h-3.5" /> Quick Add
             </button>
