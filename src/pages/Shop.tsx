@@ -79,7 +79,7 @@ export default function Shop() {
         </div>
       </section>
 
-      <main className="container pb-24 flex flex-col lg:flex-row gap-8 lg:gap-12 flex-1">
+      <main id="main" className="container pb-24 flex flex-col lg:flex-row gap-8 lg:gap-12 flex-1">
         <ShopFilters
           value={filters}
           onChange={setFilters}

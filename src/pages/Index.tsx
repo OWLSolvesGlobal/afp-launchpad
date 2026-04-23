@@ -23,7 +23,7 @@ const Index = () => {
   return (
     <div className="bg-background text-foreground">
       <Header />
-      <main>
+      <main id="main">
         <Hero />
         <CategoryTiles />
         <FeaturedCarousel />

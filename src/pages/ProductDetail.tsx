@@ -52,7 +52,7 @@ export default function ProductDetail() {
     <div className="min-h-screen bg-background text-foreground">
       <Header />
 
-      <main className="pt-24 md:pt-28">
+      <main id="main" className="pt-24 md:pt-28">
         {/* Breadcrumb */}
         <nav className="container py-4 text-xs text-graphite flex items-center gap-1.5">
           <Link to="/" className="hover:text-ink transition-colors">Home</Link>
