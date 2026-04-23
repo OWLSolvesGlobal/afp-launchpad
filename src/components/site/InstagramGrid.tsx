@@ -46,9 +46,9 @@ const tiles: Tile[] = [
 
 export const InstagramGrid = () => {
   return (
-    <section className="bg-bone py-16 md:py-24">
+    <section className="bg-bone py-24 md:py-40">
       <div className="container">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-12">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12 md:mb-20">
           <div>
             <div className="eyebrow text-graphite mb-3">— On the 'Gram</div>
             <h2 className="display-md">

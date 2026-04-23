@@ -14,9 +14,9 @@ const scenes = [
 
 export const LifestyleStrip = () => {
   return (
-    <section className="bg-foreground text-background py-16 md:py-28">
+    <section className="bg-foreground text-background py-24 md:py-40">
       <div className="container">
-        <div className="max-w-2xl mb-10 md:mb-16">
+        <div className="max-w-2xl mb-12 md:mb-20">
           <div className="eyebrow text-background/60 mb-4">— A Way of Living</div>
           <h2 className="display-lg">
             Wear it <em className="italic">anywhere.</em>

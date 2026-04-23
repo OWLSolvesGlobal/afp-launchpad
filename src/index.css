@@ -75,10 +75,10 @@
       hsl(0 0% 4% / 0.88) 100%
     );
 
-    /* Shadows */
-    --shadow-card: 0 1px 2px hsl(0 0% 4% / 0.06);
-    --shadow-card-hover: 0 24px 48px -12px hsl(0 0% 4% / 0.25);
-    --shadow-safety: 0 8px 24px -6px hsl(var(--safety) / 0.55);
+    /* Shadows — minimal, editorial */
+    --shadow-card: none;
+    --shadow-card-hover: none;
+    --shadow-safety: none;
 
     /* Transitions */
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -197,14 +197,12 @@
     transform-origin: left;
   }
 
-  /* Product card hover lift */
+  /* Product card hover — subtle image scale only, no shadow */
   .card-lift {
-    transition: transform 0.5s var(--ease-out-expo),
-                box-shadow 0.5s var(--ease-out-expo);
+    transition: transform 0.6s var(--ease-out-expo);
   }
   .card-lift:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
   }
 }
 
