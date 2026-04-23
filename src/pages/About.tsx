@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
-import founderPortrait from "@/assets/founder-portrait.jpg";
-import founderApple from "@/assets/founder-apple.jpg";
-import founderTraining from "@/assets/founder-training.jpg";
-import founderYoung from "@/assets/founder-young.jpg";
+import ashleePink from "@/assets/ashlee-pink.jpg";
+import ashleeApple from "@/assets/ashlee-apple.jpg";
+import ashleeBlue from "@/assets/ashlee-blue.jpg";
+import ashleePool from "@/assets/ashlee-pool.jpg";
+import ashleeGolf from "@/assets/ashlee-golf.jpg";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
