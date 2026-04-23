@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Menu, ShoppingBag, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import afpLogo from "@/assets/afp-logo.png";
+import { useCart } from "@/context/CartContext";
 
 const nav = [
   { to: "/shop/men", label: "Men" },
@@ -15,6 +16,7 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const { count, openCart } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -76,11 +78,17 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
           <button aria-label="Search" className="p-2 hover:opacity-60 transition-opacity">
             <Search className="w-5 h-5" />
           </button>
-          <button aria-label="Cart" className="p-2 hover:opacity-60 transition-opacity relative">
+          <button
+            aria-label={`Cart (${count} ${count === 1 ? "item" : "items"})`}
+            onClick={openCart}
+            className="p-2 hover:opacity-60 transition-opacity relative"
+          >
             <ShoppingBag className="w-5 h-5" />
-            <span className="absolute -top-0.5 -right-0.5 bg-foreground text-background text-[10px] font-stencil w-4 h-4 grid place-items-center rounded-full">
-              0
-            </span>
+            {count > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-foreground text-background text-[10px] font-stencil min-w-4 h-4 px-1 grid place-items-center rounded-full">
+                {count}
+              </span>
+            )}
           </button>
         </div>
       </div>
