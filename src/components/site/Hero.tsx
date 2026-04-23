@@ -93,21 +93,30 @@ export const Hero = () => {
             transition={{ duration: 1, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
             className="col-span-5 md:col-span-5 relative aspect-[4/5] md:aspect-[3/4] overflow-hidden bg-[hsl(var(--sand))] mt-8 md:mt-16"
           >
-            <img
-              src={mensBlack}
-              alt="AFP male athlete in black performance set"
-              className="absolute inset-0 w-full h-full object-cover object-center"
-            />
-            <div
-              aria-hidden="true"
-              className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-ink/85 via-ink/40 to-transparent pointer-events-none"
-            />
-            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 flex items-end justify-between text-bone [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
-              <div>
-                <div className="eyebrow text-bone/95 mb-1">02 / Mens</div>
-                <div className="font-serif text-xl md:text-3xl leading-none">The Set</div>
+            <Link
+              to="/shop/men"
+              aria-label="Shop the Mens collection"
+              className="group block absolute inset-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            >
+              <img
+                src={mensBlack}
+                alt="AFP male athlete in black performance set"
+                className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-ink/85 via-ink/40 to-transparent pointer-events-none"
+              />
+              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 flex items-end justify-between text-bone [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+                <div>
+                  <div className="eyebrow text-bone/95 mb-1">02 / Mens</div>
+                  <div className="font-serif text-xl md:text-3xl leading-none">The Set</div>
+                </div>
+                <span className="hidden md:inline-flex w-12 h-12 items-center justify-center bg-bone text-ink group-hover:bg-[hsl(var(--lime))] transition-colors">
+                  <ArrowUpRight className="w-5 h-5" />
+                </span>
               </div>
-            </div>
+            </Link>
           </motion.div>
         </div>
       </div>
