@@ -79,15 +79,15 @@ export default function About() {
               <div className="relative">
                 <div className="aspect-[3/4] overflow-hidden bg-muted">
                   <img
-                    src={founderPortrait}
-                    alt="Founder of Alo Fitness Pro in sage matcha green athletic set"
+                    src={ashleePink}
+                    alt="Ashlee Lowe, founder of AFP / Alo Fitness Pro, in the signature pink AFP zip-front romper"
                     className="w-full h-full object-cover"
                     width={832}
                     height={1216}
                   />
                 </div>
                 <div className="absolute -bottom-4 -left-4 md:-left-8 bg-bone text-ink px-4 py-2 font-stencil uppercase text-[10px] tracking-widest border border-ink">
-                  The Founder
+                  Ashlee Lowe · Founder
                 </div>
               </div>
             </motion.div>
