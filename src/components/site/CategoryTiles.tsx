@@ -15,7 +15,7 @@ const tiles = [
 
 export const CategoryTiles = () => {
   return (
-    <section className="bg-background py-16 md:py-24">
+    <section className="bg-bone py-16 md:py-24">
       <div className="container">
         <div className="flex items-end justify-between mb-8 md:mb-12">
           <div>

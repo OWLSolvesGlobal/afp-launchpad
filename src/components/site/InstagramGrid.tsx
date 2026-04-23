@@ -46,7 +46,7 @@ const tiles: Tile[] = [
 
 export const InstagramGrid = () => {
   return (
-    <section className="bg-background py-16 md:py-24">
+    <section className="bg-bone py-16 md:py-24">
       <div className="container">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-12">
           <div>
