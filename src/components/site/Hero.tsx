@@ -67,14 +67,19 @@ export const Hero = () => {
               fetchPriority="high"
               className="absolute inset-0 w-full h-full object-cover object-center"
             />
-            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 flex items-end justify-between text-background">
+            {/* WCAG scrim: ensures min 4.5:1 contrast for caption over photo */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-ink/85 via-ink/40 to-transparent pointer-events-none"
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 flex items-end justify-between text-bone [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
               <div>
-                <div className="eyebrow text-background/80 mb-1">01 / Womens</div>
+                <div className="eyebrow text-bone/95 mb-1">01 / Womens</div>
                 <div className="font-serif text-2xl md:text-4xl leading-none">The Romper</div>
               </div>
               <Link
                 to="/shop/women"
-                className="hidden md:inline-flex w-12 h-12 items-center justify-center bg-background text-foreground hover:bg-[hsl(var(--lime))] transition-colors"
+                className="hidden md:inline-flex w-12 h-12 items-center justify-center bg-bone text-ink hover:bg-[hsl(var(--lime))] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bone"
                 aria-label="Shop the romper"
               >
                 <ArrowUpRight className="w-5 h-5" />
@@ -93,9 +98,13 @@ export const Hero = () => {
               alt="AFP male athlete in black performance set"
               className="absolute inset-0 w-full h-full object-cover object-center"
             />
-            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 flex items-end justify-between text-background">
+            <div
+              aria-hidden="true"
+              className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-ink/85 via-ink/40 to-transparent pointer-events-none"
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 flex items-end justify-between text-bone [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
               <div>
-                <div className="eyebrow text-background/80 mb-1">02 / Mens</div>
+                <div className="eyebrow text-bone/95 mb-1">02 / Mens</div>
                 <div className="font-serif text-xl md:text-3xl leading-none">The Set</div>
               </div>
             </div>
