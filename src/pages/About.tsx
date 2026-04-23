@@ -34,7 +34,7 @@ export default function About() {
     <div className="min-h-screen bg-background text-foreground">
       <Header />
 
-      <main>
+      <main id="main">
         {/* ============ HERO ============ */}
         <section className="relative pt-28 md:pt-36 pb-16 md:pb-24 overflow-hidden">
           <div className="container grid grid-cols-12 gap-6 md:gap-10 items-end">
