@@ -73,10 +73,10 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
         </nav>
 
         <div className="flex items-center gap-1 md:gap-2">
-          <button aria-label="Search" className="p-2 hover:text-blush transition-colors">
+          <button aria-label="Search" className="p-2 hover:opacity-60 transition-opacity">
             <Search className="w-5 h-5" />
           </button>
-          <button aria-label="Cart" className="p-2 hover:text-blush transition-colors relative">
+          <button aria-label="Cart" className="p-2 hover:opacity-60 transition-opacity relative">
             <ShoppingBag className="w-5 h-5" />
             <span className="absolute -top-0.5 -right-0.5 bg-foreground text-background text-[10px] font-stencil w-4 h-4 grid place-items-center rounded-full">
               0

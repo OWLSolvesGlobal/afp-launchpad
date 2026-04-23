@@ -42,7 +42,7 @@ export const EmailCapture = () => {
           />
           <button
             type="submit"
-            className="text-foreground px-4 eyebrow flex items-center gap-2 hover:text-blush transition-colors"
+            className="text-foreground px-4 eyebrow flex items-center gap-2 hover:text-graphite transition-colors"
           >
             {done ? <Check className="w-4 h-4" /> : <>Join <ArrowRight className="w-4 h-4" /></>}
           </button>
