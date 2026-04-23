@@ -1,0 +1,115 @@
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import type { Product } from "@/data/products";
+
+export interface CartItem {
+  id: string; // composite: product.id + size + color
+  productId: string;
+  slug: string;
+  name: string;
+  price: number; // cents
+  image: string;
+  size: string;
+  color: string;
+  quantity: number;
+}
+
+interface CartContextValue {
+  items: CartItem[];
+  count: number;
+  subtotal: number;
+  isOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
+  addItem: (product: Product, opts?: { size?: string; color?: string; quantity?: number }) => void;
+  removeItem: (id: string) => void;
+  updateQuantity: (id: string, qty: number) => void;
+  clear: () => void;
+}
+
+const CartContext = createContext<CartContextValue | null>(null);
+const STORAGE_KEY = "afp-cart-v1";
+
+export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const [items, setItems] = useState<CartItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? (JSON.parse(raw) as CartItem[]) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      /* ignore */
+    }
+  }, [items]);
+
+  const value = useMemo<CartContextValue>(() => {
+    const count = items.reduce((sum, i) => sum + i.quantity, 0);
+    const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+    const addItem: CartContextValue["addItem"] = (product, opts) => {
+      const size = opts?.size ?? product.sizes[Math.min(1, product.sizes.length - 1)] ?? "OS";
+      const color = opts?.color ?? product.colors[0]?.name ?? "Default";
+      const quantity = opts?.quantity ?? 1;
+      const id = `${product.id}::${size}::${color}`;
+      setItems((prev) => {
+        const idx = prev.findIndex((i) => i.id === id);
+        if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = { ...next[idx], quantity: next[idx].quantity + quantity };
+          return next;
+        }
+        return [
+          ...prev,
+          {
+            id,
+            productId: product.id,
+            slug: product.slug,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            size,
+            color,
+            quantity,
+          },
+        ];
+      });
+      setIsOpen(true);
+    };
+
+    return {
+      items,
+      count,
+      subtotal,
+      isOpen,
+      openCart: () => setIsOpen(true),
+      closeCart: () => setIsOpen(false),
+      addItem,
+      removeItem: (id) => setItems((prev) => prev.filter((i) => i.id !== id)),
+      updateQuantity: (id, qty) =>
+        setItems((prev) =>
+          qty <= 0
+            ? prev.filter((i) => i.id !== id)
+            : prev.map((i) => (i.id === id ? { ...i, quantity: qty } : i))
+        ),
+      clear: () => setItems([]),
+    };
+  }, [items, isOpen]);
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+};
+
+export const useCart = () => {
+  const ctx = useContext(CartContext);
+  if (!ctx) throw new Error("useCart must be used within CartProvider");
+  return ctx;
+};
+
+export const formatMoney = (cents: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
