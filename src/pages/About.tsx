@@ -167,13 +167,14 @@ export default function About() {
         <section className="relative">
           <div className="aspect-[16/9] md:aspect-[21/9] overflow-hidden">
             <img
-              src={founderTraining}
-              alt="Founder training with a barbell in the gym"
+              src={ashleeBlue}
+              alt="Ashlee Lowe in the AFP powder-blue romper against a sun-warmed wall"
               loading="lazy"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-[center_25%]"
               width={1408}
               height={896}
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/20 to-transparent" />
           </div>
           <div className="absolute inset-0 flex items-end">
             <div className="container pb-8 md:pb-16">
@@ -184,6 +185,9 @@ export default function About() {
                 <p className="font-display text-2xl md:text-4xl leading-[1.1]">
                   "I make clothes I'd actually train in. Nothing leaves the rack until it survives
                   my worst workout."
+                </p>
+                <p className="mt-4 font-stencil uppercase text-[10px] tracking-widest text-bone/80">
+                  — Ashlee Lowe
                 </p>
               </div>
             </div>
