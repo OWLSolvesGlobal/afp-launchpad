@@ -23,9 +23,9 @@ export const FeaturedCarousel = () => {
   ];
 
   return (
-    <section className="bg-[hsl(var(--sand))] text-foreground py-16 md:py-24">
+    <section className="bg-[hsl(var(--sand))] text-foreground py-24 md:py-40">
       <div className="container">
-        <div className="flex items-end justify-between mb-8 md:mb-12">
+        <div className="flex items-end justify-between mb-12 md:mb-20">
           <div>
             <div className="eyebrow text-graphite mb-3">— Just Landed</div>
             <h2 className="display-md">New <em className="italic">arrivals.</em></h2>

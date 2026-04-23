@@ -15,9 +15,9 @@ const tiles = [
 
 export const CategoryTiles = () => {
   return (
-    <section className="bg-bone py-16 md:py-24">
+    <section className="bg-bone py-24 md:py-40">
       <div className="container">
-        <div className="flex items-end justify-between mb-8 md:mb-12">
+        <div className="flex items-end justify-between mb-12 md:mb-20">
           <div>
             <div className="eyebrow text-graphite mb-3">— Shop the Edit</div>
             <h2 className="display-md">Find your <em className="italic">fit.</em></h2>

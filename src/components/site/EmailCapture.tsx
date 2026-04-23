@@ -17,8 +17,8 @@ export const EmailCapture = () => {
   };
 
   return (
-    <section className="bg-background border-t border-border">
-      <div className="container py-16 md:py-24 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+    <section className="bg-background">
+      <div className="container py-24 md:py-40 grid md:grid-cols-2 gap-12 md:gap-20 items-center border-t border-border">
         <div>
           <div className="eyebrow text-graphite mb-3">— Insiders Only</div>
           <h2 className="display-md text-foreground">
@@ -30,7 +30,7 @@ export const EmailCapture = () => {
           </p>
         </div>
 
-        <form onSubmit={submit} className="flex w-full items-stretch border-b-2 border-foreground">
+        <form onSubmit={submit} className="flex w-full items-stretch border-b border-foreground">
           <input
             type="email"
             required
