@@ -11,11 +11,11 @@
 
 @layer base {
   :root {
-    /* Core palette — bone white surface */
-    --background: 42 18% 95%;           /* bone white #F5F3EE */
+    /* Core palette — pure white base, cream for section breaks */
+    --background: 0 0% 100%;            /* pure white */
     --foreground: 0 0% 4%;              /* off-black #0B0B0B */
 
-    --surface: 42 18% 97%;
+    --surface: 38 33% 95%;              /* soft cream #F7F4EF */
     --surface-foreground: 0 0% 4%;
 
     --card: 42 18% 97%;
@@ -50,7 +50,7 @@
     --ink-soft: 0 0% 16%;               /* steel #2A2A2A */
     --steel: 0 0% 16%;
     --graphite: 0 0% 29%;
-    --bone: 42 18% 95%;                 /* #F5F3EE */
+    --bone: 38 33% 95%;                 /* soft cream #F7F4EF */
     --chalk: 42 22% 88%;
     --safety: 351 86% 41%;              /* #C8102E */
     --safety-deep: 351 86% 32%;
