@@ -165,66 +165,34 @@ export default function About() {
 
         {/* ============ FULL-BLEED B/W TRAINING IMAGE ============ */}
         <section className="relative">
-          <div className="aspect-[16/9] md:aspect-[21/9] overflow-hidden">
+          <div className="relative aspect-[4/5] sm:aspect-[16/10] md:aspect-[16/9] overflow-hidden">
             <img
               src={ashleeBlue}
               alt="Ashlee Lowe in the AFP powder-blue romper against a sun-warmed wall"
               loading="lazy"
-              className="w-full h-full object-cover object-[center_25%]"
+              className="w-full h-full object-cover object-[60%_15%]"
               width={1408}
               height={896}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/20 to-transparent" />
-          </div>
-          <div className="absolute inset-0 flex items-end">
-            <div className="container pb-8 md:pb-16">
-              <div className="max-w-md text-bone">
-                <div className="font-stencil uppercase text-[10px] tracking-widest mb-3 text-safety">
-                  — The Standard
+            <div className="absolute inset-0 bg-gradient-to-r from-ink/85 via-ink/50 to-transparent" />
+            <div className="absolute inset-0 flex items-center">
+              <div className="container">
+                <div className="max-w-xl text-bone">
+                  <div className="font-stencil uppercase text-xs md:text-sm tracking-[0.3em] mb-4 text-safety">
+                    — The Standard
+                  </div>
+                  <h2 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[0.95] mb-6">
+                    The Standard
+                  </h2>
+                  <p className="font-display text-xl md:text-2xl lg:text-3xl leading-[1.15] italic text-bone/95">
+                    "I make clothes I'd actually train in. Nothing leaves the rack
+                    until it survives my worst workout."
+                  </p>
+                  <p className="mt-5 font-stencil uppercase text-[10px] md:text-xs tracking-[0.3em] text-bone/80">
+                    — Ashlee Lowe
+                  </p>
                 </div>
-                <p className="font-display text-2xl md:text-4xl leading-[1.1]">
-                  "I make clothes I'd actually train in. Nothing leaves the rack until it survives
-                  my worst workout."
-                </p>
-                <p className="mt-4 font-stencil uppercase text-[10px] tracking-widest text-bone/80">
-                  — Ashlee Lowe
-                </p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ============ TIMELINE ============ */}
-        <section className="py-20 md:py-32 bg-[hsl(var(--sand))]">
-          <div className="container">
-            <motion.div {...fadeUp} className="eyebrow text-graphite mb-3">— The Long Road</motion.div>
-            <motion.h2
-              {...fadeUp}
-              transition={{ ...fadeUp.transition, delay: 0.05 }}
-              className="font-display text-3xl md:text-5xl mb-12 md:mb-20 max-w-2xl"
-            >
-              From the start line to the start-up.
-            </motion.h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-4">
-              {timeline.map((t, i) => (
-                <motion.div
-                  key={t.year}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-60px" }}
-                  transition={{ duration: 0.6, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                  className="relative md:pr-4"
-                >
-                  <div className="font-stencil text-safety text-xs uppercase tracking-widest mb-3">
-                    {t.year}
-                  </div>
-                  <div className="border-t border-ink pt-4">
-                    <h3 className="font-display text-xl md:text-2xl mb-2">{t.title}</h3>
-                    <p className="text-sm text-graphite leading-relaxed">{t.body}</p>
-                  </div>
-                </motion.div>
-              ))}
             </div>
           </div>
         </section>
