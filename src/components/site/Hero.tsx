@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import limeRomper from "@/assets/afp-lime-romper.jpg";
-import golfDress from "@/assets/afp-golf-dress.jpg";
+import mensBlack from "@/assets/afp-mens-black.jpg";
 
 export const Hero = () => {
   return (
@@ -89,14 +89,14 @@ export const Hero = () => {
             className="col-span-5 md:col-span-5 relative aspect-[4/5] md:aspect-[3/4] overflow-hidden bg-[hsl(var(--sand))] mt-8 md:mt-16"
           >
             <img
-              src={golfDress}
-              alt="AFP athlete in navy golf dress on the green"
+              src={mensBlack}
+              alt="AFP male athlete in black performance set"
               className="absolute inset-0 w-full h-full object-cover object-center"
             />
             <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 flex items-end justify-between text-background">
               <div>
-                <div className="eyebrow text-background/80 mb-1">02 / On the Green</div>
-                <div className="font-serif text-xl md:text-3xl leading-none">The Dress</div>
+                <div className="eyebrow text-background/80 mb-1">02 / Mens</div>
+                <div className="font-serif text-xl md:text-3xl leading-none">The Set</div>
               </div>
             </div>
           </motion.div>
