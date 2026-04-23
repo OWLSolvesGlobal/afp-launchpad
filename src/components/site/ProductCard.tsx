@@ -4,6 +4,8 @@ import { Plus } from "lucide-react";
 import type { Product } from "@/data/products";
 import { formatPrice } from "@/data/products";
 import { cn } from "@/lib/utils";
+import { useCart } from "@/context/CartContext";
+import { toast } from "sonner";
 
 interface Props {
   product: Product;
@@ -11,6 +13,17 @@ interface Props {
 }
 
 export const ProductCard = ({ product, index = 0 }: Props) => {
+  const { addItem } = useCart();
+
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(product);
+    toast.success(`${product.name} added to bag`, {
+      description: `${product.colors[0]?.name ?? ""} · ${product.sizes[Math.min(1, product.sizes.length - 1)] ?? "OS"}`,
+    });
+  };
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 24 }}
@@ -56,10 +69,7 @@ export const ProductCard = ({ product, index = 0 }: Props) => {
           <div className="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out-expo hidden md:block">
             <button
               type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                // hook add-to-cart here
-              }}
+              onClick={handleQuickAdd}
               className="w-full bg-ink text-bone py-3 eyebrow flex items-center justify-center gap-2 hover:bg-safety hover:text-bone transition-colors"
             >
               <Plus className="w-3.5 h-3.5" /> Quick Add
