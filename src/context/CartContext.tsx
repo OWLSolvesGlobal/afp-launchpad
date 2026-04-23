@@ -105,9 +105,27 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
 
+const noopCart: CartContextValue = {
+  items: [],
+  count: 0,
+  subtotal: 0,
+  isOpen: false,
+  openCart: () => {},
+  closeCart: () => {},
+  addItem: () => {},
+  removeItem: () => {},
+  updateQuantity: () => {},
+  clear: () => {},
+};
+
 export const useCart = () => {
   const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart must be used within CartProvider");
+  if (!ctx) {
+    if (typeof window !== "undefined") {
+      console.warn("useCart called outside CartProvider — returning no-op cart");
+    }
+    return noopCart;
+  }
   return ctx;
 };
 
