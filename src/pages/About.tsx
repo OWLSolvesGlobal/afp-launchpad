@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
-import founderPortrait from "@/assets/founder-portrait.jpg";
-import founderApple from "@/assets/founder-apple.jpg";
-import founderTraining from "@/assets/founder-training.jpg";
-import founderYoung from "@/assets/founder-young.jpg";
+import ashleePink from "@/assets/ashlee-pink.jpg";
+import ashleeApple from "@/assets/ashlee-apple.jpg";
+import ashleeBlue from "@/assets/ashlee-blue.jpg";
+import ashleePool from "@/assets/ashlee-pool.jpg";
+import ashleeGolf from "@/assets/ashlee-golf.jpg";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -78,15 +79,15 @@ export default function About() {
               <div className="relative">
                 <div className="aspect-[3/4] overflow-hidden bg-muted">
                   <img
-                    src={founderPortrait}
-                    alt="Founder of Alo Fitness Pro in sage matcha green athletic set"
+                    src={ashleePink}
+                    alt="Ashlee Lowe, founder of AFP / Alo Fitness Pro, in the signature pink AFP zip-front romper"
                     className="w-full h-full object-cover"
                     width={832}
                     height={1216}
                   />
                 </div>
                 <div className="absolute -bottom-4 -left-4 md:-left-8 bg-bone text-ink px-4 py-2 font-stencil uppercase text-[10px] tracking-widest border border-ink">
-                  The Founder
+                  Ashlee Lowe · Founder
                 </div>
               </div>
             </motion.div>
@@ -115,8 +116,8 @@ export default function About() {
             <motion.div {...fadeUp} className="col-span-12 md:col-span-5 md:sticky md:top-28 self-start">
               <div className="aspect-[4/5] overflow-hidden bg-muted">
                 <img
-                  src={founderYoung}
-                  alt="The founder as a young girl athlete on a track"
+                  src={ashleeGolf}
+                  alt="Ashlee Lowe at the golf course in the AFP white tennis-style dress"
                   loading="lazy"
                   className="w-full h-full object-cover"
                   width={1216}
@@ -124,7 +125,7 @@ export default function About() {
                 />
               </div>
               <div className="mt-3 text-xs text-graphite italic">
-                Circa age 8 — first track season. Hasn't stopped running since.
+                On the green — sport has always been the through-line.
               </div>
             </motion.div>
 
@@ -166,13 +167,14 @@ export default function About() {
         <section className="relative">
           <div className="aspect-[16/9] md:aspect-[21/9] overflow-hidden">
             <img
-              src={founderTraining}
-              alt="Founder training with a barbell in the gym"
+              src={ashleeBlue}
+              alt="Ashlee Lowe in the AFP powder-blue romper against a sun-warmed wall"
               loading="lazy"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-[center_25%]"
               width={1408}
               height={896}
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/20 to-transparent" />
           </div>
           <div className="absolute inset-0 flex items-end">
             <div className="container pb-8 md:pb-16">
@@ -183,6 +185,9 @@ export default function About() {
                 <p className="font-display text-2xl md:text-4xl leading-[1.1]">
                   "I make clothes I'd actually train in. Nothing leaves the rack until it survives
                   my worst workout."
+                </p>
+                <p className="mt-4 font-stencil uppercase text-[10px] tracking-widest text-bone/80">
+                  — Ashlee Lowe
                 </p>
               </div>
             </div>
@@ -228,15 +233,28 @@ export default function About() {
         <section className="py-20 md:py-32">
           <div className="container grid grid-cols-12 gap-6 md:gap-12 items-center">
             <motion.div {...fadeUp} className="col-span-12 md:col-span-6 lg:col-span-5 md:order-2">
-              <div className="aspect-[4/5] overflow-hidden bg-muted">
-                <img
-                  src={founderApple}
-                  alt="Founder smiling and biting into a fresh red apple"
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                  width={832}
-                  height={1216}
-                />
+              <div className="relative">
+                <div className="aspect-[4/5] overflow-hidden bg-muted">
+                  <img
+                    src={ashleeApple}
+                    alt="Ashlee Lowe in the AFP lime-green romper, biting into a fresh green apple"
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                    width={832}
+                    height={1216}
+                  />
+                </div>
+                {/* Small inset — pool look */}
+                <div className="hidden md:block absolute -bottom-8 -left-8 w-32 lg:w-40 aspect-[4/5] overflow-hidden border-4 border-bone shadow-lg">
+                  <img
+                    src={ashleePool}
+                    alt="Ashlee Lowe in the AFP pink poolside set"
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                    width={400}
+                    height={500}
+                  />
+                </div>
               </div>
             </motion.div>
 
@@ -275,7 +293,7 @@ export default function About() {
                   See you at the start line.
                 </p>
                 <p className="font-stencil uppercase text-xs tracking-widest text-graphite">
-                  — Founder, AFP / Alo Fitness Pro
+                  — Ashlee Lowe · Founder, AFP / Alo Fitness Pro
                 </p>
               </motion.div>
             </div>
