@@ -92,11 +92,11 @@ export const InstagramGrid = () => {
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
               />
 
-              {/* Hover overlay — lifestyle-first */}
-              <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/65 transition-colors duration-300" />
-              <div className="absolute inset-0 p-2 sm:p-3 md:p-4 flex flex-col justify-between text-bone opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              {/* Hover overlay — WCAG AA: bone (#FAFAFA) on ink/80 ≈ 7.4:1 contrast */}
+              <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/80 transition-colors duration-300" />
+              <div className="absolute inset-0 p-2 sm:p-3 md:p-4 flex flex-col justify-between text-bone opacity-0 group-hover:opacity-100 transition-opacity duration-300 [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]">
                 <div className="flex items-center justify-between">
-                  <span className="eyebrow text-bone/90 text-[9px] sm:text-[10px]">
+                  <span className="eyebrow text-bone text-[9px] sm:text-[10px]">
                     @alofitnesspro
                   </span>
                   <Instagram className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -105,7 +105,7 @@ export const InstagramGrid = () => {
                   <p className="font-display uppercase tracking-[0.02em] text-sm sm:text-base md:text-lg leading-tight">
                     {t.caption}
                   </p>
-                  <div className="mt-1.5 flex items-center gap-3 text-[10px] sm:text-xs text-bone/80">
+                  <div className="mt-1.5 flex items-center gap-3 text-[10px] sm:text-xs text-bone/95">
                     <span className="inline-flex items-center gap-1">
                       <Heart className="w-3 h-3" /> {t.likes}
                     </span>
@@ -117,7 +117,7 @@ export const InstagramGrid = () => {
               </div>
 
               {/* Persistent IG corner mark for non-hover (mobile) */}
-              <div className="absolute top-1.5 right-1.5 md:hidden bg-ink/55 backdrop-blur-sm rounded-full p-1">
+              <div className="absolute top-1.5 right-1.5 md:hidden bg-ink/85 backdrop-blur-sm rounded-full p-1">
                 <Instagram className="w-3 h-3 text-bone" />
               </div>
             </motion.a>
