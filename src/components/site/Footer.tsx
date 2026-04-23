@@ -35,14 +35,14 @@ export const Footer = () => {
   return (
     <footer className="bg-ink text-bone">
       {/* Marquee */}
-      <div className="border-y border-ink-soft py-4 overflow-hidden">
-        <div className="marquee-track flex whitespace-nowrap font-display uppercase text-2xl md:text-4xl tracking-tight">
+      <div className="border-y border-ink-soft py-5 overflow-hidden">
+        <div className="marquee-track flex whitespace-nowrap font-serif italic text-2xl md:text-4xl">
           {Array.from({ length: 2 }).map((_, i) => (
             <div key={i} className="flex items-center gap-8 pr-8">
               {Array.from({ length: 6 }).map((_, j) => (
                 <span key={j} className="flex items-center gap-8">
-                  Iron over everything
-                  <span className="text-safety">●</span>
+                  Built for the life you live
+                  <span className="text-bone/40 not-italic">✦</span>
                 </span>
               ))}
             </div>
@@ -56,14 +56,14 @@ export const Footer = () => {
             <img src={afpLogo} alt="Alo Fitness Pro" className="h-12 w-auto invert" />
           </Link>
           <p className="mt-4 max-w-xs text-sm text-bone/70 leading-relaxed">
-            Strength-built apparel for the rack and the platform.
-            Shipped worldwide.
+            Performance apparel for women and men. Designed for the gym,
+            the green, and everywhere in between. Shipped worldwide.
           </p>
           <a
             href="https://instagram.com/alofitnesspro"
             target="_blank"
             rel="noreferrer"
-            className="mt-6 inline-flex items-center gap-2 eyebrow link-safety"
+            className="mt-6 inline-flex items-center gap-2 eyebrow hover:text-bone transition-colors text-bone/70"
           >
             <Instagram className="w-4 h-4" /> @alofitnesspro
           </a>
@@ -75,7 +75,7 @@ export const Footer = () => {
             <ul className="space-y-3">
               {c.links.map((l) => (
                 <li key={l.label}>
-                  <Link to={l.to} className="text-sm hover:text-safety transition-colors">
+                  <Link to={l.to} className="text-sm hover:text-bone transition-colors text-bone/70">
                     {l.label}
                   </Link>
                 </li>
