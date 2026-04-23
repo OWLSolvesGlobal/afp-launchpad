@@ -116,8 +116,8 @@ export default function About() {
             <motion.div {...fadeUp} className="col-span-12 md:col-span-5 md:sticky md:top-28 self-start">
               <div className="aspect-[4/5] overflow-hidden bg-muted">
                 <img
-                  src={founderYoung}
-                  alt="The founder as a young girl athlete on a track"
+                  src={ashleeGolf}
+                  alt="Ashlee Lowe at the golf course in the AFP white tennis-style dress"
                   loading="lazy"
                   className="w-full h-full object-cover"
                   width={1216}
@@ -125,7 +125,7 @@ export default function About() {
                 />
               </div>
               <div className="mt-3 text-xs text-graphite italic">
-                Circa age 8 — first track season. Hasn't stopped running since.
+                On the green — sport has always been the through-line.
               </div>
             </motion.div>
 
