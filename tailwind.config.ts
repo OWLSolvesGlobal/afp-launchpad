@@ -16,6 +16,7 @@ export default {
         stencil: ['"Stardos Stencil"', "Oswald", "system-ui", "sans-serif"],
         heading: ["Oswald", "system-ui", "sans-serif"],
         body: ["Inter", "system-ui", "sans-serif"],
+        serif: ["Fraunces", "Times New Roman", "Georgia", "serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -35,6 +36,11 @@ export default {
           DEFAULT: "hsl(var(--safety))",
           deep: "hsl(var(--safety-deep))",
         },
+        lime: "hsl(var(--lime))",
+        blush: "hsl(var(--blush))",
+        lilac: "hsl(var(--lilac))",
+        sky: "hsl(var(--sky))",
+        sand: "hsl(var(--sand))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
