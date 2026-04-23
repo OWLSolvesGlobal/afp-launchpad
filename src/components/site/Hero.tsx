@@ -1,115 +1,108 @@
-import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
-import heroImg from "@/assets/hero-iron.jpg";
-import afpLogo from "@/assets/afp-logo.png";
+import { ArrowUpRight } from "lucide-react";
+import limeRomper from "@/assets/afp-lime-romper.jpg";
+import golfDress from "@/assets/afp-golf-dress.jpg";
 
 export const Hero = () => {
-  const imgRef = useRef<HTMLDivElement>(null);
-
-  // Subtle parallax
-  useEffect(() => {
-    const el = imgRef.current;
-    if (!el) return;
-    const onScroll = () => {
-      const y = window.scrollY;
-      el.style.transform = `translate3d(0, ${y * 0.25}px, 0) scale(1.08)`;
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
-    <section className="relative h-[100svh] min-h-[640px] w-full overflow-hidden bg-ink text-bone grain">
-      {/* [PLACEHOLDER — REPLACE WITH AFP INSTAGRAM CONTENT] */}
-      <div ref={imgRef} className="absolute inset-0 will-change-transform">
-        <img
-          src={heroImg}
-          alt="Loaded barbell on platform in industrial gym, chalk dust suspended in tungsten light"
-          width={1920}
-          height={1280}
-          className="w-full h-full object-cover object-center opacity-85"
-          fetchPriority="high"
-        />
-      </div>
+    <section className="relative bg-background pt-20 md:pt-24 pb-12 md:pb-20 overflow-hidden">
+      <div className="container">
+        {/* Eyebrow row */}
+        <div className="flex items-center justify-between mb-6 md:mb-10">
+          <span className="eyebrow text-graphite">SS26 — In Motion</span>
+          <span className="eyebrow text-graphite hidden sm:block">@alofitnesspro</span>
+        </div>
 
-      <div className="absolute inset-0 bg-gradient-hero" />
-
-      {/* Oversized barbell watermark */}
-      <div className="pointer-events-none absolute inset-0 grid place-items-center">
-        <motion.img
-          src={afpLogo}
-          alt=""
-          aria-hidden="true"
-          initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 0.18, scale: 1 }}
-          transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
-          className="w-[120%] md:w-[85%] lg:w-[70%] max-w-none invert"
-        />
-      </div>
-
-      <div className="relative h-full container flex flex-col justify-end pb-16 md:pb-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="eyebrow text-safety mb-4"
-        >
-          Drop 01 / SS26 — Live Now
-        </motion.div>
-
+        {/* Editorial headline */}
         <motion.h1
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
-          className="display-xl text-bone max-w-[14ch]"
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          className="display-xl text-foreground max-w-[14ch]"
         >
-          Iron Over<br />Everything.
+          Built for the<br />
+          <em className="italic font-serif text-graphite/70">life you live.</em>
         </motion.h1>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-6 max-w-md text-bone/70 text-sm md:text-base font-body"
-        >
-          Strength-built apparel for the rack, the platform, and everything in between.
-        </motion.p>
-
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.75, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-8 md:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4"
+          transition={{ duration: 0.7, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-6 md:mt-10 grid md:grid-cols-12 gap-6 md:gap-8 items-end"
         >
-          <Link
-            to="/shop/men"
-            className="group inline-flex items-center justify-between gap-6 bg-safety text-bone px-6 py-4 eyebrow hover:bg-safety-deep transition-colors"
-          >
-            Shop Men
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </Link>
-          <Link
-            to="/shop/women"
-            className="group inline-flex items-center justify-between gap-6 border border-bone/40 hover:border-bone text-bone px-6 py-4 eyebrow transition-colors"
-          >
-            Shop Women
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </motion.div>
-      </div>
+          <p className="md:col-span-5 text-base md:text-lg text-graphite max-w-md leading-relaxed">
+            Performance fits engineered for the gym, the green, the pool deck.
+            Worn by women and men who don't sit still.
+          </p>
 
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.6 }}
-        transition={{ delay: 1.5, duration: 0.8 }}
-        className="absolute bottom-6 right-4 md:right-8 eyebrow text-bone/70 hidden sm:block"
-      >
-        <span className="inline-block rotate-90 origin-right">Scroll —</span>
-      </motion.div>
+          <div className="md:col-span-4 md:col-start-9 flex flex-col sm:flex-row gap-3">
+            <Link
+              to="/shop/women"
+              className="group inline-flex items-center justify-between bg-foreground text-background px-6 py-4 eyebrow hover:bg-graphite transition-colors flex-1"
+            >
+              Shop Women
+              <ArrowUpRight className="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            </Link>
+            <Link
+              to="/shop/men"
+              className="group inline-flex items-center justify-between border border-foreground text-foreground px-6 py-4 eyebrow hover:bg-foreground hover:text-background transition-colors flex-1"
+            >
+              Shop Men
+              <ArrowUpRight className="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            </Link>
+          </div>
+        </motion.div>
+
+        {/* Twin lifestyle imagery */}
+        <div className="mt-10 md:mt-16 grid grid-cols-12 gap-3 md:gap-5">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="col-span-7 md:col-span-7 relative aspect-[4/5] md:aspect-[3/4] overflow-hidden bg-[hsl(var(--sand))]"
+          >
+            <img
+              src={limeRomper}
+              alt="AFP athlete in lime green seamless romper"
+              fetchPriority="high"
+              className="absolute inset-0 w-full h-full object-cover object-center"
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 flex items-end justify-between text-background">
+              <div>
+                <div className="eyebrow text-background/80 mb-1">01 / Womens</div>
+                <div className="font-serif text-2xl md:text-4xl leading-none">The Romper</div>
+              </div>
+              <Link
+                to="/shop/women"
+                className="hidden md:inline-flex w-12 h-12 items-center justify-center bg-background text-foreground hover:bg-[hsl(var(--lime))] transition-colors"
+                aria-label="Shop the romper"
+              >
+                <ArrowUpRight className="w-5 h-5" />
+              </Link>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            className="col-span-5 md:col-span-5 relative aspect-[4/5] md:aspect-[3/4] overflow-hidden bg-[hsl(var(--sand))] mt-8 md:mt-16"
+          >
+            <img
+              src={golfDress}
+              alt="AFP athlete in navy golf dress on the green"
+              className="absolute inset-0 w-full h-full object-cover object-center"
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 flex items-end justify-between text-background">
+              <div>
+                <div className="eyebrow text-background/80 mb-1">02 / On the Green</div>
+                <div className="font-serif text-xl md:text-3xl leading-none">The Dress</div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
     </section>
   );
 };

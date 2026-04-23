@@ -6,26 +6,28 @@ import { CategoryTiles } from "@/components/site/CategoryTiles";
 import { FeaturedCarousel } from "@/components/site/FeaturedCarousel";
 import { InstagramGrid } from "@/components/site/InstagramGrid";
 import { EmailCapture } from "@/components/site/EmailCapture";
+import { LifestyleStrip } from "@/components/site/LifestyleStrip";
 
 const Index = () => {
   useEffect(() => {
-    document.title = "Alo Fitness Pro — Iron Over Everything";
+    document.title = "Alo Fitness Pro — Built for the life you live";
     const meta = document.querySelector('meta[name="description"]');
     if (meta) {
       meta.setAttribute(
         "content",
-        "Strength-built apparel for the rack, the platform, and everything in between. Lifting tees, squat shorts, seamless sets, accessories. Shipped worldwide."
+        "Performance fitness apparel for women and men. Seamless sets, rompers, golf dresses, training tees. Designed by Alo Fitness Pro. Shipped worldwide."
       );
     }
   }, []);
 
   return (
     <div className="bg-background text-foreground">
-      <Header transparent />
+      <Header />
       <main>
         <Hero />
         <CategoryTiles />
         <FeaturedCarousel />
+        <LifestyleStrip />
         <InstagramGrid />
         <EmailCapture />
       </main>

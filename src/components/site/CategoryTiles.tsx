@@ -1,14 +1,16 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
-import menImg from "@/assets/category-men.jpg";
-import womenImg from "@/assets/category-women.jpg";
+import womenImg from "@/assets/afp-purple-romper.jpg";
+import menImg from "@/assets/afp-mens-white.jpg";
+import setImg from "@/assets/afp-black-jumpsuit.jpg";
+import accImg from "@/assets/afp-golf-dress.jpg";
 
 const tiles = [
-  { to: "/shop/men", label: "Men's Range", img: menImg, count: "Built to lift" },
-  { to: "/shop/women", label: "Women's Range", img: womenImg, count: "Seamless + strong" },
-  { to: "/shop/men?sort=new", label: "New Iron", img: menImg, count: "Just landed" },
-  { to: "/shop/women?sort=best", label: "The Drop List", img: womenImg, count: "Top of the rack" },
+  { to: "/shop/women",          label: "Women",     img: womenImg, count: "32 styles", tint: "hsl(var(--lilac))" },
+  { to: "/shop/men",            label: "Men",       img: menImg,   count: "18 styles", tint: "hsl(var(--sand))"  },
+  { to: "/shop/women?sort=new", label: "Sets",      img: setImg,   count: "Match top to bottom", tint: "hsl(var(--sand))" },
+  { to: "/shop/women?sort=best",label: "Tennis & Golf", img: accImg, count: "Court ready", tint: "hsl(var(--sky))" },
 ];
 
 export const CategoryTiles = () => {
@@ -17,11 +19,11 @@ export const CategoryTiles = () => {
       <div className="container">
         <div className="flex items-end justify-between mb-8 md:mb-12">
           <div>
-            <div className="eyebrow text-graphite mb-3">01 — Shop the Rack</div>
-            <h2 className="display-md">Pick Your Weight.</h2>
+            <div className="eyebrow text-graphite mb-3">— Shop the Edit</div>
+            <h2 className="display-md">Find your <em className="italic">fit.</em></h2>
           </div>
-          <Link to="/shop/men" className="hidden md:inline-flex eyebrow link-safety">
-            View all →
+          <Link to="/shop/women" className="hidden md:inline-flex eyebrow link-safety">
+            Shop everything →
           </Link>
         </div>
 
@@ -36,23 +38,25 @@ export const CategoryTiles = () => {
             >
               <Link
                 to={t.to}
-                className="group relative block aspect-[3/4] overflow-hidden bg-ink"
+                className="group block"
               >
-                <img
-                  src={t.img}
-                  alt={`Shop ${t.label}`}
-                  loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-105 transition-all duration-700 ease-out-expo"
-                />
-                <div className="absolute inset-0 bg-gradient-card-hover" />
-                <div className="absolute inset-0 p-4 md:p-6 flex flex-col justify-between text-bone">
-                  <ArrowUpRight className="w-5 h-5 self-end opacity-0 group-hover:opacity-100 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all duration-300" />
-                  <div>
-                    <div className="eyebrow text-safety mb-1">{t.count}</div>
-                    <h3 className="font-display uppercase text-3xl md:text-4xl leading-none tracking-tight">
-                      {t.label}
-                    </h3>
+                <div
+                  className="relative aspect-[3/4] overflow-hidden"
+                  style={{ backgroundColor: t.tint }}
+                >
+                  <img
+                    src={t.img}
+                    alt={`Shop ${t.label}`}
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
+                  />
+                  <div className="absolute top-3 right-3 w-9 h-9 grid place-items-center bg-background/0 group-hover:bg-background transition-colors">
+                    <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-foreground" />
                   </div>
+                </div>
+                <div className="mt-3 flex items-baseline justify-between">
+                  <h3 className="font-serif text-xl md:text-2xl text-foreground">{t.label}</h3>
+                  <span className="eyebrow text-graphite text-[10px]">{t.count}</span>
                 </div>
               </Link>
             </motion.div>

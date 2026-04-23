@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Stardos+Stencil:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Stardos+Stencil:wght@400;700&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -54,6 +54,13 @@
     --chalk: 42 22% 88%;
     --safety: 351 86% 41%;              /* #C8102E */
     --safety-deep: 351 86% 32%;
+
+    /* Lifestyle accent palette — pulled from actual AFP product runs */
+    --lime: 76 85% 60%;                 /* lime romper */
+    --blush: 350 90% 84%;               /* pink pool set */
+    --lilac: 290 55% 70%;               /* purple romper */
+    --sky: 210 60% 78%;                 /* blue romper */
+    --sand: 38 35% 88%;                 /* warm bone */
 
     /* Gradients */
     --gradient-hero: linear-gradient(
@@ -132,18 +139,21 @@
 }
 
 @layer components {
-  /* Display headings — STENCIL INDUSTRIAL, ALL CAPS, +0.02em */
+  /* Display headings — refined editorial serif, mixed case */
   .display-xl {
-    @apply font-display uppercase leading-[0.88] tracking-[0.02em];
-    font-size: clamp(3rem, 12vw, 9rem);
+    @apply font-serif leading-[0.92] tracking-[-0.02em];
+    font-size: clamp(3rem, 11vw, 8.5rem);
+    font-weight: 400;
   }
   .display-lg {
-    @apply font-display uppercase leading-[0.92] tracking-[0.02em];
+    @apply font-serif leading-[0.95] tracking-[-0.02em];
     font-size: clamp(2.25rem, 7vw, 5rem);
+    font-weight: 400;
   }
   .display-md {
-    @apply font-display uppercase leading-[0.96] tracking-[0.02em];
+    @apply font-serif leading-[1] tracking-[-0.015em];
     font-size: clamp(1.75rem, 4vw, 3rem);
+    font-weight: 400;
   }
 
   .eyebrow {
@@ -203,6 +213,7 @@
   .font-stencil { font-family: 'Stardos Stencil', 'Oswald', system-ui, sans-serif; font-weight: 700; }
   .font-heading { font-family: 'Oswald', system-ui, sans-serif; font-weight: 600; }
   .font-body    { font-family: 'Inter', system-ui, sans-serif; }
+  .font-serif   { font-family: 'Fraunces', 'Times New Roman', Georgia, serif; }
 
   .bg-gradient-hero { background: var(--gradient-hero); }
   .bg-gradient-card-hover { background: var(--gradient-card-hover); }
