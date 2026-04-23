@@ -141,23 +141,23 @@
 @layer components {
   /* Display headings — refined editorial serif, mixed case */
   .display-xl {
-    @apply font-serif leading-[0.92] tracking-[-0.02em];
+    @apply font-body leading-[0.92] tracking-[-0.04em];
     font-size: clamp(3rem, 11vw, 8.5rem);
-    font-weight: 400;
+    font-weight: 500;
   }
   .display-lg {
-    @apply font-serif leading-[0.95] tracking-[-0.02em];
+    @apply font-body leading-[0.95] tracking-[-0.035em];
     font-size: clamp(2.25rem, 7vw, 5rem);
-    font-weight: 400;
+    font-weight: 500;
   }
   .display-md {
-    @apply font-serif leading-[1] tracking-[-0.015em];
+    @apply font-body leading-[1.02] tracking-[-0.03em];
     font-size: clamp(1.75rem, 4vw, 3rem);
-    font-weight: 400;
+    font-weight: 500;
   }
 
   .eyebrow {
-    @apply font-stencil uppercase tracking-[0.28em] text-xs;
+    @apply font-body uppercase tracking-[0.32em] text-[11px] font-medium;
   }
 
   /* Grain overlay for hero */

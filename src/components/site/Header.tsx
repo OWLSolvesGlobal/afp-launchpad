@@ -62,7 +62,7 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
               to={n.to}
               className={({ isActive }) =>
                 cn(
-                  "eyebrow link-safety transition-opacity",
+                  "text-[11px] uppercase tracking-[0.32em] font-medium link-safety transition-opacity",
                   isActive ? "opacity-100" : "opacity-80 hover:opacity-100"
                 )
               }
