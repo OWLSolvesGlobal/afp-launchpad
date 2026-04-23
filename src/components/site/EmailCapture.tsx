@@ -17,30 +17,32 @@ export const EmailCapture = () => {
   };
 
   return (
-    <section className="bg-ink text-bone border-y border-steel">
-      <div className="container py-12 md:py-16 grid md:grid-cols-2 gap-8 items-center">
+    <section className="bg-background border-t border-border">
+      <div className="container py-16 md:py-24 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
         <div>
-          <div className="eyebrow text-safety mb-3">— The Roster</div>
-          <h2 className="display-md">Join The Roster.</h2>
-          <p className="mt-3 text-sm md:text-base max-w-md text-bone/70">
-            10% off your first order. Early access to drops, restocks,
-            and athlete-only releases. No fluff.
+          <div className="eyebrow text-graphite mb-3">— Insiders Only</div>
+          <h2 className="display-md text-foreground">
+            Get <em className="italic">10% off</em><br />your first order.
+          </h2>
+          <p className="mt-4 text-sm md:text-base max-w-md text-graphite leading-relaxed">
+            Early access to new drops, restocks, and members-only colorways.
+            One email a week. No spam, ever.
           </p>
         </div>
 
-        <form onSubmit={submit} className="flex w-full items-stretch border border-bone/40">
+        <form onSubmit={submit} className="flex w-full items-stretch border-b-2 border-foreground">
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
-            className="flex-1 bg-transparent px-4 py-4 outline-none placeholder:text-bone/40 text-base text-bone"
+            className="flex-1 bg-transparent px-2 py-4 outline-none placeholder:text-graphite/50 text-base text-foreground"
             aria-label="Email address"
           />
           <button
             type="submit"
-            className="bg-safety text-bone px-5 md:px-8 eyebrow flex items-center gap-2 hover:bg-safety-deep transition-colors"
+            className="text-foreground px-4 eyebrow flex items-center gap-2 hover:text-graphite transition-colors"
           >
             {done ? <Check className="w-4 h-4" /> : <>Join <ArrowRight className="w-4 h-4" /></>}
           </button>

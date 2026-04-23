@@ -11,15 +11,15 @@ import { motion } from "framer-motion";
 // All tiles deep-link to the live IG profile.
 // ============================================================
 
-import igGolfDuo from "@/assets/ig-golf-duo.png";        // real
-import igWhiteTee from "@/assets/ig-white-tee.png";      // real
-import igBlackSet from "@/assets/ig-black-set.png";      // real
-import igDeadlift from "@/assets/ig-deadlift.jpg";       // placeholder
-import igFlatlay from "@/assets/ig-flatlay.jpg";         // placeholder
-import igResort from "@/assets/ig-resort.jpg";           // placeholder
-import igDuoStudio from "@/assets/ig-duo-studio.jpg";    // placeholder
-import igBeachRun from "@/assets/ig-beach-run.jpg";      // placeholder
-import heroImg from "@/assets/hero-iron.jpg";            // placeholder
+import igGolfDress from "@/assets/afp-golf-dress.jpg";
+import igLime from "@/assets/afp-lime-romper.jpg";
+import igPinkPool from "@/assets/afp-pink-pool.jpg";
+import igMensBlack from "@/assets/afp-mens-black.jpg";
+import igMensWhite from "@/assets/afp-mens-white.jpg";
+import igPurple from "@/assets/afp-purple-romper.jpg";
+import igBlueRomper from "@/assets/afp-blue-romper.jpg";
+import igBlackJump from "@/assets/afp-black-jumpsuit.jpg";
+import igGolfDuo from "@/assets/ig-golf-duo.png";
 
 type Tile = {
   src: string;
@@ -33,15 +33,15 @@ type Tile = {
 const IG_URL = "https://www.instagram.com/alofitnesspro/";
 
 const tiles: Tile[] = [
-  { src: igGolfDuo,    alt: "Two athletes on the green in AFP visors and sets",        caption: "Off the platform.",   likes: "2.1k", href: IG_URL, real: true },
-  { src: igWhiteTee,   alt: "Athlete in white AFP performance tee and black shorts",    caption: "The clean fit.",      likes: "1.8k", href: IG_URL, real: true },
-  { src: igBlackSet,   alt: "Athlete in head-to-toe black AFP training set",            caption: "All black, all day.", likes: "3.4k", href: IG_URL, real: true },
-  { src: igDeadlift,   alt: "Lifter pulling a deadlift in a moody industrial gym",      caption: "Iron over everything.", likes: "4.2k", href: IG_URL },
-  { src: igDuoStudio,  alt: "Two athletes back to back in matching AFP black fits",     caption: "Built together.",     likes: "1.5k", href: IG_URL },
-  { src: igResort,     alt: "Athlete poolside in white AFP seamless set",               caption: "Off-season ≠ off-duty.", likes: "2.7k", href: IG_URL },
-  { src: heroImg,      alt: "Loaded barbell on the platform under tungsten light",      caption: "Set the bar.",        likes: "5.6k", href: IG_URL },
-  { src: igBeachRun,   alt: "Athlete running at sunrise on a tropical beach",           caption: "Mileage everywhere.", likes: "3.1k", href: IG_URL },
-  { src: igFlatlay,    alt: "AFP black training kit flat-lay on bone background",       caption: "The kit.",            likes: "1.2k", href: IG_URL },
+  { src: igLime,       alt: "AFP athlete in lime green seamless romper",        caption: "Lime season.",        likes: "4.2k", href: IG_URL, real: true },
+  { src: igGolfDress,  alt: "AFP athlete in navy golf dress",                   caption: "On the green.",       likes: "3.1k", href: IG_URL, real: true },
+  { src: igPinkPool,   alt: "AFP athlete in pink set poolside",                 caption: "Pool day energy.",    likes: "5.4k", href: IG_URL, real: true },
+  { src: igMensWhite,  alt: "AFP male athlete in white tee and black shorts",   caption: "The clean fit.",      likes: "2.8k", href: IG_URL, real: true },
+  { src: igPurple,     alt: "AFP athlete in purple zip romper",                 caption: "Signature romper.",   likes: "6.1k", href: IG_URL, real: true },
+  { src: igBlueRomper, alt: "AFP athlete in sky blue romper against terracotta wall", caption: "Sun-soaked.",   likes: "3.7k", href: IG_URL, real: true },
+  { src: igMensBlack,  alt: "AFP male athlete head to toe in black",            caption: "All black everything.", likes: "2.2k", href: IG_URL, real: true },
+  { src: igGolfDuo,    alt: "Two athletes on the green in AFP visors and sets", caption: "Off the platform.",   likes: "1.9k", href: IG_URL, real: true },
+  { src: igBlackJump,  alt: "AFP athlete in black halter jumpsuit in courtyard",caption: "Built to wear.",      likes: "4.0k", href: IG_URL, real: true },
 ];
 
 export const InstagramGrid = () => {
@@ -50,12 +50,13 @@ export const InstagramGrid = () => {
       <div className="container">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-12">
           <div>
-            <div className="eyebrow text-graphite mb-3">03 — Lived In</div>
+            <div className="eyebrow text-graphite mb-3">— On the 'Gram</div>
             <h2 className="display-md">
-              The Life. <span className="text-safety">@alofitnesspro</span>
+              <em className="italic">@alofitnesspro</em>
             </h2>
             <p className="mt-3 text-sm text-graphite max-w-md">
-              Not just kit. A way of moving through the world.
+              Tag <span className="text-foreground">#AFPlife</span> to be featured.
+              The community wears it best.
             </p>
           </div>
           <a
@@ -128,7 +129,7 @@ export const InstagramGrid = () => {
             href={IG_URL}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-3 bg-ink text-bone px-6 py-3 eyebrow hover:bg-safety transition-colors"
+            className="inline-flex items-center gap-3 bg-foreground text-background px-6 py-3 eyebrow hover:bg-graphite transition-colors"
           >
             <Instagram className="w-4 h-4" /> See it all on Instagram
           </a>

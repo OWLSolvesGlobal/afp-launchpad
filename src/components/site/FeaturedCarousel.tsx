@@ -23,25 +23,25 @@ export const FeaturedCarousel = () => {
   ];
 
   return (
-    <section className="bg-ink text-bone py-16 md:py-24">
+    <section className="bg-[hsl(var(--sand))] text-foreground py-16 md:py-24">
       <div className="container">
         <div className="flex items-end justify-between mb-8 md:mb-12">
           <div>
-            <div className="eyebrow text-safety mb-3">02 — The Kit</div>
-            <h2 className="display-md">New Iron.</h2>
+            <div className="eyebrow text-graphite mb-3">— Just Landed</div>
+            <h2 className="display-md">New <em className="italic">arrivals.</em></h2>
           </div>
           <div className="flex gap-2">
             <button
               aria-label="Previous"
               onClick={() => scrollBy(-1)}
-              className="w-10 h-10 grid place-items-center border border-bone/30 hover:border-safety hover:text-safety transition-colors"
+              className="w-10 h-10 grid place-items-center border border-foreground/30 hover:border-foreground hover:bg-foreground hover:text-background transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               aria-label="Next"
               onClick={() => scrollBy(1)}
-              className="w-10 h-10 grid place-items-center border border-bone/30 hover:border-safety hover:text-safety transition-colors"
+              className="w-10 h-10 grid place-items-center border border-foreground/30 hover:border-foreground hover:bg-foreground hover:text-background transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -58,10 +58,7 @@ export const FeaturedCarousel = () => {
             key={p.id}
             className="snap-start shrink-0 w-[72%] sm:w-[44%] md:w-[32%] lg:w-[24%]"
           >
-            {/* invert ProductCard onto dark bg by overriding card token via wrapper */}
-            <div className="text-bone [&_.bg-card]:bg-transparent [&_.text-graphite]:text-bone/60">
-              <ProductCard product={p} index={i} />
-            </div>
+            <ProductCard product={p} index={i} />
           </div>
         ))}
       </div>
