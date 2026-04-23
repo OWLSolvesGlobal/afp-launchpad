@@ -37,20 +37,18 @@ export const Hero = () => {
           </p>
 
           <div className="md:col-span-4 md:col-start-9 flex flex-col sm:flex-row gap-3">
-            <Link
-              to="/shop/women"
-              className="group inline-flex items-center justify-between bg-foreground text-background px-6 py-4 eyebrow hover:bg-graphite transition-colors flex-1"
-            >
-              Shop Women
-              <ArrowUpRight className="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-            </Link>
-            <Link
-              to="/shop/men"
-              className="group inline-flex items-center justify-between border border-foreground text-foreground px-6 py-4 eyebrow hover:bg-foreground hover:text-background transition-colors flex-1"
-            >
-              Shop Men
-              <ArrowUpRight className="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-            </Link>
+            <Button asChild variant="afp-primary" size="afp" className="group flex-1 justify-between">
+              <Link to="/shop/women">
+                Shop Women
+                <ArrowUpRight className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </Link>
+            </Button>
+            <Button asChild variant="afp-outline" size="afp" className="group flex-1 justify-between">
+              <Link to="/shop/men">
+                Shop Men
+                <ArrowUpRight className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </Link>
+            </Button>
           </div>
         </motion.div>
 
