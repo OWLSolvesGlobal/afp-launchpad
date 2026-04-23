@@ -86,7 +86,7 @@ export const Footer = () => {
       </div>
 
       <div className="border-t border-ink-soft">
-        <div className="container py-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-bone/50">
+        <div className="container py-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-bone/75">
           <span>© {new Date().getFullYear()} Alo Fitness Pro. All rights reserved.</span>
           <span className="eyebrow">Ships worldwide · USD</span>
         </div>
