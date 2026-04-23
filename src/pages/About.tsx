@@ -16,14 +16,6 @@ const fadeUp = {
   transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] as const },
 };
 
-const timeline = [
-  { year: "Age 6", title: "First Race", body: "Pigtails, scraped knees, finish line. The first taste of what her body could do." },
-  { year: "High School", title: "Captain", body: "Track. Volleyball. Weight room. Three sports, one obsession — leave nothing on the field." },
-  { year: "College", title: "Athlete", body: "Scholarships, sunrise lifts, and learning that discipline is a love language." },
-  { year: "After", title: "The Pivot", body: "The whistle stopped. The fire didn't. Coaching, training, building community in every gym she walked into." },
-  { year: "Today", title: "AFP", body: "Alo Fitness Pro — fitness fashion for the unstoppable. Designed by an athlete. Worn by the relentless." },
-];
-
 export default function About() {
   useEffect(() => {
     document.title = "About — AFP | Alo Fitness Pro";
