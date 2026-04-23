@@ -217,7 +217,7 @@ const NotFound = () => {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Header />
 
-      <main className="flex-1 pt-24 md:pt-28">
+      <main id="main" className="flex-1 pt-24 md:pt-28">
         <section className="relative overflow-hidden">
           {/* 3D Canvas */}
           <div className="relative h-[60vh] md:h-[72vh] bg-gradient-to-b from-[hsl(var(--sand))] to-bone">

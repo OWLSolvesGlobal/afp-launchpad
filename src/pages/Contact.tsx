@@ -38,7 +38,7 @@ export default function Contact() {
     <div className="min-h-screen bg-background text-foreground">
       <Header />
 
-      <main className="pt-24 md:pt-28">
+      <main id="main" className="pt-24 md:pt-28">
         {/* Hero */}
         <section className="container py-12 md:py-20">
           <motion.div {...fadeUp} className="eyebrow text-graphite mb-4">— Get in Touch</motion.div>

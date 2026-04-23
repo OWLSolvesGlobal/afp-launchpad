@@ -118,7 +118,7 @@ export default function FAQ() {
     <div className="min-h-screen bg-background text-foreground">
       <Header />
 
-      <main className="pt-24 md:pt-28">
+      <main id="main" className="pt-24 md:pt-28">
         <section className="container py-12 md:py-20">
           <div className="eyebrow text-graphite mb-4">— Help Center</div>
           <h1 className="font-display text-5xl md:text-7xl leading-[0.95] tracking-tight max-w-3xl">

@@ -62,7 +62,7 @@ export default function Checkout() {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 container pt-32 pb-24 text-center">
+        <main id="main" className="flex-1 container pt-32 pb-24 text-center">
           <div className="eyebrow text-graphite mb-4">Checkout</div>
           <h1 className="display-lg mb-6">Your bag is empty.</h1>
           <p className="text-graphite mb-8">Add something you love before checking out.</p>
