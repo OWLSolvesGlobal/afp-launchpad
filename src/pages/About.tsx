@@ -233,15 +233,28 @@ export default function About() {
         <section className="py-20 md:py-32">
           <div className="container grid grid-cols-12 gap-6 md:gap-12 items-center">
             <motion.div {...fadeUp} className="col-span-12 md:col-span-6 lg:col-span-5 md:order-2">
-              <div className="aspect-[4/5] overflow-hidden bg-muted">
-                <img
-                  src={founderApple}
-                  alt="Founder smiling and biting into a fresh red apple"
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                  width={832}
-                  height={1216}
-                />
+              <div className="relative">
+                <div className="aspect-[4/5] overflow-hidden bg-muted">
+                  <img
+                    src={ashleeApple}
+                    alt="Ashlee Lowe in the AFP lime-green romper, biting into a fresh green apple"
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                    width={832}
+                    height={1216}
+                  />
+                </div>
+                {/* Small inset — pool look */}
+                <div className="hidden md:block absolute -bottom-8 -left-8 w-32 lg:w-40 aspect-[4/5] overflow-hidden border-4 border-bone shadow-lg">
+                  <img
+                    src={ashleePool}
+                    alt="Ashlee Lowe in the AFP pink poolside set"
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                    width={400}
+                    height={500}
+                  />
+                </div>
               </div>
             </motion.div>
 
@@ -280,7 +293,7 @@ export default function About() {
                   See you at the start line.
                 </p>
                 <p className="font-stencil uppercase text-xs tracking-widest text-graphite">
-                  — Founder, AFP / Alo Fitness Pro
+                  — Ashlee Lowe · Founder, AFP / Alo Fitness Pro
                 </p>
               </motion.div>
             </div>
