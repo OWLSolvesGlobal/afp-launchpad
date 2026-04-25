@@ -57,9 +57,9 @@ export default function About() {
                 transition={{ ...fadeUp.transition, delay: 0.15 }}
                 className="mt-8 max-w-md text-base md:text-lg text-graphite leading-relaxed"
               >
-                AFP wasn't drawn up in a boardroom. It was built in the chalk dust of high-school
-                weight rooms, on rain-soaked tracks at 5 a.m., and in the quiet moments between
-                reps when a young girl decided she'd never stop chasing strong.
+                AFP wasn't built in a boardroom. It started in training spaces and early
+                mornings—but grew into something made for movement, rest and everything in
+                between.
               </motion.p>
             </div>
 
@@ -72,14 +72,14 @@ export default function About() {
                 <div className="aspect-[3/4] overflow-hidden bg-muted">
                   <img
                     src={ashleePink}
-                    alt="Ashlee Lowe, founder of AFP / Alo Fitness Pro, in the signature pink AFP zip-front romper"
+                    alt="AFP signature pink zip-front romper"
                     className="w-full h-full object-cover"
                     width={832}
                     height={1216}
                   />
                 </div>
                 <div className="absolute -bottom-4 -left-4 md:-left-8 bg-bone text-ink px-4 py-2 font-stencil uppercase text-[10px] tracking-widest border border-ink">
-                  Ashlee Lowe
+                  AFP · Est. by an Athlete
                 </div>
               </div>
             </motion.div>
@@ -109,7 +109,7 @@ export default function About() {
               <div className="aspect-[4/5] overflow-hidden bg-muted">
                 <img
                   src={ashleeGolf}
-                  alt="Ashlee Lowe at the golf course in the AFP white tennis-style dress"
+                  alt="AFP white tennis-style dress on the green"
                   loading="lazy"
                   className="w-full h-full object-cover"
                   width={1216}
@@ -160,7 +160,7 @@ export default function About() {
           <div className="relative aspect-[4/5] sm:aspect-[16/10] md:aspect-[16/9] overflow-hidden">
             <img
               src={ashleeBlue}
-              alt="Ashlee Lowe in the AFP powder-blue romper against a sun-warmed wall"
+              alt="AFP powder-blue romper against a sun-warmed wall"
               loading="lazy"
               className="w-full h-full object-cover object-[60%_15%]"
               width={1408}
@@ -181,7 +181,7 @@ export default function About() {
                     until it survives my worst workout."
                   </p>
                   <p className="mt-5 font-stencil uppercase text-[10px] md:text-xs tracking-[0.3em] text-bone/80">
-                    — Ashlee Lowe
+                    — The Founder
                   </p>
                 </div>
               </div>
@@ -197,7 +197,7 @@ export default function About() {
                 <div className="aspect-[4/5] overflow-hidden bg-muted">
                   <img
                     src={ashleeApple}
-                    alt="Ashlee Lowe in the AFP lime-green romper, biting into a fresh green apple"
+                    alt="AFP lime-green romper paired with a fresh green apple"
                     loading="lazy"
                     className="w-full h-full object-cover"
                     width={832}
@@ -208,7 +208,7 @@ export default function About() {
                 <div className="hidden md:block absolute -bottom-8 -left-8 w-32 lg:w-40 aspect-[4/5] overflow-hidden border-4 border-bone shadow-lg">
                   <img
                     src={ashleePool}
-                    alt="Ashlee Lowe in the AFP pink poolside set"
+                    alt="AFP pink poolside set"
                     loading="lazy"
                     className="w-full h-full object-cover"
                     width={400}
@@ -253,7 +253,7 @@ export default function About() {
                   See you at the start line.
                 </p>
                 <p className="font-stencil uppercase text-xs tracking-widest text-graphite">
-                  — Ashlee Lowe, AFP / Alo Fitness Pro
+                  — AFP / Alo Fitness Pro
                 </p>
               </motion.div>
             </div>
