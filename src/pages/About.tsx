@@ -79,7 +79,7 @@ export default function About() {
                   />
                 </div>
                 <div className="absolute -bottom-4 -left-4 md:-left-8 bg-bone text-ink px-4 py-2 font-stencil uppercase text-[10px] tracking-widest border border-ink">
-                  Ashlee Lowe · Founder
+                  Ashlee Lowe
                 </div>
               </div>
             </motion.div>
@@ -91,12 +91,12 @@ export default function About() {
           <div className="flex gap-12 whitespace-nowrap animate-[scroll_40s_linear_infinite] font-stencil uppercase text-2xl md:text-3xl tracking-widest">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex gap-12 shrink-0">
-                <span>Discipline</span><span className="text-safety">★</span>
-                <span>Sweat</span><span className="text-safety">★</span>
-                <span>Style</span><span className="text-safety">★</span>
-                <span>Strength</span><span className="text-safety">★</span>
-                <span>Self-Belief</span><span className="text-safety">★</span>
-                <span>Showtime</span><span className="text-safety">★</span>
+                <span>Discipline</span>
+                <span>Sweat</span>
+                <span>Style</span>
+                <span>Strength</span>
+                <span>Self-Belief</span>
+                <span>Showtime</span>
               </div>
             ))}
           </div>
@@ -253,7 +253,7 @@ export default function About() {
                   See you at the start line.
                 </p>
                 <p className="font-stencil uppercase text-xs tracking-widest text-graphite">
-                  — Ashlee Lowe · Founder, AFP / Alo Fitness Pro
+                  — Ashlee Lowe, AFP / Alo Fitness Pro
                 </p>
               </motion.div>
             </div>
