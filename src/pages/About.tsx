@@ -40,7 +40,7 @@ export default function About() {
           <div className="container grid grid-cols-12 gap-6 md:gap-10 items-end">
             <div className="col-span-12 md:col-span-7 lg:col-span-6">
               <motion.div {...fadeUp} className="eyebrow text-graphite mb-6">
-                — Our Story · Est. by an Athlete
+                — Our Story
               </motion.div>
               <motion.h1
                 {...fadeUp}
@@ -77,9 +77,6 @@ export default function About() {
                     width={832}
                     height={1216}
                   />
-                </div>
-                <div className="absolute -bottom-4 -left-4 md:-left-8 bg-bone text-ink px-4 py-2 font-stencil uppercase text-[10px] tracking-widest border border-ink">
-                  AFP · Est. by an Athlete
                 </div>
               </div>
             </motion.div>
