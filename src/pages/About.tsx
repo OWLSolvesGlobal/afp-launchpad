@@ -121,11 +121,10 @@ export default function About() {
                     The Standard
                   </h2>
                   <p className="font-display text-xl md:text-2xl lg:text-3xl leading-[1.15] italic text-bone/95">
-                    "I make clothes I'd actually train in. Nothing leaves the rack
-                    until it survives my worst workout."
+                    We provide pieces we actually live in, train in, move in, and unwind in.
                   </p>
-                  <p className="mt-5 font-stencil uppercase text-[10px] md:text-xs tracking-[0.3em] text-bone/80">
-                    — The Founder
+                  <p className="mt-5 font-display text-lg md:text-xl lg:text-2xl leading-[1.2] italic text-bone/90">
+                    Nothing leaves the rack until it earns its place in my routine.
                   </p>
                 </div>
               </div>
