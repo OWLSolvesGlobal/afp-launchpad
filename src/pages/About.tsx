@@ -84,7 +84,7 @@ export default function About() {
         </section>
 
         {/* ============ MARQUEE ============ */}
-        <section className="border-y border-border bg-bone text-ink overflow-hidden py-6">
+        <section className="border-y border-border bg-background text-foreground overflow-hidden py-6">
           <div className="flex gap-12 whitespace-nowrap animate-[scroll_40s_linear_infinite] font-stencil uppercase text-2xl md:text-3xl tracking-widest">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex gap-12 shrink-0">
