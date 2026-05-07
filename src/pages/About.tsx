@@ -99,59 +99,6 @@ export default function About() {
           </div>
         </section>
 
-        {/* ============ ORIGIN STORY — split editorial ============ */}
-        <section className="py-20 md:py-32">
-          <div className="container grid grid-cols-12 gap-6 md:gap-10">
-            <motion.div {...fadeUp} className="col-span-12 md:col-span-5 md:sticky md:top-28 self-start">
-              <div className="aspect-[4/5] overflow-hidden bg-muted">
-                <img
-                  src={ashleeGolf}
-                  alt="AFP white tennis-style dress on the green"
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                  width={1216}
-                  height={832}
-                />
-              </div>
-              <div className="mt-3 text-xs text-graphite italic">
-                On the green — sport has always been the through-line.
-              </div>
-            </motion.div>
-
-            <div className="col-span-12 md:col-span-7 md:pl-10 lg:pl-16">
-              <motion.div {...fadeUp} className="eyebrow text-safety mb-4">— Chapter One</motion.div>
-              <motion.h2
-                {...fadeUp}
-                transition={{ ...fadeUp.transition, delay: 0.05 }}
-                className="font-display text-3xl md:text-5xl leading-[1.05] mb-8"
-              >
-                A girl, a track, and a stopwatch that wouldn't lie.
-              </motion.h2>
-
-              <motion.div
-                {...fadeUp}
-                transition={{ ...fadeUp.transition, delay: 0.1 }}
-                className="space-y-6 text-base md:text-lg text-graphite leading-relaxed max-w-xl"
-              >
-                <p>
-                  Before there was a brand, there was a kid who couldn't sit still. Sneakers worn
-                  thin at the toes. Knees always a little bruised. The kind of energy that made
-                  coaches smile and parents tired.
-                </p>
-                <p className="border-l-2 border-ink pl-5 italic text-ink">
-                  "Sport didn't just shape my body. It shaped how I show up — for myself, and for
-                  the women coming up behind me."
-                </p>
-                <p>
-                  From elementary track meets to high-school championships, she learned the
-                  thing every athlete eventually learns: <span className="text-ink font-medium">
-                  the work is the prize</span>. The medals fade. The discipline doesn't.
-                </p>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
         {/* ============ FULL-BLEED B/W TRAINING IMAGE ============ */}
         <section className="relative">
           <div className="relative aspect-[4/5] sm:aspect-[16/10] md:aspect-[16/9] overflow-hidden">
