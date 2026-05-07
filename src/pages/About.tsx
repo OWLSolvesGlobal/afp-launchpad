@@ -212,7 +212,6 @@ export default function About() {
               transition={{ ...fadeUp.transition, delay: 0.05 }}
               className="font-display text-4xl md:text-6xl lg:text-7xl leading-[0.95] mb-10 max-w-3xl mx-auto"
             >
-              The unstoppable wear AFP.<br />
               <span className="italic font-light">Are you in?</span>
             </motion.h2>
             <motion.div
