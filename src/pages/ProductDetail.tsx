@@ -17,6 +17,7 @@ import {
 import { useCart } from "@/context/CartContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { ProductDetailSkeleton } from "@/components/site/skeletons/ProductDetailSkeleton";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -47,14 +48,7 @@ export default function ProductDetail() {
       .slice(0, 4);
   }, [product?.id, all]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background text-foreground">
-        <Header />
-        <main className="pt-32 container text-center text-graphite text-sm">Loading…</main>
-      </div>
-    );
-  }
+  if (isLoading) return <ProductDetailSkeleton />;
   if (!product) return <Navigate to="/" replace />;
 
   const variantQty = selectedSize ? stockFor(stock, selectedSize, selectedColor) : 0;
