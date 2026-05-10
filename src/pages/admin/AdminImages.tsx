@@ -436,8 +436,21 @@ function Workbench() {
                 </button>
               ))}
             </div>
+            <button
+              onClick={() => setCreating(true)}
+              className="ml-auto eyebrow text-[10px] px-3 py-1.5 bg-safety text-bone border border-safety hover:bg-safety-deep inline-flex items-center gap-1.5"
+            >
+              <Plus className="w-3 h-3" /> New product
+            </button>
           </div>
         </div>
+
+        {creating && (
+          <NewProductCard
+            onClose={() => setCreating(false)}
+            onCreate={onCreate}
+          />
+        )}
 
         {loading ? (
           <div className="py-24 text-center text-graphite eyebrow">Loading…</div>
@@ -452,6 +465,8 @@ function Workbench() {
                 onNameChange={onNameChange}
                 onSlugChange={onSlugChange}
                 onColorsChange={onColorsChange}
+                onPriceChange={onPriceChange}
+                onDelete={onDelete}
               />
             ))}
             {!filtered.length && (
