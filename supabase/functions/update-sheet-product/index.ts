@@ -1,5 +1,5 @@
-// Admin-only: updates fields for a single product row in the Google Sheet's
-// `Products` tab, located by its `id` column. Fields = { [headerName]: value }.
+// Admin-only: mutate a single product row in the Google Sheet's `Products` tab.
+// Body: { id, action?: "update" | "create" | "delete", fields?: { [header]: value } }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -59,7 +59,11 @@ Deno.serve(async (req) => {
     });
   }
 
-  let body: { id?: string; fields?: Record<string, string | number | boolean | null> };
+  let body: {
+    id?: string;
+    action?: "update" | "create" | "delete";
+    fields?: Record<string, string | number | boolean | null>;
+  };
   try { body = await req.json(); }
   catch {
     return new Response(JSON.stringify({ error: "Invalid JSON" }), {
@@ -68,9 +72,15 @@ Deno.serve(async (req) => {
   }
 
   const id = body.id?.trim();
+  const action = body.action ?? "update";
   const fields = body.fields ?? {};
-  if (!id || !Object.keys(fields).length) {
-    return new Response(JSON.stringify({ error: "id and at least one field required" }), {
+  if (!id) {
+    return new Response(JSON.stringify({ error: "id required" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (action === "update" && !Object.keys(fields).length) {
+    return new Response(JSON.stringify({ error: "fields required for update" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
@@ -104,6 +114,40 @@ Deno.serve(async (req) => {
     });
   }
   const rowIdx = values.findIndex((row, i) => i > 0 && (row[idCol] ?? "").trim() === id);
+
+  // ============ CREATE ============
+  if (action === "create") {
+    if (rowIdx >= 0) {
+      return new Response(JSON.stringify({ error: `Product ${id} already exists in sheet` }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const newRow = headers.map((h) => {
+      if (h === "id") return id;
+      const v = fields[h];
+      return v == null ? "" : String(v);
+    });
+    const appendUrl = `${GATEWAY_URL}/spreadsheets/${SHEET_ID}/values/Products!A1:append?valueInputOption=USER_ENTERED`;
+    const appendRes = await fetch(appendUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": GOOGLE_SHEETS_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ values: [newRow] }),
+    });
+    if (!appendRes.ok) {
+      const t = await appendRes.text();
+      return new Response(JSON.stringify({ error: `Append failed: [${appendRes.status}] ${t}` }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify({ ok: true, action: "create" }), {
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   if (rowIdx < 0) {
     return new Response(JSON.stringify({ error: `Product ${id} not found in sheet` }), {
       status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -111,6 +155,62 @@ Deno.serve(async (req) => {
   }
   const sheetRow = rowIdx + 1; // 1-based for A1 notation
 
+  // ============ DELETE ============
+  if (action === "delete") {
+    const metaUrl = `${GATEWAY_URL}/spreadsheets/${SHEET_ID}?fields=sheets.properties`;
+    const metaRes = await fetch(metaUrl, {
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": GOOGLE_SHEETS_API_KEY,
+      },
+    });
+    if (!metaRes.ok) {
+      const t = await metaRes.text();
+      return new Response(JSON.stringify({ error: `Meta read failed: [${metaRes.status}] ${t}` }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const meta = await metaRes.json();
+    const productsTab = (meta.sheets ?? []).find((s: any) => s.properties?.title === "Products");
+    const gid = productsTab?.properties?.sheetId;
+    if (gid == null) {
+      return new Response(JSON.stringify({ error: "Products tab not found" }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const delUrl = `${GATEWAY_URL}/spreadsheets/${SHEET_ID}:batchUpdate`;
+    const delRes = await fetch(delUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": GOOGLE_SHEETS_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        requests: [{
+          deleteDimension: {
+            range: {
+              sheetId: gid,
+              dimension: "ROWS",
+              startIndex: rowIdx,
+              endIndex: rowIdx + 1,
+            },
+          },
+        }],
+      }),
+    });
+    if (!delRes.ok) {
+      const t = await delRes.text();
+      return new Response(JSON.stringify({ error: `Delete failed: [${delRes.status}] ${t}` }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify({ ok: true, action: "delete", row: sheetRow }), {
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // ============ UPDATE ============
   // 2. Build per-field cell writes
   const updates: { range: string; values: string[][] }[] = [];
   const skipped: string[] = [];
