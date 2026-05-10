@@ -4,12 +4,16 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ShopFilters, defaultFilters, type FilterState } from "@/components/site/ShopFilters";
-import { getProductsByGender, products as allProducts, type Gender } from "@/data/products";
+import { useProducts, type Gender } from "@/lib/catalog";
 
 export default function Shop() {
   const { gender } = useParams<{ gender: Gender }>();
   const isWomen = gender === "women";
-  const list = useMemo(() => getProductsByGender(isWomen ? "women" : "men"), [isWomen]);
+  const { data: all = [], isLoading } = useProducts();
+  const list = useMemo(
+    () => all.filter((p) => p.gender === (isWomen ? "women" : "men")),
+    [all, isWomen],
+  );
 
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
 
@@ -95,7 +99,9 @@ export default function Shop() {
             </div>
           </div>
 
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <div className="py-24 text-center text-graphite text-sm">Loading…</div>
+          ) : filtered.length === 0 ? (
             <div className="py-24 text-center">
               <div className="eyebrow text-graphite mb-2">No matches</div>
               <p className="text-sm">Try loosening the filters.</p>

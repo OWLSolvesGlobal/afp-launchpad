@@ -5,14 +5,24 @@ import { ChevronRight, Minus, Plus, Truck, RotateCcw, ShieldCheck } from "lucide
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { ProductCard } from "@/components/site/ProductCard";
-import { getProductBySlug, formatPrice, products } from "@/data/products";
+import {
+  formatPrice,
+  useProduct,
+  useProducts,
+  useStock,
+  stockFor,
+  sizeAvailable,
+  colorAvailable,
+} from "@/lib/catalog";
 import { useCart } from "@/context/CartContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const product = slug ? getProductBySlug(slug) : undefined;
+  const { data: product, isLoading } = useProduct(slug);
+  const { data: stock = [] } = useStock(product?.id);
+  const { data: all = [] } = useProducts();
   const { addItem } = useCart();
 
   const [selectedColor, setSelectedColor] = useState(product?.colors[0]?.name ?? "");
@@ -30,16 +40,32 @@ export default function ProductDetail() {
 
   const related = useMemo(() => {
     if (!product) return [];
-    return products
+    return all
       .filter((p) => p.id !== product.id && p.gender === product.gender)
       .slice(0, 4);
-  }, [product?.id]);
+  }, [product?.id, all]);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <Header />
+        <main className="pt-32 container text-center text-graphite text-sm">Loading…</main>
+      </div>
+    );
+  }
   if (!product) return <Navigate to="/" replace />;
+
+  const variantQty = selectedSize ? stockFor(stock, selectedSize, selectedColor) : 0;
+  const lowStock = variantQty > 0 && variantQty < 5;
+  const soldOut = !!selectedSize && variantQty <= 0;
 
   const handleAdd = () => {
     if (!selectedSize) {
       toast.error("Please select a size");
+      return;
+    }
+    if (variantQty < qty) {
+      toast.error(soldOut ? "Sold out" : `Only ${variantQty} left`);
       return;
     }
     addItem(product, { size: selectedSize, color: selectedColor, quantity: qty });
@@ -137,10 +163,11 @@ export default function ProductDetail() {
                     key={c.name}
                     type="button"
                     onClick={() => setSelectedColor(c.name)}
+                    disabled={!colorAvailable(stock, c.name)}
                     title={c.name}
                     aria-label={`Color: ${c.name}`}
                     className={cn(
-                      "w-9 h-9 rounded-full border-2 transition-all",
+                      "w-9 h-9 rounded-full border-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed",
                       selectedColor === c.name
                         ? "border-ink ring-2 ring-ink ring-offset-2 ring-offset-background"
                         : "border-border hover:border-ink"
@@ -165,8 +192,9 @@ export default function ProductDetail() {
                     key={s}
                     type="button"
                     onClick={() => setSelectedSize(s)}
+                    disabled={!sizeAvailable(stock, s)}
                     className={cn(
-                      "h-11 border text-sm font-medium transition-colors",
+                      "h-11 border text-sm font-medium transition-colors disabled:opacity-30 disabled:line-through disabled:cursor-not-allowed",
                       selectedSize === s
                         ? "bg-ink text-bone border-ink"
                         : "bg-background border-border hover:border-ink"
@@ -176,6 +204,12 @@ export default function ProductDetail() {
                   </button>
                 ))}
               </div>
+              {selectedSize && lowStock && (
+                <p className="mt-2 text-xs text-safety">Only {variantQty} left</p>
+              )}
+              {soldOut && (
+                <p className="mt-2 text-xs text-graphite">Sold out in this combo — try another color</p>
+              )}
             </div>
 
             {/* Quantity */}
@@ -206,9 +240,10 @@ export default function ProductDetail() {
             <button
               type="button"
               onClick={handleAdd}
-              className="w-full bg-ink text-bone py-4 eyebrow hover:bg-safety transition-colors mb-3"
+              disabled={soldOut}
+              className="w-full bg-ink text-bone py-4 eyebrow hover:bg-safety transition-colors mb-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-ink"
             >
-              Add to Bag — {formatPrice(product.price * qty)}
+              {soldOut ? "Sold Out" : `Add to Bag — ${formatPrice(product.price * qty)}`}
             </button>
             <Link
               to="/checkout"

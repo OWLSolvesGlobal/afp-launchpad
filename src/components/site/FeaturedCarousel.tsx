@@ -1,10 +1,11 @@
 import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { products } from "@/data/products";
+import { useProducts } from "@/lib/catalog";
 import { ProductCard } from "./ProductCard";
 
 export const FeaturedCarousel = () => {
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const { data: products = [] } = useProducts();
 
   const scrollBy = (dir: 1 | -1) => {
     const el = scrollerRef.current;
@@ -12,15 +13,13 @@ export const FeaturedCarousel = () => {
     el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
   };
 
-  // Pull a featured mix
-  const featured = [
-    products.find((p) => p.id === "w-001")!,
-    products.find((p) => p.id === "m-003")!,
-    products.find((p) => p.id === "w-002")!,
-    products.find((p) => p.id === "m-001")!,
-    products.find((p) => p.id === "w-005")!,
-    products.find((p) => p.id === "m-005")!,
-  ];
+  // Pull a featured mix: prefer badged items, then alternate genders
+  const ranked = [...products].sort((a, b) => {
+    const score = (p: typeof products[number]) =>
+      p.badge === "BESTSELLER" ? 0 : p.badge === "NEW" ? 1 : p.badge ? 2 : 3;
+    return score(a) - score(b);
+  });
+  const featured = ranked.slice(0, 8);
 
   return (
     <section className="bg-[hsl(var(--sand))] text-foreground py-24 md:py-40">
@@ -49,6 +48,7 @@ export const FeaturedCarousel = () => {
         </div>
       </div>
 
+      {featured.length > 0 && (
       <div
         ref={scrollerRef}
         className="flex gap-3 md:gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 px-5 lg:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -62,6 +62,7 @@ export const FeaturedCarousel = () => {
           </div>
         ))}
       </div>
+      )}
     </section>
   );
 };

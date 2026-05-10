@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
-import type { Product } from "@/data/products";
-import { formatPrice } from "@/data/products";
+import type { Product } from "@/lib/catalog";
+import { formatPrice } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
@@ -48,10 +48,6 @@ export const ProductCard = ({ product, index = 0 }: Props) => {
           />
 
           {/* Placeholder tag — visible to admin/dev, easy to spot */}
-          <span className="absolute top-2 left-2 bg-bone/90 backdrop-blur text-ink text-[9px] font-display uppercase tracking-wider px-1.5 py-0.5">
-            {product.tag}
-          </span>
-
           {product.badge && (
             <span
               className={cn(
