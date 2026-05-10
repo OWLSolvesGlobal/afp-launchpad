@@ -238,7 +238,7 @@ function Workbench() {
         .from("products").update({ price_cents: cents }).eq("id", row.id);
       if (error) { update(row.id, { state: "error", err: error.message }); return; }
       try {
-        await pushToSheet(row.id, { price_usd: formatDollars(cents) });
+        await pushToSheet(row.id, { price_bbd: formatDollars(cents) });
       } catch (e: any) {
         update(row.id, {
           priceCents: cents, draftPrice: formatDollars(cents),
@@ -289,7 +289,7 @@ function Workbench() {
         slug,
         gender: draft.gender,
         category: draft.category.trim().toLowerCase() || "uncategorized",
-        price_usd: formatDollars(cents),
+        price_bbd: formatDollars(cents),
         sizes: "",
         colors: "",
         published: "TRUE",
@@ -560,7 +560,7 @@ function ProductRow({
 
         <label className="block">
           <span className="text-[10px] eyebrow text-graphite flex items-center gap-1">
-            <DollarSign className="w-2.5 h-2.5" /> Price (USD)
+            <DollarSign className="w-2.5 h-2.5" /> Price (BBD)
           </span>
           <div className="relative mt-1">
             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-graphite text-sm">$</span>
@@ -749,7 +749,7 @@ function NewProductCard({
         <Input value={draft.category} onChange={(e) => setField("category", e.target.value)} placeholder="e.g. tops" className="mt-1" />
       </label>
       <label className="md:col-span-2 block text-xs">
-        <span className="eyebrow text-[10px] text-graphite">Price (USD)</span>
+        <span className="eyebrow text-[10px] text-graphite">Price (BBD)</span>
         <Input value={draft.priceUsd} onChange={(e) => setField("priceUsd", e.target.value)} inputMode="decimal" placeholder="0.00" className="mt-1 font-mono" />
       </label>
       <div className="md:col-span-4 flex items-center justify-end gap-2">
