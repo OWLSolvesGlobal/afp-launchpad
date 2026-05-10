@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
-  Loader2, Trash2, Star, UploadCloud, Search, Check, AlertCircle, RefreshCw, Pencil, ExternalLink, Boxes, ChevronDown, ChevronUp, Palette,
+  Loader2, Trash2, Star, UploadCloud, Search, Check, AlertCircle, RefreshCw, Pencil, ExternalLink, Boxes, ChevronDown, ChevronUp, Palette, Plus, DollarSign, X,
 } from "lucide-react";
 import { StockGrid } from "@/components/admin/StockGrid";
 import { ColorsEditor, type ColorWay } from "@/components/admin/ColorsEditor";
@@ -24,13 +24,25 @@ interface Row {
   images: string[];
   sizes: string[];
   colors: ColorWay[];
+  priceCents: number;
   busy: boolean;
   // edit state
   draftName: string;
   draftSlug: string;
+  draftPrice: string;       // dollars, free text while editing
   slugTouched: boolean;
   state: SaveState;
   err?: string;
+  deleting?: boolean;
+}
+
+interface NewProductDraft {
+  id: string;
+  name: string;
+  slug: string;
+  gender: "men" | "women";
+  category: string;
+  priceUsd: string;
 }
 
 /** URL-safe slug from a free-form name. */
@@ -55,7 +67,11 @@ async function uploadOne(file: File, token: string): Promise<string> {
   return j.url as string;
 }
 
-async function pushToSheet(id: string, fields: Record<string, string>): Promise<void> {
+async function pushToSheet(
+  id: string,
+  fields: Record<string, string>,
+  action: "update" | "create" | "delete" = "update",
+): Promise<void> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error("Not signed in");
   const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-sheet-product`;
@@ -65,10 +81,19 @@ async function pushToSheet(id: string, fields: Record<string, string>): Promise<
       Authorization: `Bearer ${session.access_token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ id, fields }),
+    body: JSON.stringify({ id, action, fields }),
   });
   const j = await res.json();
   if (!res.ok) throw new Error(j.error || "Sheet write failed");
+}
+
+function formatDollars(cents: number): string {
+  return (cents / 100).toFixed(2);
+}
+function parseDollars(s: string): number | null {
+  const n = Number(s.replace(/[^0-9.]/g, ""));
+  if (!isFinite(n) || n < 0) return null;
+  return Math.round(n * 100);
 }
 
 function Workbench() {
@@ -76,12 +101,13 @@ function Workbench() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"all" | "missing" | "men" | "women">("all");
+  const [creating, setCreating] = useState(false);
 
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("products")
-      .select("id,slug,name,gender,category,images,sizes,colors")
+      .select("id,slug,name,gender,category,images,sizes,colors,price_cents")
       .order("gender")
       .order("id");
     if (error) { toast.error(error.message); setLoading(false); return; }
@@ -90,8 +116,11 @@ function Workbench() {
       images: r.images ?? [],
       sizes: Array.isArray(r.sizes) ? r.sizes : [],
       colors: Array.isArray(r.colors) ? r.colors : [],
+      priceCents: r.price_cents ?? 0,
       busy: false,
-      draftName: r.name, draftSlug: r.slug, slugTouched: false, state: "idle",
+      draftName: r.name, draftSlug: r.slug,
+      draftPrice: formatDollars(r.price_cents ?? 0),
+      slugTouched: false, state: "idle",
     })));
     setLoading(false);
   };
@@ -187,6 +216,107 @@ function Workbench() {
   const onSlugChange = (row: Row, val: string) => {
     update(row.id, { draftSlug: val, slugTouched: true });
     queueSave(row, row.draftName, val);
+  };
+
+  // ============ PRICE SAVE (debounced) ============
+  const priceTimers = useRef<Record<string, number>>({});
+  const onPriceChange = (row: Row, val: string) => {
+    update(row.id, { draftPrice: val, state: "idle" });
+    if (priceTimers.current[row.id]) window.clearTimeout(priceTimers.current[row.id]);
+    priceTimers.current[row.id] = window.setTimeout(async () => {
+      const cents = parseDollars(val);
+      if (cents == null) {
+        update(row.id, { state: "error", err: "Invalid price" });
+        return;
+      }
+      if (cents === row.priceCents) {
+        update(row.id, { state: "idle" });
+        return;
+      }
+      update(row.id, { state: "saving", err: undefined });
+      const { error } = await supabase
+        .from("products").update({ price_cents: cents }).eq("id", row.id);
+      if (error) { update(row.id, { state: "error", err: error.message }); return; }
+      try {
+        await pushToSheet(row.id, { price_usd: formatDollars(cents) });
+      } catch (e: any) {
+        update(row.id, {
+          priceCents: cents, draftPrice: formatDollars(cents),
+          state: "error", err: `Saved on site, sheet failed: ${e.message}`,
+        });
+        return;
+      }
+      update(row.id, { priceCents: cents, draftPrice: formatDollars(cents), state: "saved" });
+      window.setTimeout(() => update(row.id, { state: "idle" }), 1500);
+    }, 700);
+  };
+
+  // ============ DELETE PRODUCT ============
+  const onDelete = async (row: Row) => {
+    if (!window.confirm(`Delete "${row.name}" from the site AND the Google Sheet? This cannot be undone.`)) return;
+    update(row.id, { deleting: true, state: "saving" });
+    // 1. Sheet first — if this fails we keep the DB row so admin can retry.
+    try {
+      await pushToSheet(row.id, {}, "delete");
+    } catch (e: any) {
+      update(row.id, { deleting: false, state: "error", err: `Sheet delete failed: ${e.message}` });
+      return;
+    }
+    // 2. Stock rows
+    await supabase.from("product_stock").delete().eq("product_id", row.id);
+    // 3. Product row
+    const { error } = await supabase.from("products").delete().eq("id", row.id);
+    if (error) {
+      update(row.id, { deleting: false, state: "error", err: error.message });
+      return;
+    }
+    setRows((prev) => prev.filter((r) => r.id !== row.id));
+    toast.success(`Deleted ${row.name}`);
+  };
+
+  // ============ CREATE NEW PRODUCT ============
+  const onCreate = async (draft: NewProductDraft): Promise<boolean> => {
+    const id = draft.id.trim();
+    if (!id || !draft.name.trim()) { toast.error("Name and id required"); return false; }
+    if (rows.some((r) => r.id === id)) { toast.error("That id already exists"); return false; }
+    const cents = parseDollars(draft.priceUsd) ?? 0;
+    const slug = slugify(draft.slug || draft.name);
+
+    // 1. Sheet first — if this fails the next sync would re-introduce drift.
+    try {
+      await pushToSheet(id, {
+        name: draft.name.trim(),
+        slug,
+        gender: draft.gender,
+        category: draft.category.trim().toLowerCase() || "uncategorized",
+        price_usd: formatDollars(cents),
+        sizes: "",
+        colors: "",
+        published: "TRUE",
+      }, "create");
+    } catch (e: any) {
+      toast.error(`Sheet create failed: ${e.message}`);
+      return false;
+    }
+
+    // 2. DB insert
+    const { error } = await supabase.from("products").insert({
+      id,
+      slug,
+      name: draft.name.trim(),
+      gender: draft.gender,
+      category: draft.category.trim().toLowerCase() || "uncategorized",
+      price_cents: cents,
+      colors: [],
+      sizes: [],
+      images: [],
+      published: true,
+    });
+    if (error) { toast.error(`DB insert failed: ${error.message}`); return false; }
+
+    toast.success(`Added ${draft.name}`);
+    await load();
+    return true;
   };
 
   // ============ COLORS ============
@@ -306,8 +436,21 @@ function Workbench() {
                 </button>
               ))}
             </div>
+            <button
+              onClick={() => setCreating(true)}
+              className="ml-auto eyebrow text-[10px] px-3 py-1.5 bg-safety text-bone border border-safety hover:bg-safety-deep inline-flex items-center gap-1.5"
+            >
+              <Plus className="w-3 h-3" /> New product
+            </button>
           </div>
         </div>
+
+        {creating && (
+          <NewProductCard
+            onClose={() => setCreating(false)}
+            onCreate={onCreate}
+          />
+        )}
 
         {loading ? (
           <div className="py-24 text-center text-graphite eyebrow">Loading…</div>
@@ -322,6 +465,8 @@ function Workbench() {
                 onNameChange={onNameChange}
                 onSlugChange={onSlugChange}
                 onColorsChange={onColorsChange}
+                onPriceChange={onPriceChange}
+                onDelete={onDelete}
               />
             ))}
             {!filtered.length && (
@@ -357,7 +502,7 @@ function StateChip({ state, err }: { state: SaveState; err?: string }) {
 }
 
 function ProductRow({
-  row, onFiles, onRemove, onPrimary, onNameChange, onSlugChange, onColorsChange,
+  row, onFiles, onRemove, onPrimary, onNameChange, onSlugChange, onColorsChange, onPriceChange, onDelete,
 }: {
   row: Row;
   onFiles: (row: Row, files: FileList | File[]) => void;
@@ -366,6 +511,8 @@ function ProductRow({
   onNameChange: (row: Row, val: string) => void;
   onSlugChange: (row: Row, val: string) => void;
   onColorsChange: (row: Row, next: ColorWay[]) => void;
+  onPriceChange: (row: Row, val: string) => void;
+  onDelete: (row: Row) => void;
 }) {
   const [dragging, setDragging] = useState(false);
   const [stockOpen, setStockOpen] = useState(false);
@@ -411,7 +558,32 @@ function ProductRow({
           <span className="text-[10px] text-graphite mt-1 block truncate">/product/{row.draftSlug}</span>
         </label>
 
+        <label className="block">
+          <span className="text-[10px] eyebrow text-graphite flex items-center gap-1">
+            <DollarSign className="w-2.5 h-2.5" /> Price (USD)
+          </span>
+          <div className="relative mt-1">
+            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-graphite text-sm">$</span>
+            <Input
+              value={row.draftPrice}
+              inputMode="decimal"
+              onChange={(e) => onPriceChange(row, e.target.value)}
+              className="pl-6 font-mono text-sm"
+            />
+          </div>
+        </label>
+
         <div className="h-4"><StateChip state={row.state} err={row.err} /></div>
+
+        <button
+          type="button"
+          onClick={() => onDelete(row)}
+          disabled={row.deleting}
+          className="eyebrow text-[10px] inline-flex items-center gap-1.5 text-graphite hover:text-safety transition-colors disabled:opacity-50"
+        >
+          {row.deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+          Delete product
+        </button>
       </div>
 
       {/* Right: gallery */}
@@ -509,4 +681,84 @@ function ProductRow({
 
 export default function AdminImages() {
   return <AdminGate><Workbench /></AdminGate>;
+}
+
+function NewProductCard({
+  onClose, onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (draft: NewProductDraft) => Promise<boolean>;
+}) {
+  const [draft, setDraft] = useState<NewProductDraft>({
+    id: "", name: "", slug: "", gender: "women", category: "", priceUsd: "",
+  });
+  const [busy, setBusy] = useState(false);
+
+  const setField = <K extends keyof NewProductDraft>(k: K, v: NewProductDraft[K]) =>
+    setDraft((d) => {
+      const next = { ...d, [k]: v };
+      if (k === "name" && !d.slug) next.slug = slugify(v as string);
+      if (k === "name" && !d.id) next.id = slugify(v as string);
+      return next;
+    });
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const ok = await onCreate(draft);
+    setBusy(false);
+    if (ok) onClose();
+  };
+
+  return (
+    <form
+      onSubmit={submit}
+      className="bg-card border border-safety rounded-sm p-4 mb-4 grid grid-cols-1 md:grid-cols-6 gap-3 items-end"
+    >
+      <div className="md:col-span-6 flex items-center justify-between">
+        <span className="eyebrow text-safety">New product</span>
+        <button type="button" onClick={onClose} className="text-graphite hover:text-ink">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+      <label className="md:col-span-2 block text-xs">
+        <span className="eyebrow text-[10px] text-graphite">Name</span>
+        <Input value={draft.name} onChange={(e) => setField("name", e.target.value)} required className="mt-1" />
+      </label>
+      <label className="block text-xs">
+        <span className="eyebrow text-[10px] text-graphite">ID</span>
+        <Input value={draft.id} onChange={(e) => setField("id", slugify(e.target.value))} required className="mt-1 font-mono" />
+      </label>
+      <label className="block text-xs">
+        <span className="eyebrow text-[10px] text-graphite">Slug</span>
+        <Input value={draft.slug} onChange={(e) => setField("slug", slugify(e.target.value))} className="mt-1 font-mono" />
+      </label>
+      <label className="block text-xs">
+        <span className="eyebrow text-[10px] text-graphite">Gender</span>
+        <select
+          value={draft.gender}
+          onChange={(e) => setField("gender", e.target.value as "men" | "women")}
+          className="mt-1 w-full h-9 px-2 bg-background border border-input rounded-md text-sm"
+        >
+          <option value="women">women</option>
+          <option value="men">men</option>
+        </select>
+      </label>
+      <label className="block text-xs">
+        <span className="eyebrow text-[10px] text-graphite">Category</span>
+        <Input value={draft.category} onChange={(e) => setField("category", e.target.value)} placeholder="e.g. tops" className="mt-1" />
+      </label>
+      <label className="md:col-span-2 block text-xs">
+        <span className="eyebrow text-[10px] text-graphite">Price (USD)</span>
+        <Input value={draft.priceUsd} onChange={(e) => setField("priceUsd", e.target.value)} inputMode="decimal" placeholder="0.00" className="mt-1 font-mono" />
+      </label>
+      <div className="md:col-span-4 flex items-center justify-end gap-2">
+        <Button type="button" variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+        <Button type="submit" size="sm" disabled={busy} className="bg-safety hover:bg-safety-deep text-bone">
+          {busy ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Plus className="w-3 h-3 mr-2" />}
+          Create in site &amp; sheet
+        </Button>
+      </div>
+    </form>
+  );
 }
