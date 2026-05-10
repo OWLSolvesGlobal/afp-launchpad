@@ -10,6 +10,7 @@ import { useCart, formatMoney } from "@/context/CartContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { CheckoutSkeleton } from "@/components/site/skeletons/CheckoutSkeleton";
+import { supabase } from "@/integrations/supabase/client";
 
 type Fulfillment = "delivery" | "pickup";
 
@@ -34,11 +35,37 @@ export default function Checkout() {
   const [fulfillment, setFulfillment] = useState<Fulfillment>("delivery");
   const [pickupLocation, setPickupLocation] = useState(PICKUP_LOCATIONS[0].id);
   const [hydrating, setHydrating] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [creditBalanceCents, setCreditBalanceCents] = useState(0);
+  const [redeemDollars, setRedeemDollars] = useState("");
+  const [code, setCode] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     document.title = "Checkout — Alo Fitness Pro";
     const t = window.setTimeout(() => setHydrating(false), 450);
     return () => window.clearTimeout(t);
+  }, []);
+
+  // Load signed-in user + their available credit balance (sum of unlocked, unexpired entries)
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (cancel) return;
+      if (!session) { setUserId(null); setCreditBalanceCents(0); return; }
+      setUserId(session.user.id);
+      const nowIso = new Date().toISOString();
+      const { data } = await supabase
+        .from("credit_ledger")
+        .select("amount_cents")
+        .eq("user_id", session.user.id)
+        .lte("unlocks_at", nowIso)
+        .gt("expires_at", nowIso);
+      const bal = (data ?? []).reduce((s, r) => s + (r.amount_cents ?? 0), 0);
+      setCreditBalanceCents(Math.max(0, bal));
+    })();
+    return () => { cancel = true; };
   }, []);
 
   const shipping = useMemo(() => {
@@ -48,16 +75,47 @@ export default function Checkout() {
   }, [fulfillment, subtotal]);
 
   const tax = Math.round(subtotal * 0.08);
-  const total = subtotal + shipping + tax;
+  const maxRedeemCents = Math.min(creditBalanceCents, Math.floor(subtotal / 2));
+  const requestedRedeemCents = Math.max(
+    0,
+    Math.min(maxRedeemCents, Math.round((parseFloat(redeemDollars) || 0) * 100))
+  );
+  const total = subtotal + shipping + tax - requestedRedeemCents;
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) return;
+    setSubmitting(true);
+
+    // Only call backend if signed-in AND something credit-related is happening (code or redemption)
+    let resultMsg = "";
+    if (userId && (code.trim() || requestedRedeemCents > 0)) {
+      const { data, error } = await supabase.functions.invoke("apply-checkout", {
+        body: {
+          subtotalCents: subtotal,
+          code: code.trim(),
+          redeemCents: requestedRedeemCents,
+        },
+      });
+      if (error || (data as any)?.error) {
+        setSubmitting(false);
+        return toast.error((data as any)?.error || error?.message || "Checkout failed");
+      }
+      const earned = (data as any).customerEarnedCents ?? 0;
+      const redeemed = (data as any).redeemedCents ?? 0;
+      if (earned > 0) resultMsg = ` You earned $${(earned / 100).toFixed(2)} in store credit.`;
+      else if (redeemed > 0) resultMsg = ` $${(redeemed / 100).toFixed(2)} credit applied.`;
+    } else if (!userId && code.trim()) {
+      setSubmitting(false);
+      return toast.error("Sign in to use a partner code or store credit.");
+    }
+
     toast.success(
-      fulfillment === "pickup"
+      (fulfillment === "pickup"
         ? "Order placed — we'll text you when it's ready for pickup."
-        : "Order placed — confirmation email on the way."
+        : "Order placed — confirmation email on the way.") + resultMsg
     );
+    setSubmitting(false);
     clear();
     navigate("/");
   };
@@ -235,6 +293,45 @@ export default function Checkout() {
                 </div>
               </div>
             </section>
+
+            {/* Code + store credit */}
+            <section>
+              <h2 className="eyebrow text-graphite mb-4">05 — Partner Code &amp; Store Credit</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="code">Partner code (optional)</Label>
+                  <Input
+                    id="code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.toUpperCase())}
+                    placeholder="AP20"
+                    autoCapitalize="characters"
+                  />
+                  <p className="text-[11px] text-graphite mt-2 uppercase tracking-wider">
+                    No upfront discount — you and the influencer each earn credit.
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="redeem">
+                    Redeem store credit{userId ? ` (avail. ${formatMoney(creditBalanceCents)})` : ""}
+                  </Label>
+                  <Input
+                    id="redeem"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    max={maxRedeemCents / 100}
+                    value={redeemDollars}
+                    onChange={(e) => setRedeemDollars(e.target.value)}
+                    disabled={!userId || creditBalanceCents === 0}
+                    placeholder={userId ? `Max ${formatMoney(maxRedeemCents)}` : "Sign in to redeem"}
+                  />
+                  <p className="text-[11px] text-graphite mt-2 uppercase tracking-wider">
+                    Up to 50% of subtotal. Using credit + a code on the same order means only the influencer earns.
+                  </p>
+                </div>
+              </div>
+            </section>
           </div>
 
           {/* RIGHT — order summary */}
@@ -274,6 +371,9 @@ export default function Checkout() {
                   value={shipping === 0 ? "Free" : formatMoney(shipping)}
                 />
                 <Row label="Estimated tax" value={formatMoney(tax)} />
+                {requestedRedeemCents > 0 && (
+                  <Row label="Store credit" value={`-${formatMoney(requestedRedeemCents)}`} />
+                )}
               </div>
 
               <div className="flex items-baseline justify-between pt-3 border-t border-border">
@@ -281,8 +381,8 @@ export default function Checkout() {
                 <span className="font-serif text-3xl">{formatMoney(total)}</span>
               </div>
 
-              <Button type="submit" variant="afp-primary" size="afp" className="w-full">
-                {fulfillment === "pickup" ? "Place Pickup Order" : "Place Order"}
+              <Button type="submit" variant="afp-primary" size="afp" className="w-full" disabled={submitting}>
+                {submitting ? "Placing…" : fulfillment === "pickup" ? "Place Pickup Order" : "Place Order"}
               </Button>
 
               <p className="text-[11px] text-graphite text-center uppercase tracking-wider">
