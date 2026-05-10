@@ -68,6 +68,39 @@ export type Database = {
         }
         Relationships: []
       }
+      influencer_profiles: {
+        Row: {
+          birthday: string | null
+          created_at: string
+          full_name: string | null
+          instagram_handle: string | null
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birthday?: string | null
+          created_at?: string
+          full_name?: string | null
+          instagram_handle?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birthday?: string | null
+          created_at?: string
+          full_name?: string | null
+          instagram_handle?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       partner_codes: {
         Row: {
           active: boolean

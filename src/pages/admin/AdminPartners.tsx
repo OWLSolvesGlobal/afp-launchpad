@@ -5,9 +5,12 @@ import { AdminGate } from "@/components/admin/AdminGate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Trash2, Pause, Play, BadgeDollarSign, Users, Wallet } from "lucide-react";
+import { Trash2, Pause, Play, BadgeDollarSign, Users, Wallet, Pencil, Cake } from "lucide-react";
 import { formatMoney } from "@/context/CartContext";
 
 type Code = {
@@ -29,6 +32,15 @@ type LedgerRow = {
   created_at: string;
 };
 
+type InfluencerProfile = {
+  user_id: string;
+  full_name: string | null;
+  birthday: string | null; // ISO date YYYY-MM-DD
+  instagram_handle: string | null;
+  phone: string | null;
+  notes: string | null;
+};
+
 const VALUES = [1000, 2000, 3000];
 
 export default function AdminPartners() {
@@ -43,6 +55,7 @@ function PartnersInner() {
   const [codes, setCodes] = useState<Code[]>([]);
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
   const [emails, setEmails] = useState<Record<string, string>>({});
+  const [profiles, setProfiles] = useState<Record<string, InfluencerProfile>>({});
   const [loading, setLoading] = useState(true);
 
   // Create-code form
@@ -50,6 +63,10 @@ function PartnersInner() {
   const [email, setEmail] = useState("");
   const [value, setValue] = useState<number>(2000);
   const [note, setNote] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
 
   // Adjust-credit form
@@ -60,6 +77,9 @@ function PartnersInner() {
 
   // Per-influencer payout amount input (keyed by user_id)
   const [payoutDraft, setPayoutDraft] = useState<Record<string, string>>({});
+
+  // Profile editor dialog state
+  const [editing, setEditing] = useState<InfluencerProfile | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -85,6 +105,20 @@ function PartnersInner() {
         body: { user_ids: ids },
       });
       setEmails(emailRes?.emails ?? {});
+
+      // Load any existing influencer profiles
+      const influencerIds = Array.from(new Set(codesData.map((x) => x.influencer_user_id)));
+      if (influencerIds.length > 0) {
+        const { data: profs } = await supabase
+          .from("influencer_profiles")
+          .select("*")
+          .in("user_id", influencerIds);
+        const map: Record<string, InfluencerProfile> = {};
+        for (const p of (profs ?? []) as InfluencerProfile[]) map[p.user_id] = p;
+        setProfiles(map);
+      } else {
+        setProfiles({});
+      }
     }
     setLoading(false);
   };
@@ -161,9 +195,27 @@ function PartnersInner() {
       setBusy(false);
       return toast.error("Influencer must sign up with that email first.");
     }
+    const userId = lookup.data.user_id as string;
+
+    // Upsert profile details (only fields that were filled in)
+    const profilePatch: Partial<InfluencerProfile> & { user_id: string } = { user_id: userId };
+    if (fullName.trim()) profilePatch.full_name = fullName.trim();
+    if (birthday) profilePatch.birthday = birthday;
+    if (instagram.trim()) profilePatch.instagram_handle = instagram.trim().replace(/^@/, "");
+    if (phone.trim()) profilePatch.phone = phone.trim();
+    if (Object.keys(profilePatch).length > 1) {
+      const { error: pErr } = await supabase
+        .from("influencer_profiles")
+        .upsert(profilePatch, { onConflict: "user_id" });
+      if (pErr) {
+        setBusy(false);
+        return toast.error(`Profile save failed: ${pErr.message}`);
+      }
+    }
+
     const { error } = await supabase.from("partner_codes").insert({
       code: trimmedCode,
-      influencer_user_id: lookup.data.user_id,
+      influencer_user_id: userId,
       credit_value_cents: value,
       note: note.trim() || null,
     });
@@ -171,6 +223,7 @@ function PartnersInner() {
     if (error) return toast.error(error.message);
     toast.success(`Code ${trimmedCode} created`);
     setCode(""); setEmail(""); setNote("");
+    setFullName(""); setBirthday(""); setInstagram(""); setPhone("");
     load();
   };
 
@@ -254,6 +307,9 @@ function PartnersInner() {
         {/* Create code */}
         <section className="border border-border p-6 md:p-8 bg-card">
           <h2 className="eyebrow text-graphite mb-4">New Code</h2>
+          <p className="text-xs text-graphite mb-4 max-w-2xl">
+            The influencer must already have a customer account on the storefront. Filling in name, birthday and Instagram is optional but recommended — it'll appear on the influencer roster below for easy reference.
+          </p>
           <form onSubmit={createCode} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
             <div className="md:col-span-3">
               <Label htmlFor="pc">Code</Label>
@@ -278,6 +334,27 @@ function PartnersInner() {
               <Label htmlFor="pn">Note (optional)</Label>
               <Input id="pn" value={note} onChange={(e) => setNote(e.target.value)} placeholder="IG · @handle" />
             </div>
+
+            <div className="md:col-span-12 border-t border-border pt-4 mt-2">
+              <div className="eyebrow text-graphite text-[10px] mb-3">Influencer details (optional)</div>
+            </div>
+            <div className="md:col-span-4">
+              <Label htmlFor="pfn">Full name</Label>
+              <Input id="pfn" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jane Doe" />
+            </div>
+            <div className="md:col-span-2">
+              <Label htmlFor="pbd">Birthday</Label>
+              <Input id="pbd" type="date" value={birthday} onChange={(e) => setBirthday(e.target.value)} />
+            </div>
+            <div className="md:col-span-3">
+              <Label htmlFor="pig">Instagram handle</Label>
+              <Input id="pig" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="@janedoe" />
+            </div>
+            <div className="md:col-span-3">
+              <Label htmlFor="pph">Phone</Label>
+              <Input id="pph" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 246 …" />
+            </div>
+
             <div className="md:col-span-12">
               <Button type="submit" variant="afp-primary" size="afp" disabled={busy}>
                 {busy ? "Creating…" : "Create code"}
@@ -296,19 +373,39 @@ function PartnersInner() {
           ) : (
             <div className="border border-border bg-card divide-y divide-border">
               <div className="hidden md:grid grid-cols-12 gap-3 px-4 py-2 text-[10px] uppercase tracking-[0.24em] text-graphite border-b border-border">
-                <div className="col-span-3">Influencer</div>
+                <div className="col-span-4">Influencer</div>
                 <div className="col-span-2">Codes</div>
                 <div className="col-span-1 text-right">Uses</div>
                 <div className="col-span-1 text-right">Earned</div>
                 <div className="col-span-1 text-right">Paid out</div>
                 <div className="col-span-1 text-right">Owed</div>
-                <div className="col-span-3 text-right">Record payout</div>
+                <div className="col-span-2 text-right">Record payout</div>
               </div>
-              {influencerRows.map((row) => (
+              {influencerRows.map((row) => {
+                const p = profiles[row.user_id];
+                const displayName = p?.full_name || row.email;
+                const bday = p?.birthday ? formatBirthday(p.birthday) : null;
+                return (
                 <div key={row.user_id} className="grid grid-cols-1 md:grid-cols-12 gap-3 px-4 py-4 items-center">
-                  <div className="md:col-span-3 min-w-0">
-                    <div className="text-sm font-medium truncate">{row.email}</div>
-                    <div className="text-[10px] text-graphite font-mono truncate">{row.user_id.slice(0, 8)}…</div>
+                  <div className="md:col-span-4 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-medium truncate">{displayName}</div>
+                      <button
+                        type="button"
+                        onClick={() => setEditing(p ?? { user_id: row.user_id, full_name: null, birthday: null, instagram_handle: null, phone: null, notes: null })}
+                        className="text-graphite hover:text-foreground shrink-0"
+                        aria-label="Edit influencer details"
+                        title="Edit influencer details"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                    </div>
+                    {p?.full_name && <div className="text-[11px] text-graphite truncate">{row.email}</div>}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[11px] text-graphite">
+                      {bday && <span className="inline-flex items-center gap-1"><Cake className="w-3 h-3" />{bday}</span>}
+                      {p?.instagram_handle && <span>@{p.instagram_handle}</span>}
+                      {p?.phone && <span>{p.phone}</span>}
+                    </div>
                   </div>
                   <div className="md:col-span-2 flex flex-wrap gap-1">
                     {row.codes.map((c) => (
@@ -329,7 +426,7 @@ function PartnersInner() {
                   <div className={`md:col-span-1 text-right text-sm tabular-nums font-medium ${row.balance > 0 ? "text-safety" : ""}`}>
                     {formatMoney(row.balance)}
                   </div>
-                  <div className="md:col-span-3 flex items-center gap-2 justify-end">
+                  <div className="md:col-span-2 flex items-center gap-2 justify-end">
                     <Input
                       type="number"
                       min={0}
@@ -347,11 +444,12 @@ function PartnersInner() {
                       disabled={row.balance <= 0}
                       onClick={() => recordPayout(row)}
                     >
-                      Record payout
+                      Pay
                     </Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
           <p className="text-[11px] text-graphite mt-3 uppercase tracking-wider">
@@ -451,7 +549,113 @@ function PartnersInner() {
         </section>
       </main>
       <Footer />
+      <ProfileEditor
+        profile={editing}
+        email={editing ? (emails[editing.user_id] ?? "") : ""}
+        onClose={() => setEditing(null)}
+        onSaved={(p) => {
+          setProfiles((prev) => ({ ...prev, [p.user_id]: p }));
+          setEditing(null);
+          toast.success("Influencer details saved");
+        }}
+      />
     </div>
+  );
+}
+
+function formatBirthday(iso: string): string {
+  // Render as "Mar 14" so the year (often unknown / not relevant) stays out of the way.
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return iso;
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+}
+
+function ProfileEditor({
+  profile, email, onClose, onSaved,
+}: {
+  profile: InfluencerProfile | null;
+  email: string;
+  onClose: () => void;
+  onSaved: (p: InfluencerProfile) => void;
+}) {
+  const [fullName, setFullName] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [phone, setPhone] = useState("");
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setFullName(profile?.full_name ?? "");
+    setBirthday(profile?.birthday ?? "");
+    setInstagram(profile?.instagram_handle ?? "");
+    setPhone(profile?.phone ?? "");
+    setNotes(profile?.notes ?? "");
+  }, [profile]);
+
+  if (!profile) return null;
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const patch = {
+      user_id: profile.user_id,
+      full_name: fullName.trim() || null,
+      birthday: birthday || null,
+      instagram_handle: instagram.trim() ? instagram.trim().replace(/^@/, "") : null,
+      phone: phone.trim() || null,
+      notes: notes.trim() || null,
+    };
+    const { data, error } = await supabase
+      .from("influencer_profiles")
+      .upsert(patch, { onConflict: "user_id" })
+      .select()
+      .single();
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    onSaved(data as InfluencerProfile);
+  };
+
+  return (
+    <Dialog open={!!profile} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Influencer details</DialogTitle>
+          <DialogDescription>{email || "—"}</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={save} className="space-y-4">
+          <div>
+            <Label htmlFor="ef">Full name</Label>
+            <Input id="ef" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jane Doe" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="eb">Birthday</Label>
+              <Input id="eb" type="date" value={birthday} onChange={(e) => setBirthday(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="ep">Phone</Label>
+              <Input id="ep" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 246 …" />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="ei">Instagram handle</Label>
+            <Input id="ei" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="@janedoe" />
+          </div>
+          <div>
+            <Label htmlFor="en">Internal notes</Label>
+            <Input id="en" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Anything to remember" />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose} disabled={busy}>Cancel</Button>
+            <Button type="submit" variant="afp-primary" size="afp" disabled={busy}>
+              {busy ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
