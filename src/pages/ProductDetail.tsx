@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronRight, Minus, Plus, Truck, RotateCcw, ShieldCheck } from "lucide-react";
+import { ChevronRight, ChevronLeft, Minus, Plus, Truck, RotateCcw, ShieldCheck } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { ProductCard } from "@/components/site/ProductCard";
@@ -100,7 +100,7 @@ export default function ProductDetail() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="aspect-[4/5] overflow-hidden bg-muted">
+            <div className="aspect-[4/5] overflow-hidden bg-muted relative group">
               <img
                 src={(product.images[activeImage] ?? product.image)}
                 alt={product.imageAlt}
@@ -108,10 +108,33 @@ export default function ProductDetail() {
                 height={1500}
                 className="w-full h-full object-cover"
               />
+              {product.images.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setActiveImage((i) => (i - 1 + product.images.length) % product.images.length)}
+                    aria-label="Previous image"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center bg-bone/90 text-ink hover:bg-ink hover:text-bone transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveImage((i) => (i + 1) % product.images.length)}
+                    aria-label="Next image"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center bg-bone/90 text-ink hover:bg-ink hover:text-bone transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                  <span className="absolute bottom-3 right-3 bg-ink/80 text-bone text-[10px] eyebrow px-2 py-1">
+                    {activeImage + 1} / {product.images.length}
+                  </span>
+                </>
+              )}
             </div>
             {product.images.length > 1 && (
               <div className="mt-3 grid grid-cols-5 gap-2">
-                {product.images.slice(0, 5).map((src, i) => (
+                {product.images.map((src, i) => (
                   <button
                     key={src + i}
                     type="button"
