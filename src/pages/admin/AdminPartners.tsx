@@ -307,6 +307,9 @@ function PartnersInner() {
         {/* Create code */}
         <section className="border border-border p-6 md:p-8 bg-card">
           <h2 className="eyebrow text-graphite mb-4">New Code</h2>
+          <p className="text-xs text-graphite mb-4 max-w-2xl">
+            The influencer must already have a customer account on the storefront. Filling in name, birthday and Instagram is optional but recommended — it'll appear on the influencer roster below for easy reference.
+          </p>
           <form onSubmit={createCode} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
             <div className="md:col-span-3">
               <Label htmlFor="pc">Code</Label>
@@ -331,6 +334,27 @@ function PartnersInner() {
               <Label htmlFor="pn">Note (optional)</Label>
               <Input id="pn" value={note} onChange={(e) => setNote(e.target.value)} placeholder="IG · @handle" />
             </div>
+
+            <div className="md:col-span-12 border-t border-border pt-4 mt-2">
+              <div className="eyebrow text-graphite text-[10px] mb-3">Influencer details (optional)</div>
+            </div>
+            <div className="md:col-span-4">
+              <Label htmlFor="pfn">Full name</Label>
+              <Input id="pfn" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jane Doe" />
+            </div>
+            <div className="md:col-span-2">
+              <Label htmlFor="pbd">Birthday</Label>
+              <Input id="pbd" type="date" value={birthday} onChange={(e) => setBirthday(e.target.value)} />
+            </div>
+            <div className="md:col-span-3">
+              <Label htmlFor="pig">Instagram handle</Label>
+              <Input id="pig" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="@janedoe" />
+            </div>
+            <div className="md:col-span-3">
+              <Label htmlFor="pph">Phone</Label>
+              <Input id="pph" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 246 …" />
+            </div>
+
             <div className="md:col-span-12">
               <Button type="submit" variant="afp-primary" size="afp" disabled={busy}>
                 {busy ? "Creating…" : "Create code"}
@@ -349,19 +373,39 @@ function PartnersInner() {
           ) : (
             <div className="border border-border bg-card divide-y divide-border">
               <div className="hidden md:grid grid-cols-12 gap-3 px-4 py-2 text-[10px] uppercase tracking-[0.24em] text-graphite border-b border-border">
-                <div className="col-span-3">Influencer</div>
+                <div className="col-span-4">Influencer</div>
                 <div className="col-span-2">Codes</div>
                 <div className="col-span-1 text-right">Uses</div>
                 <div className="col-span-1 text-right">Earned</div>
                 <div className="col-span-1 text-right">Paid out</div>
                 <div className="col-span-1 text-right">Owed</div>
-                <div className="col-span-3 text-right">Record payout</div>
+                <div className="col-span-2 text-right">Record payout</div>
               </div>
-              {influencerRows.map((row) => (
+              {influencerRows.map((row) => {
+                const p = profiles[row.user_id];
+                const displayName = p?.full_name || row.email;
+                const bday = p?.birthday ? formatBirthday(p.birthday) : null;
+                return (
                 <div key={row.user_id} className="grid grid-cols-1 md:grid-cols-12 gap-3 px-4 py-4 items-center">
-                  <div className="md:col-span-3 min-w-0">
-                    <div className="text-sm font-medium truncate">{row.email}</div>
-                    <div className="text-[10px] text-graphite font-mono truncate">{row.user_id.slice(0, 8)}…</div>
+                  <div className="md:col-span-4 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-medium truncate">{displayName}</div>
+                      <button
+                        type="button"
+                        onClick={() => setEditing(p ?? { user_id: row.user_id, full_name: null, birthday: null, instagram_handle: null, phone: null, notes: null })}
+                        className="text-graphite hover:text-foreground shrink-0"
+                        aria-label="Edit influencer details"
+                        title="Edit influencer details"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                    </div>
+                    {p?.full_name && <div className="text-[11px] text-graphite truncate">{row.email}</div>}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[11px] text-graphite">
+                      {bday && <span className="inline-flex items-center gap-1"><Cake className="w-3 h-3" />{bday}</span>}
+                      {p?.instagram_handle && <span>@{p.instagram_handle}</span>}
+                      {p?.phone && <span>{p.phone}</span>}
+                    </div>
                   </div>
                   <div className="md:col-span-2 flex flex-wrap gap-1">
                     {row.codes.map((c) => (
@@ -382,7 +426,7 @@ function PartnersInner() {
                   <div className={`md:col-span-1 text-right text-sm tabular-nums font-medium ${row.balance > 0 ? "text-safety" : ""}`}>
                     {formatMoney(row.balance)}
                   </div>
-                  <div className="md:col-span-3 flex items-center gap-2 justify-end">
+                  <div className="md:col-span-2 flex items-center gap-2 justify-end">
                     <Input
                       type="number"
                       min={0}
@@ -400,11 +444,12 @@ function PartnersInner() {
                       disabled={row.balance <= 0}
                       onClick={() => recordPayout(row)}
                     >
-                      Record payout
+                      Pay
                     </Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
           <p className="text-[11px] text-graphite mt-3 uppercase tracking-wider">
