@@ -26,7 +26,8 @@ export interface StockEntry {
   quantity: number;
 }
 
-export const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+export const formatPrice = (cents: number) =>
+  new Intl.NumberFormat("en-BB", { style: "currency", currency: "BBD" }).format(cents / 100);
 
 const mapProduct = (row: any): Product => {
   const images: string[] = Array.isArray(row.images) && row.images.length
