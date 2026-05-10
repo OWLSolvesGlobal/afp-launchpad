@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
-  Loader2, Trash2, Star, UploadCloud, Search, Check, AlertCircle, RefreshCw, Pencil, ExternalLink, Boxes, ChevronDown, ChevronUp, Palette,
+  Loader2, Trash2, Star, UploadCloud, Search, Check, AlertCircle, RefreshCw, Pencil, ExternalLink, Boxes, ChevronDown, ChevronUp, Palette, Plus, DollarSign, X,
 } from "lucide-react";
 import { StockGrid } from "@/components/admin/StockGrid";
 import { ColorsEditor, type ColorWay } from "@/components/admin/ColorsEditor";
@@ -24,13 +24,16 @@ interface Row {
   images: string[];
   sizes: string[];
   colors: ColorWay[];
+  priceCents: number;
   busy: boolean;
   // edit state
   draftName: string;
   draftSlug: string;
+  draftPrice: string;       // dollars, free text while editing
   slugTouched: boolean;
   state: SaveState;
   err?: string;
+  deleting?: boolean;
 }
 
 /** URL-safe slug from a free-form name. */
@@ -55,7 +58,11 @@ async function uploadOne(file: File, token: string): Promise<string> {
   return j.url as string;
 }
 
-async function pushToSheet(id: string, fields: Record<string, string>): Promise<void> {
+async function pushToSheet(
+  id: string,
+  fields: Record<string, string>,
+  action: "update" | "create" | "delete" = "update",
+): Promise<void> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error("Not signed in");
   const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-sheet-product`;
@@ -65,10 +72,19 @@ async function pushToSheet(id: string, fields: Record<string, string>): Promise<
       Authorization: `Bearer ${session.access_token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ id, fields }),
+    body: JSON.stringify({ id, action, fields }),
   });
   const j = await res.json();
   if (!res.ok) throw new Error(j.error || "Sheet write failed");
+}
+
+function formatDollars(cents: number): string {
+  return (cents / 100).toFixed(2);
+}
+function parseDollars(s: string): number | null {
+  const n = Number(s.replace(/[^0-9.]/g, ""));
+  if (!isFinite(n) || n < 0) return null;
+  return Math.round(n * 100);
 }
 
 function Workbench() {
@@ -76,12 +92,13 @@ function Workbench() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"all" | "missing" | "men" | "women">("all");
+  const [creating, setCreating] = useState(false);
 
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("products")
-      .select("id,slug,name,gender,category,images,sizes,colors")
+      .select("id,slug,name,gender,category,images,sizes,colors,price_cents")
       .order("gender")
       .order("id");
     if (error) { toast.error(error.message); setLoading(false); return; }
@@ -90,8 +107,11 @@ function Workbench() {
       images: r.images ?? [],
       sizes: Array.isArray(r.sizes) ? r.sizes : [],
       colors: Array.isArray(r.colors) ? r.colors : [],
+      priceCents: r.price_cents ?? 0,
       busy: false,
-      draftName: r.name, draftSlug: r.slug, slugTouched: false, state: "idle",
+      draftName: r.name, draftSlug: r.slug,
+      draftPrice: formatDollars(r.price_cents ?? 0),
+      slugTouched: false, state: "idle",
     })));
     setLoading(false);
   };
@@ -187,6 +207,107 @@ function Workbench() {
   const onSlugChange = (row: Row, val: string) => {
     update(row.id, { draftSlug: val, slugTouched: true });
     queueSave(row, row.draftName, val);
+  };
+
+  // ============ PRICE SAVE (debounced) ============
+  const priceTimers = useRef<Record<string, number>>({});
+  const onPriceChange = (row: Row, val: string) => {
+    update(row.id, { draftPrice: val, state: "idle" });
+    if (priceTimers.current[row.id]) window.clearTimeout(priceTimers.current[row.id]);
+    priceTimers.current[row.id] = window.setTimeout(async () => {
+      const cents = parseDollars(val);
+      if (cents == null) {
+        update(row.id, { state: "error", err: "Invalid price" });
+        return;
+      }
+      if (cents === row.priceCents) {
+        update(row.id, { state: "idle" });
+        return;
+      }
+      update(row.id, { state: "saving", err: undefined });
+      const { error } = await supabase
+        .from("products").update({ price_cents: cents }).eq("id", row.id);
+      if (error) { update(row.id, { state: "error", err: error.message }); return; }
+      try {
+        await pushToSheet(row.id, { price_usd: formatDollars(cents) });
+      } catch (e: any) {
+        update(row.id, {
+          priceCents: cents, draftPrice: formatDollars(cents),
+          state: "error", err: `Saved on site, sheet failed: ${e.message}`,
+        });
+        return;
+      }
+      update(row.id, { priceCents: cents, draftPrice: formatDollars(cents), state: "saved" });
+      window.setTimeout(() => update(row.id, { state: "idle" }), 1500);
+    }, 700);
+  };
+
+  // ============ DELETE PRODUCT ============
+  const onDelete = async (row: Row) => {
+    if (!window.confirm(`Delete "${row.name}" from the site AND the Google Sheet? This cannot be undone.`)) return;
+    update(row.id, { deleting: true, state: "saving" });
+    // 1. Sheet first — if this fails we keep the DB row so admin can retry.
+    try {
+      await pushToSheet(row.id, {}, "delete");
+    } catch (e: any) {
+      update(row.id, { deleting: false, state: "error", err: `Sheet delete failed: ${e.message}` });
+      return;
+    }
+    // 2. Stock rows
+    await supabase.from("product_stock").delete().eq("product_id", row.id);
+    // 3. Product row
+    const { error } = await supabase.from("products").delete().eq("id", row.id);
+    if (error) {
+      update(row.id, { deleting: false, state: "error", err: error.message });
+      return;
+    }
+    setRows((prev) => prev.filter((r) => r.id !== row.id));
+    toast.success(`Deleted ${row.name}`);
+  };
+
+  // ============ CREATE NEW PRODUCT ============
+  const onCreate = async (draft: NewProductDraft): Promise<boolean> => {
+    const id = draft.id.trim();
+    if (!id || !draft.name.trim()) { toast.error("Name and id required"); return false; }
+    if (rows.some((r) => r.id === id)) { toast.error("That id already exists"); return false; }
+    const cents = parseDollars(draft.priceUsd) ?? 0;
+    const slug = slugify(draft.slug || draft.name);
+
+    // 1. Sheet first — if this fails the next sync would re-introduce drift.
+    try {
+      await pushToSheet(id, {
+        name: draft.name.trim(),
+        slug,
+        gender: draft.gender,
+        category: draft.category.trim().toLowerCase() || "uncategorized",
+        price_usd: formatDollars(cents),
+        sizes: "",
+        colors: "",
+        published: "TRUE",
+      }, "create");
+    } catch (e: any) {
+      toast.error(`Sheet create failed: ${e.message}`);
+      return false;
+    }
+
+    // 2. DB insert
+    const { error } = await supabase.from("products").insert({
+      id,
+      slug,
+      name: draft.name.trim(),
+      gender: draft.gender,
+      category: draft.category.trim().toLowerCase() || "uncategorized",
+      price_cents: cents,
+      colors: [],
+      sizes: [],
+      images: [],
+      published: true,
+    });
+    if (error) { toast.error(`DB insert failed: ${error.message}`); return false; }
+
+    toast.success(`Added ${draft.name}`);
+    await load();
+    return true;
   };
 
   // ============ COLORS ============
