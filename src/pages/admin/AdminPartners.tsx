@@ -5,9 +5,12 @@ import { AdminGate } from "@/components/admin/AdminGate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Trash2, Pause, Play, BadgeDollarSign, Users, Wallet } from "lucide-react";
+import { Trash2, Pause, Play, BadgeDollarSign, Users, Wallet, Pencil, Cake } from "lucide-react";
 import { formatMoney } from "@/context/CartContext";
 
 type Code = {
@@ -29,6 +32,15 @@ type LedgerRow = {
   created_at: string;
 };
 
+type InfluencerProfile = {
+  user_id: string;
+  full_name: string | null;
+  birthday: string | null; // ISO date YYYY-MM-DD
+  instagram_handle: string | null;
+  phone: string | null;
+  notes: string | null;
+};
+
 const VALUES = [1000, 2000, 3000];
 
 export default function AdminPartners() {
@@ -43,6 +55,7 @@ function PartnersInner() {
   const [codes, setCodes] = useState<Code[]>([]);
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
   const [emails, setEmails] = useState<Record<string, string>>({});
+  const [profiles, setProfiles] = useState<Record<string, InfluencerProfile>>({});
   const [loading, setLoading] = useState(true);
 
   // Create-code form
@@ -50,6 +63,10 @@ function PartnersInner() {
   const [email, setEmail] = useState("");
   const [value, setValue] = useState<number>(2000);
   const [note, setNote] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
 
   // Adjust-credit form
@@ -60,6 +77,9 @@ function PartnersInner() {
 
   // Per-influencer payout amount input (keyed by user_id)
   const [payoutDraft, setPayoutDraft] = useState<Record<string, string>>({});
+
+  // Profile editor dialog state
+  const [editing, setEditing] = useState<InfluencerProfile | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -85,6 +105,20 @@ function PartnersInner() {
         body: { user_ids: ids },
       });
       setEmails(emailRes?.emails ?? {});
+
+      // Load any existing influencer profiles
+      const influencerIds = Array.from(new Set(codesData.map((x) => x.influencer_user_id)));
+      if (influencerIds.length > 0) {
+        const { data: profs } = await supabase
+          .from("influencer_profiles")
+          .select("*")
+          .in("user_id", influencerIds);
+        const map: Record<string, InfluencerProfile> = {};
+        for (const p of (profs ?? []) as InfluencerProfile[]) map[p.user_id] = p;
+        setProfiles(map);
+      } else {
+        setProfiles({});
+      }
     }
     setLoading(false);
   };
@@ -161,9 +195,27 @@ function PartnersInner() {
       setBusy(false);
       return toast.error("Influencer must sign up with that email first.");
     }
+    const userId = lookup.data.user_id as string;
+
+    // Upsert profile details (only fields that were filled in)
+    const profilePatch: Partial<InfluencerProfile> & { user_id: string } = { user_id: userId };
+    if (fullName.trim()) profilePatch.full_name = fullName.trim();
+    if (birthday) profilePatch.birthday = birthday;
+    if (instagram.trim()) profilePatch.instagram_handle = instagram.trim().replace(/^@/, "");
+    if (phone.trim()) profilePatch.phone = phone.trim();
+    if (Object.keys(profilePatch).length > 1) {
+      const { error: pErr } = await supabase
+        .from("influencer_profiles")
+        .upsert(profilePatch, { onConflict: "user_id" });
+      if (pErr) {
+        setBusy(false);
+        return toast.error(`Profile save failed: ${pErr.message}`);
+      }
+    }
+
     const { error } = await supabase.from("partner_codes").insert({
       code: trimmedCode,
-      influencer_user_id: lookup.data.user_id,
+      influencer_user_id: userId,
       credit_value_cents: value,
       note: note.trim() || null,
     });
@@ -171,6 +223,7 @@ function PartnersInner() {
     if (error) return toast.error(error.message);
     toast.success(`Code ${trimmedCode} created`);
     setCode(""); setEmail(""); setNote("");
+    setFullName(""); setBirthday(""); setInstagram(""); setPhone("");
     load();
   };
 
