@@ -31,7 +31,9 @@ Deno.serve(async (req) => {
     const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
     if (error) return json({ error: error.message }, 500);
     const match = data.users.find((u) => (u.email ?? "").toLowerCase() === email.toLowerCase());
-    if (!match) return json({ error: "Not found" }, 404);
+    // Return 200 with null so the client can handle "not signed up yet" without
+    // supabase-js wrapping a 404 into a generic FunctionsHttpError.
+    if (!match) return json({ user_id: null });
     return json({ user_id: match.id });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
