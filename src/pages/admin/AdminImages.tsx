@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type DragEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
@@ -6,7 +6,7 @@ import { AdminGate } from "@/components/admin/AdminGate";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ImageIcon, Loader2, Trash2, Star, GripVertical, UploadCloud } from "lucide-react";
+import { Loader2, Trash2, Star, UploadCloud } from "lucide-react";
 
 interface Row {
   id: string;
@@ -146,7 +146,7 @@ function ProductRow({
   onPrimary: (row: Row, idx: number) => void;
 }) {
   const [dragging, setDragging] = useState(false);
-  const onDrop = (e: DragEvent<HTMLDivElement>) => {
+  const onDrop = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     setDragging(false);
     if (e.dataTransfer.files?.length) onFiles(row, e.dataTransfer.files);
