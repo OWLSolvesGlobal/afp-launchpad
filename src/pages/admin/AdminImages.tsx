@@ -456,6 +456,26 @@ function Workbench() {
             >
               <Plus className="w-3 h-3" /> New product
             </button>
+            <div className="flex border border-border" role="group" aria-label="View mode">
+              <button
+                type="button"
+                onClick={() => setView("grid")}
+                aria-pressed={view === "grid"}
+                title="Grid view"
+                className={`p-1.5 ${view === "grid" ? "bg-ink text-bone" : "text-graphite hover:text-ink"}`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("list")}
+                aria-pressed={view === "list"}
+                title="List view"
+                className={`p-1.5 border-l border-border ${view === "list" ? "bg-ink text-bone" : "text-graphite hover:text-ink"}`}
+              >
+                <ListIcon className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -468,7 +488,7 @@ function Workbench() {
 
         {loading ? (
           <div className="py-24 text-center text-graphite eyebrow">Loading…</div>
-        ) : (
+        ) : view === "list" ? (
           <ul className="space-y-3">
             {filtered.map((row) => (
               <ProductRow
@@ -489,6 +509,41 @@ function Workbench() {
               </li>
             )}
           </ul>
+        ) : (
+          <>
+            <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {filtered.map((row) => (
+                <ProductTile
+                  key={row.id}
+                  row={row}
+                  expanded={expanded.has(row.id)}
+                  onToggle={() => toggleExpanded(row.id)}
+                />
+              ))}
+              {!filtered.length && (
+                <li className="col-span-full py-16 text-center text-sm text-graphite border border-dashed border-border">
+                  Nothing matches.
+                </li>
+              )}
+            </ul>
+            {filtered
+              .filter((r) => expanded.has(r.id))
+              .map((row) => (
+                <div key={`exp-${row.id}`} className="mt-4">
+                  <ProductRow
+                    row={row}
+                    onFiles={handleFiles}
+                    onRemove={removeAt}
+                    onPrimary={makePrimary}
+                    onNameChange={onNameChange}
+                    onSlugChange={onSlugChange}
+                    onColorsChange={onColorsChange}
+                    onPriceChange={onPriceChange}
+                    onDelete={onDelete}
+                  />
+                </div>
+              ))}
+          </>
         )}
       </main>
       <Footer />
