@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { Product } from "@/data/products";
+import type { Product } from "@/lib/catalog";
 
 export interface CartItem {
   id: string; // composite: product.id + size + color
