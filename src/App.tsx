@@ -18,6 +18,7 @@ import AdminImages from "./pages/admin/AdminImages.tsx";
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/site/CartDrawer";
 import { ScrollToTop } from "@/components/site/ScrollToTop";
+import { RouteProgress } from "@/components/site/RouteProgress";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
       <BrowserRouter>
         <CartProvider>
           <ScrollToTop />
+          <RouteProgress />
           {/* Skip link for keyboard / screen reader users (WCAG 2.4.1) */}
           <a
             href="#main"
