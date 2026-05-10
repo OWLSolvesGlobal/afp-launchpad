@@ -1,1 +1,7 @@
 project_id = "erwdivqssbceqvysvwky"
+
+[functions.sync-products]
+verify_jwt = false
+
+[functions.upload-product-image]
+verify_jwt = false
