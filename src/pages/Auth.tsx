@@ -7,6 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { landingPathForRole } from "@/hooks/useUserRole";
+
+async function destinationForUser(userId: string) {
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
+  return landingPathForRole(!!data);
+}
 
 export default function Auth() {
   const nav = useNavigate();
@@ -17,8 +28,11 @@ export default function Auth() {
 
   useEffect(() => {
     document.title = "Sign in — AFP";
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) nav("/admin/sync", { replace: true });
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session) {
+        const to = await destinationForUser(data.session.user.id);
+        nav(to, { replace: true });
+      }
     });
   }, [nav]);
 
@@ -29,15 +43,16 @@ export default function Auth() {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email, password,
-          options: { emailRedirectTo: `${window.location.origin}/admin/sync` },
+          options: { emailRedirectTo: `${window.location.origin}/auth` },
         });
         if (error) throw error;
         toast.success("Account created. Check your email to confirm.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data: signed, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Signed in");
-        nav("/admin/sync", { replace: true });
+        const to = signed.user ? await destinationForUser(signed.user.id) : "/";
+        nav(to, { replace: true });
       }
     } catch (err: any) {
       toast.error(err.message ?? "Auth failed");
