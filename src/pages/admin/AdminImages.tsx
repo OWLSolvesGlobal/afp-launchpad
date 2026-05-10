@@ -570,6 +570,66 @@ function StateChip({ state, err }: { state: SaveState; err?: string }) {
   return null;
 }
 
+function ProductTile({
+  row, expanded, onToggle,
+}: {
+  row: Row;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const cover = row.images[0];
+  const priceUsd = (row.priceCents / 100).toFixed(2);
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className={`group w-full text-left bg-card border ${
+          expanded ? "border-ink ring-1 ring-ink" : "border-border hover:border-ink/60"
+        } transition-colors`}
+      >
+        <div className="aspect-square bg-muted relative overflow-hidden">
+          {cover ? (
+            <img
+              src={cover}
+              alt={row.name}
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <div className="absolute inset-0 grid place-items-center text-graphite text-[10px] eyebrow">
+              No image
+            </div>
+          )}
+          {row.images.length > 1 && (
+            <span className="absolute top-1.5 right-1.5 bg-ink/80 text-bone text-[9px] eyebrow px-1.5 py-0.5">
+              {row.images.length}
+            </span>
+          )}
+          {row.state === "saving" && (
+            <span className="absolute bottom-1.5 left-1.5 bg-background/90 px-1.5 py-0.5">
+              <Loader2 className="w-3 h-3 animate-spin" />
+            </span>
+          )}
+        </div>
+        <div className="p-2">
+          <div className="text-[9px] eyebrow text-graphite truncate">
+            {row.gender} · {row.category}
+          </div>
+          <div className="text-xs font-medium truncate mt-0.5">{row.name || row.id}</div>
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-[10px] text-graphite">${priceUsd}</span>
+            <span className="text-[9px] eyebrow text-safety inline-flex items-center gap-0.5">
+              {expanded ? <><ChevronUp className="w-2.5 h-2.5" /> close</> : <><Pencil className="w-2.5 h-2.5" /> edit</>}
+            </span>
+          </div>
+        </div>
+      </button>
+    </li>
+  );
+}
+
 function ProductRow({
   row, onFiles, onRemove, onPrimary, onNameChange, onSlugChange, onColorsChange, onPriceChange, onDelete,
 }: {
