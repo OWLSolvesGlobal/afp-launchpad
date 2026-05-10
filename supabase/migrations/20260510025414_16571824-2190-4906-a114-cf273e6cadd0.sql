@@ -1,0 +1,1 @@
+drop policy if exists "Authenticated can read active codes" on public.partner_codes;
