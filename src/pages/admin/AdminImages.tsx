@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
-  Loader2, Trash2, Star, UploadCloud, Search, Check, AlertCircle, RefreshCw, Pencil, ExternalLink, Boxes, ChevronDown, ChevronUp, Palette, Plus, DollarSign, X,
+  Loader2, Trash2, Star, UploadCloud, Search, Check, AlertCircle, RefreshCw, Pencil, ExternalLink, Boxes, ChevronDown, ChevronUp, Palette, Plus, DollarSign, X, LayoutGrid, List as ListIcon,
 } from "lucide-react";
 import { StockGrid } from "@/components/admin/StockGrid";
 import { ColorsEditor, type ColorWay } from "@/components/admin/ColorsEditor";
@@ -102,6 +102,20 @@ function Workbench() {
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"all" | "missing" | "men" | "women">("all");
   const [creating, setCreating] = useState(false);
+  const [view, setView] = useState<"grid" | "list">(() => {
+    if (typeof window === "undefined") return "grid";
+    return (localStorage.getItem("admin-products-view") as "grid" | "list") || "grid";
+  });
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    try { localStorage.setItem("admin-products-view", view); } catch { /* noop */ }
+  }, [view]);
+  const toggleExpanded = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
 
   const load = async () => {
     setLoading(true);
