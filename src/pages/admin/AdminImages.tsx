@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
-  Loader2, Trash2, Star, UploadCloud, Search, Check, AlertCircle, RefreshCw, Pencil, ExternalLink,
+  Loader2, Trash2, Star, UploadCloud, Search, Check, AlertCircle, RefreshCw, Pencil, ExternalLink, Boxes, ChevronDown, ChevronUp,
 } from "lucide-react";
+import { StockGrid } from "@/components/admin/StockGrid";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -20,6 +21,8 @@ interface Row {
   gender: string;
   category: string;
   images: string[];
+  sizes: string[];
+  colors: { name: string; hex?: string }[];
   busy: boolean;
   // edit state
   draftName: string;
@@ -77,13 +80,16 @@ function Workbench() {
     setLoading(true);
     const { data, error } = await supabase
       .from("products")
-      .select("id,slug,name,gender,category,images")
+      .select("id,slug,name,gender,category,images,sizes,colors")
       .order("gender")
       .order("id");
     if (error) { toast.error(error.message); setLoading(false); return; }
     setRows((data ?? []).map((r: any): Row => ({
       id: r.id, slug: r.slug, name: r.name, gender: r.gender, category: r.category,
-      images: r.images ?? [], busy: false,
+      images: r.images ?? [],
+      sizes: Array.isArray(r.sizes) ? r.sizes : [],
+      colors: Array.isArray(r.colors) ? r.colors : [],
+      busy: false,
       draftName: r.name, draftSlug: r.slug, slugTouched: false, state: "idle",
     })));
     setLoading(false);
