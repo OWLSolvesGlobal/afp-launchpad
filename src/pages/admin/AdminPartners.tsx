@@ -549,7 +549,113 @@ function PartnersInner() {
         </section>
       </main>
       <Footer />
+      <ProfileEditor
+        profile={editing}
+        email={editing ? (emails[editing.user_id] ?? "") : ""}
+        onClose={() => setEditing(null)}
+        onSaved={(p) => {
+          setProfiles((prev) => ({ ...prev, [p.user_id]: p }));
+          setEditing(null);
+          toast.success("Influencer details saved");
+        }}
+      />
     </div>
+  );
+}
+
+function formatBirthday(iso: string): string {
+  // Render as "Mar 14" so the year (often unknown / not relevant) stays out of the way.
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return iso;
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+}
+
+function ProfileEditor({
+  profile, email, onClose, onSaved,
+}: {
+  profile: InfluencerProfile | null;
+  email: string;
+  onClose: () => void;
+  onSaved: (p: InfluencerProfile) => void;
+}) {
+  const [fullName, setFullName] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [phone, setPhone] = useState("");
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setFullName(profile?.full_name ?? "");
+    setBirthday(profile?.birthday ?? "");
+    setInstagram(profile?.instagram_handle ?? "");
+    setPhone(profile?.phone ?? "");
+    setNotes(profile?.notes ?? "");
+  }, [profile]);
+
+  if (!profile) return null;
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const patch = {
+      user_id: profile.user_id,
+      full_name: fullName.trim() || null,
+      birthday: birthday || null,
+      instagram_handle: instagram.trim() ? instagram.trim().replace(/^@/, "") : null,
+      phone: phone.trim() || null,
+      notes: notes.trim() || null,
+    };
+    const { data, error } = await supabase
+      .from("influencer_profiles")
+      .upsert(patch, { onConflict: "user_id" })
+      .select()
+      .single();
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    onSaved(data as InfluencerProfile);
+  };
+
+  return (
+    <Dialog open={!!profile} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Influencer details</DialogTitle>
+          <DialogDescription>{email || "—"}</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={save} className="space-y-4">
+          <div>
+            <Label htmlFor="ef">Full name</Label>
+            <Input id="ef" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jane Doe" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="eb">Birthday</Label>
+              <Input id="eb" type="date" value={birthday} onChange={(e) => setBirthday(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="ep">Phone</Label>
+              <Input id="ep" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 246 …" />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="ei">Instagram handle</Label>
+            <Input id="ei" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="@janedoe" />
+          </div>
+          <div>
+            <Label htmlFor="en">Internal notes</Label>
+            <Input id="en" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Anything to remember" />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose} disabled={busy}>Cancel</Button>
+            <Button type="submit" variant="afp-primary" size="afp" disabled={busy}>
+              {busy ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
