@@ -384,11 +384,35 @@ function PartnersInner() {
           <form onSubmit={createCode} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
             <div className="md:col-span-3">
               <Label htmlFor="pc">Code</Label>
-              <Input id="pc" value={code} onChange={(e) => setCode(e.target.value)} placeholder="AP20" />
+              <Input
+                id="pc"
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase().replace(/\s+/g, ""))}
+                placeholder="AP20"
+                autoCapitalize="characters"
+              />
             </div>
             <div className="md:col-span-4">
-              <Label htmlFor="pe">Influencer email</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="pe">Influencer email</Label>
+                <span className="text-[10px] uppercase tracking-wider text-graphite">
+                  {lookup.status === "checking" && "Checking…"}
+                  {lookup.status === "found" && <span className="text-safety">Account found</span>}
+                  {lookup.status === "missing" && <span className="text-destructive">Needs signup</span>}
+                  {lookup.status === "error" && <span className="text-destructive">Lookup error</span>}
+                </span>
+              </div>
               <Input id="pe" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="they@signedup.com" />
+              {lookup.status === "missing" && (
+                <div className="text-[11px] text-graphite mt-1">
+                  Ask them to create an account at the storefront sign-up, then come back.
+                </div>
+              )}
+              {lookup.status === "found" && lookup.profile && (
+                <div className="text-[11px] text-graphite mt-1">
+                  Existing influencer — details prefilled below.
+                </div>
+              )}
             </div>
             <div className="md:col-span-2">
               <Label htmlFor="pv">Value</Label>
@@ -427,7 +451,12 @@ function PartnersInner() {
             </div>
 
             <div className="md:col-span-12">
-              <Button type="submit" variant="afp-primary" size="afp" disabled={busy}>
+              <Button
+                type="submit"
+                variant="afp-primary"
+                size="afp"
+                disabled={busy || lookup.status === "checking" || lookup.status === "missing"}
+              >
                 {busy ? "Creating…" : "Create code"}
               </Button>
             </div>
