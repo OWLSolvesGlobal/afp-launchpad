@@ -111,10 +111,21 @@ function PartnersInner() {
       new Set([...codesData.map((x) => x.influencer_user_id), ...ledgerData.map((x) => x.user_id)])
     );
     if (ids.length > 0) {
-      const { data: emailRes } = await supabase.functions.invoke("list-user-emails", {
-        body: { user_ids: ids },
-      });
-      setEmails(emailRes?.emails ?? {});
+      try {
+        const { data: emailRes, error: emailErr } = await supabase.functions.invoke(
+          "list-user-emails",
+          { body: { user_ids: ids } },
+        );
+        if (emailErr) {
+          console.warn("list-user-emails failed:", emailErr.message);
+          setEmails({});
+        } else {
+          setEmails(emailRes?.emails ?? {});
+        }
+      } catch (e) {
+        console.warn("list-user-emails threw:", (e as Error).message);
+        setEmails({});
+      }
 
       // Load any existing influencer profiles
       const influencerIds = Array.from(new Set(codesData.map((x) => x.influencer_user_id)));
