@@ -28,6 +28,7 @@ export default function ProductDetail() {
   const [selectedColor, setSelectedColor] = useState(product?.colors[0]?.name ?? "");
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [qty, setQty] = useState(1);
+  const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
     if (!product) return;
@@ -35,6 +36,7 @@ export default function ProductDetail() {
     setSelectedColor(product.colors[0]?.name ?? "");
     setSelectedSize("");
     setQty(1);
+    setActiveImage(0);
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }, [product?.id]);
 
@@ -97,17 +99,34 @@ export default function ProductDetail() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="bg-muted"
           >
-            <div className="aspect-[4/5] overflow-hidden">
+            <div className="aspect-[4/5] overflow-hidden bg-muted">
               <img
-                src={product.image}
+                src={(product.images[activeImage] ?? product.image)}
                 alt={product.imageAlt}
                 width={1200}
                 height={1500}
                 className="w-full h-full object-cover"
               />
             </div>
+            {product.images.length > 1 && (
+              <div className="mt-3 grid grid-cols-5 gap-2">
+                {product.images.slice(0, 5).map((src, i) => (
+                  <button
+                    key={src + i}
+                    type="button"
+                    onClick={() => setActiveImage(i)}
+                    aria-label={`View image ${i + 1}`}
+                    className={cn(
+                      "aspect-square overflow-hidden bg-muted border-2 transition-colors",
+                      i === activeImage ? "border-ink" : "border-transparent hover:border-border"
+                    )}
+                  >
+                    <img src={src} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* Details */}
