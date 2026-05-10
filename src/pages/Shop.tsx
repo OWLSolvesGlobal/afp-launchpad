@@ -5,6 +5,7 @@ import { Footer } from "@/components/site/Footer";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ShopFilters, defaultFilters, type FilterState } from "@/components/site/ShopFilters";
 import { useProducts, type Gender } from "@/lib/catalog";
+import { ShopSkeleton } from "@/components/site/skeletons/ShopSkeleton";
 
 export default function Shop() {
   const { gender } = useParams<{ gender: Gender }>();
@@ -62,6 +63,8 @@ export default function Shop() {
     return out;
   }, [list, filters]);
 
+  if (isLoading) return <ShopSkeleton isWomen={isWomen} />;
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -99,9 +102,7 @@ export default function Shop() {
             </div>
           </div>
 
-          {isLoading ? (
-            <div className="py-24 text-center text-graphite text-sm">Loading…</div>
-          ) : filtered.length === 0 ? (
+          {filtered.length === 0 ? (
             <div className="py-24 text-center">
               <div className="eyebrow text-graphite mb-2">No matches</div>
               <p className="text-sm">Try loosening the filters.</p>
