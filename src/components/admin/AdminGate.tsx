@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 /** Wrap admin pages: requires a signed-in user with the `admin` role. */
 export function AdminGate({ children }: { children: ReactNode }) {
@@ -10,12 +11,23 @@ export function AdminGate({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { if (!cancelled) setState("anon"); return; }
+      if (!session) {
+        if (!cancelled) {
+          toast.error("Please sign in to access the admin area.");
+          setState("anon");
+        }
+        return;
+      }
       const { data: role } = await supabase
         .from("user_roles").select("role")
         .eq("user_id", session.user.id).eq("role", "admin").maybeSingle();
       if (cancelled) return;
-      setState(role ? "ok" : "forbidden");
+      if (!role) {
+        toast.error("Admin access only — redirected to storefront.");
+        setState("forbidden");
+      } else {
+        setState("ok");
+      }
     })();
     return () => { cancelled = true; };
   }, []);
@@ -24,18 +36,6 @@ export function AdminGate({ children }: { children: ReactNode }) {
     return <div className="min-h-screen grid place-items-center text-graphite eyebrow">Loading…</div>;
   }
   if (state === "anon") return <Navigate to="/auth" replace />;
-  if (state === "forbidden") {
-    return (
-      <div className="min-h-screen grid place-items-center p-8 text-center">
-        <div>
-          <div className="eyebrow text-safety mb-2">Access denied</div>
-          <p className="text-sm text-graphite max-w-md">
-            Your account doesn't have the <code>admin</code> role.
-            Ask the project owner to grant it in the database (table <code>user_roles</code>).
-          </p>
-        </div>
-      </div>
-    );
-  }
+  if (state === "forbidden") return <Navigate to="/" replace />;
   return <>{children}</>;
 }
