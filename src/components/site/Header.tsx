@@ -129,6 +129,12 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
                         >
                           <LayoutDashboard className="w-4 h-4" /> Catalog sync
                         </Link>
+                        <Link
+                          to="/admin/partners"
+                          className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted"
+                        >
+                          <LayoutDashboard className="w-4 h-4" /> Partnerships
+                        </Link>
                       </>
                     )}
                     <button
@@ -193,6 +199,9 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
                 </Link>
                 <Link to="/admin/sync" className="font-serif text-5xl tracking-tight leading-none text-safety">
                   Sync
+                </Link>
+                <Link to="/admin/partners" className="font-serif text-5xl tracking-tight leading-none text-safety">
+                  Partners
                 </Link>
               </>
             )}
