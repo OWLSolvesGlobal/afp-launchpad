@@ -69,6 +69,16 @@ function PartnersInner() {
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
 
+  // Live influencer lookup state, keyed off the email field
+  type LookupState =
+    | { status: "idle" }
+    | { status: "checking" }
+    | { status: "found"; userId: string; profile: InfluencerProfile | null }
+    | { status: "missing" }
+    | { status: "error"; message: string };
+  const [lookup, setLookup] = useState<LookupState>({ status: "idle" });
+  const [profilePrefilled, setProfilePrefilled] = useState(false);
+
   // Adjust-credit form
   const [adjEmail, setAdjEmail] = useState("");
   const [adjAmount, setAdjAmount] = useState("");
@@ -124,6 +134,49 @@ function PartnersInner() {
   };
 
   useEffect(() => { load(); }, []);
+
+  // Debounced live lookup of the influencer email so admins see "ready" / "needs signup"
+  // without ever submitting and getting a confusing error.
+  useEffect(() => {
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setLookup({ status: "idle" });
+      return;
+    }
+    let cancelled = false;
+    setLookup({ status: "checking" });
+    const t = setTimeout(async () => {
+      const res = await supabase.functions.invoke("lookup-user-by-email", { body: { email: trimmed } });
+      if (cancelled) return;
+      if (res.error) {
+        setLookup({ status: "error", message: res.error.message || "Lookup failed" });
+        return;
+      }
+      const userId = res.data?.user_id ?? null;
+      if (!userId) { setLookup({ status: "missing" }); return; }
+      // Pull any existing profile so the form prefills nicely.
+      const { data: prof } = await supabase
+        .from("influencer_profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (cancelled) return;
+      setLookup({ status: "found", userId, profile: (prof as InfluencerProfile) ?? null });
+    }, 350);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [email]);
+
+  // Prefill the optional profile fields from an existing record once, so admins
+  // don't have to retype known details. They can still override anything.
+  useEffect(() => {
+    if (lookup.status !== "found" || !lookup.profile || profilePrefilled) return;
+    const p = lookup.profile;
+    if (!fullName && p.full_name) setFullName(p.full_name);
+    if (!birthday && p.birthday) setBirthday(p.birthday);
+    if (!instagram && p.instagram_handle) setInstagram(p.instagram_handle);
+    if (!phone && p.phone) setPhone(p.phone);
+    setProfilePrefilled(true);
+  }, [lookup, fullName, birthday, instagram, phone, profilePrefilled]);
 
   // ------- Stats -------
   const stats = useMemo(() => {
@@ -190,12 +243,23 @@ function PartnersInner() {
     const trimmedEmail = email.trim().toLowerCase();
     if (!trimmedCode || !trimmedEmail) return toast.error("Code and influencer email required");
     setBusy(true);
-    const lookup = await supabase.functions.invoke("lookup-user-by-email", { body: { email: trimmedEmail } });
-    if (lookup.error || !lookup.data?.user_id) {
+    // Use the live-lookup result when it matches; otherwise re-query so we never
+    // submit on stale or in-flight state.
+    let userId: string | null = null;
+    if (lookup.status === "found") {
+      userId = lookup.userId;
+    } else {
+      const res = await supabase.functions.invoke("lookup-user-by-email", { body: { email: trimmedEmail } });
+      if (res.error) {
+        setBusy(false);
+        return toast.error(`Lookup failed: ${res.error.message ?? "unknown error"}`);
+      }
+      userId = res.data?.user_id ?? null;
+    }
+    if (!userId) {
       setBusy(false);
       return toast.error("Influencer must sign up with that email first.");
     }
-    const userId = lookup.data.user_id as string;
 
     // Upsert profile details (only fields that were filled in)
     const profilePatch: Partial<InfluencerProfile> & { user_id: string } = { user_id: userId };
@@ -224,6 +288,8 @@ function PartnersInner() {
     toast.success(`Code ${trimmedCode} created`);
     setCode(""); setEmail(""); setNote("");
     setFullName(""); setBirthday(""); setInstagram(""); setPhone("");
+    setLookup({ status: "idle" });
+    setProfilePrefilled(false);
     load();
   };
 
@@ -266,13 +332,18 @@ function PartnersInner() {
     const cents = Math.round((isFinite(dollars) ? dollars : 0) * 100);
     if (!trimmedEmail || cents === 0) return toast.error("Email and non-zero amount required");
     setAdjBusy(true);
-    const lookup = await supabase.functions.invoke("lookup-user-by-email", { body: { email: trimmedEmail } });
-    if (lookup.error || !lookup.data?.user_id) {
+    const res = await supabase.functions.invoke("lookup-user-by-email", { body: { email: trimmedEmail } });
+    if (res.error) {
       setAdjBusy(false);
-      return toast.error("No user with that email");
+      return toast.error(`Lookup failed: ${res.error.message ?? "unknown error"}`);
+    }
+    const userId = res.data?.user_id as string | null;
+    if (!userId) {
+      setAdjBusy(false);
+      return toast.error("No customer account exists for that email yet.");
     }
     const { error } = await supabase.from("credit_ledger").insert({
-      user_id: lookup.data.user_id,
+      user_id: userId,
       amount_cents: cents,
       reason: "adjust",
       order_ref: adjReason.trim() ? `note:${adjReason.trim().slice(0, 60)}` : null,
