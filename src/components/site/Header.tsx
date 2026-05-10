@@ -1,4 +1,4 @@
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Menu, ShoppingBag, Search, X, User, LayoutDashboard, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
   const [open, setOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { count, openCart } = useCart();
   const { session, isAdmin } = useUserRole();
 
@@ -37,6 +38,8 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
     await supabase.auth.signOut();
     toast.success("Signed out");
     setAccountOpen(false);
+    setOpen(false);
+    navigate("/", { replace: true });
   };
 
   // Always light header on the new bone-white site
