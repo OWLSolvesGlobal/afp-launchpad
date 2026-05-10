@@ -48,6 +48,7 @@ export const FeaturedCarousel = () => {
         </div>
       </div>
 
+      {featured.length > 0 && (
       <div
         ref={scrollerRef}
         className="flex gap-3 md:gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 px-5 lg:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -61,6 +62,7 @@ export const FeaturedCarousel = () => {
           </div>
         ))}
       </div>
+      )}
     </section>
   );
 };
