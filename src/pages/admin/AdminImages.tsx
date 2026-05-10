@@ -357,7 +357,7 @@ function StateChip({ state, err }: { state: SaveState; err?: string }) {
 }
 
 function ProductRow({
-  row, onFiles, onRemove, onPrimary, onNameChange, onSlugChange,
+  row, onFiles, onRemove, onPrimary, onNameChange, onSlugChange, onColorsChange,
 }: {
   row: Row;
   onFiles: (row: Row, files: FileList | File[]) => void;
@@ -365,9 +365,11 @@ function ProductRow({
   onPrimary: (row: Row, idx: number) => void;
   onNameChange: (row: Row, val: string) => void;
   onSlugChange: (row: Row, val: string) => void;
+  onColorsChange: (row: Row, next: ColorWay[]) => void;
 }) {
   const [dragging, setDragging] = useState(false);
   const [stockOpen, setStockOpen] = useState(false);
+  const [colorsOpen, setColorsOpen] = useState(false);
   const onDrop = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault(); setDragging(false);
     if (e.dataTransfer.files?.length) onFiles(row, e.dataTransfer.files);
@@ -470,6 +472,15 @@ function ProductRow({
         <div className="mt-4 border-t border-border pt-3">
           <button
             type="button"
+            onClick={() => setColorsOpen((v) => !v)}
+            className="inline-flex items-center gap-2 eyebrow text-[10px] text-graphite hover:text-ink transition-colors mr-4"
+          >
+            <Palette className="w-3 h-3" />
+            {colorsOpen ? "Hide colorways" : `Edit colorways (${row.colors.length})`}
+            {colorsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+          <button
+            type="button"
             onClick={() => setStockOpen((v) => !v)}
             className="inline-flex items-center gap-2 eyebrow text-[10px] text-graphite hover:text-ink transition-colors"
           >
@@ -477,6 +488,14 @@ function ProductRow({
             {stockOpen ? "Hide stock" : "Edit stock"}
             {stockOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
+          {colorsOpen && (
+            <div className="mt-3">
+              <ColorsEditor
+                colors={row.colors}
+                onChange={(next) => onColorsChange(row, next)}
+              />
+            </div>
+          )}
           {stockOpen && (
             <div className="mt-3">
               <StockGrid productId={row.id} sizes={row.sizes} colors={row.colors} />
