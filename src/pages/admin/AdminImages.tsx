@@ -552,9 +552,6 @@ function Workbench() {
 }
 
 function StateChip({ state, err }: { state: SaveState; err?: string }) {
-  return null === null ? _StateChip(state, err) : null;
-}
-function _StateChip(state: SaveState, err?: string) {
   if (state === "saving") return (
     <span className="inline-flex items-center gap-1 text-[10px] eyebrow text-graphite">
       <Loader2 className="w-3 h-3 animate-spin" /> Saving…
