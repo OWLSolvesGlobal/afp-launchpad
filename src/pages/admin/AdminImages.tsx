@@ -502,7 +502,7 @@ function StateChip({ state, err }: { state: SaveState; err?: string }) {
 }
 
 function ProductRow({
-  row, onFiles, onRemove, onPrimary, onNameChange, onSlugChange, onColorsChange,
+  row, onFiles, onRemove, onPrimary, onNameChange, onSlugChange, onColorsChange, onPriceChange, onDelete,
 }: {
   row: Row;
   onFiles: (row: Row, files: FileList | File[]) => void;
@@ -511,6 +511,8 @@ function ProductRow({
   onNameChange: (row: Row, val: string) => void;
   onSlugChange: (row: Row, val: string) => void;
   onColorsChange: (row: Row, next: ColorWay[]) => void;
+  onPriceChange: (row: Row, val: string) => void;
+  onDelete: (row: Row) => void;
 }) {
   const [dragging, setDragging] = useState(false);
   const [stockOpen, setStockOpen] = useState(false);
@@ -556,7 +558,32 @@ function ProductRow({
           <span className="text-[10px] text-graphite mt-1 block truncate">/product/{row.draftSlug}</span>
         </label>
 
+        <label className="block">
+          <span className="text-[10px] eyebrow text-graphite flex items-center gap-1">
+            <DollarSign className="w-2.5 h-2.5" /> Price (USD)
+          </span>
+          <div className="relative mt-1">
+            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-graphite text-sm">$</span>
+            <Input
+              value={row.draftPrice}
+              inputMode="decimal"
+              onChange={(e) => onPriceChange(row, e.target.value)}
+              className="pl-6 font-mono text-sm"
+            />
+          </div>
+        </label>
+
         <div className="h-4"><StateChip state={row.state} err={row.err} /></div>
+
+        <button
+          type="button"
+          onClick={() => onDelete(row)}
+          disabled={row.deleting}
+          className="eyebrow text-[10px] inline-flex items-center gap-1.5 text-graphite hover:text-safety transition-colors disabled:opacity-50"
+        >
+          {row.deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+          Delete product
+        </button>
       </div>
 
       {/* Right: gallery */}
@@ -654,4 +681,84 @@ function ProductRow({
 
 export default function AdminImages() {
   return <AdminGate><Workbench /></AdminGate>;
+}
+
+function NewProductCard({
+  onClose, onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (draft: NewProductDraft) => Promise<boolean>;
+}) {
+  const [draft, setDraft] = useState<NewProductDraft>({
+    id: "", name: "", slug: "", gender: "women", category: "", priceUsd: "",
+  });
+  const [busy, setBusy] = useState(false);
+
+  const setField = <K extends keyof NewProductDraft>(k: K, v: NewProductDraft[K]) =>
+    setDraft((d) => {
+      const next = { ...d, [k]: v };
+      if (k === "name" && !d.slug) next.slug = slugify(v as string);
+      if (k === "name" && !d.id) next.id = slugify(v as string);
+      return next;
+    });
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const ok = await onCreate(draft);
+    setBusy(false);
+    if (ok) onClose();
+  };
+
+  return (
+    <form
+      onSubmit={submit}
+      className="bg-card border border-safety rounded-sm p-4 mb-4 grid grid-cols-1 md:grid-cols-6 gap-3 items-end"
+    >
+      <div className="md:col-span-6 flex items-center justify-between">
+        <span className="eyebrow text-safety">New product</span>
+        <button type="button" onClick={onClose} className="text-graphite hover:text-ink">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+      <label className="md:col-span-2 block text-xs">
+        <span className="eyebrow text-[10px] text-graphite">Name</span>
+        <Input value={draft.name} onChange={(e) => setField("name", e.target.value)} required className="mt-1" />
+      </label>
+      <label className="block text-xs">
+        <span className="eyebrow text-[10px] text-graphite">ID</span>
+        <Input value={draft.id} onChange={(e) => setField("id", slugify(e.target.value))} required className="mt-1 font-mono" />
+      </label>
+      <label className="block text-xs">
+        <span className="eyebrow text-[10px] text-graphite">Slug</span>
+        <Input value={draft.slug} onChange={(e) => setField("slug", slugify(e.target.value))} className="mt-1 font-mono" />
+      </label>
+      <label className="block text-xs">
+        <span className="eyebrow text-[10px] text-graphite">Gender</span>
+        <select
+          value={draft.gender}
+          onChange={(e) => setField("gender", e.target.value as "men" | "women")}
+          className="mt-1 w-full h-9 px-2 bg-background border border-input rounded-md text-sm"
+        >
+          <option value="women">women</option>
+          <option value="men">men</option>
+        </select>
+      </label>
+      <label className="block text-xs">
+        <span className="eyebrow text-[10px] text-graphite">Category</span>
+        <Input value={draft.category} onChange={(e) => setField("category", e.target.value)} placeholder="e.g. tops" className="mt-1" />
+      </label>
+      <label className="md:col-span-2 block text-xs">
+        <span className="eyebrow text-[10px] text-graphite">Price (USD)</span>
+        <Input value={draft.priceUsd} onChange={(e) => setField("priceUsd", e.target.value)} inputMode="decimal" placeholder="0.00" className="mt-1 font-mono" />
+      </label>
+      <div className="md:col-span-4 flex items-center justify-end gap-2">
+        <Button type="button" variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+        <Button type="submit" size="sm" disabled={busy} className="bg-safety hover:bg-safety-deep text-bone">
+          {busy ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Plus className="w-3 h-3 mr-2" />}
+          Create in site &amp; sheet
+        </Button>
+      </div>
+    </form>
+  );
 }
