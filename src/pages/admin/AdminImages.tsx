@@ -36,6 +36,15 @@ interface Row {
   deleting?: boolean;
 }
 
+interface NewProductDraft {
+  id: string;
+  name: string;
+  slug: string;
+  gender: "men" | "women";
+  category: string;
+  priceUsd: string;
+}
+
 /** URL-safe slug from a free-form name. */
 function slugify(s: string): string {
   return s
