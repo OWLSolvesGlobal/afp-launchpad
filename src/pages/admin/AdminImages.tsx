@@ -320,6 +320,7 @@ function ProductRow({
   onSlugChange: (row: Row, val: string) => void;
 }) {
   const [dragging, setDragging] = useState(false);
+  const [stockOpen, setStockOpen] = useState(false);
   const onDrop = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault(); setDragging(false);
     if (e.dataTransfer.files?.length) onFiles(row, e.dataTransfer.files);
@@ -409,10 +410,32 @@ function ProductRow({
           ) : (
             <div className="flex items-center justify-center gap-2 text-sm">
               <UploadCloud className="w-4 h-4 text-graphite" />
-              <span>{row.images.length === 0 ? "Drop images, or click to choose" : "Add more"}</span>
+              <span>
+                {row.images.length === 0
+                  ? "Drop images, or click to choose (multiple = product carousel)"
+                  : `Add more · ${row.images.length} in carousel`}
+              </span>
             </div>
           )}
         </label>
+
+        {/* Stock panel */}
+        <div className="mt-4 border-t border-border pt-3">
+          <button
+            type="button"
+            onClick={() => setStockOpen((v) => !v)}
+            className="inline-flex items-center gap-2 eyebrow text-[10px] text-graphite hover:text-ink transition-colors"
+          >
+            <Boxes className="w-3 h-3" />
+            {stockOpen ? "Hide stock" : "Edit stock"}
+            {stockOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+          {stockOpen && (
+            <div className="mt-3">
+              <StockGrid productId={row.id} sizes={row.sizes} colors={row.colors} />
+            </div>
+          )}
+        </div>
       </div>
     </li>
   );
