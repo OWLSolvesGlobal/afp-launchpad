@@ -9,7 +9,8 @@ export function AdminGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+
+    const evaluate = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         if (!cancelled) {
@@ -28,8 +29,25 @@ export function AdminGate({ children }: { children: ReactNode }) {
       } else {
         setState("ok");
       }
-    })();
-    return () => { cancelled = true; };
+    };
+
+    // Initial check
+    evaluate();
+
+    // Re-evaluate on auth changes (sign out in another tab, token refresh, etc.)
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        if (!cancelled) setState("anon");
+      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        // Defer to avoid Supabase re-entrancy warnings
+        setTimeout(() => { if (!cancelled) evaluate(); }, 0);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   if (state === "loading") {
