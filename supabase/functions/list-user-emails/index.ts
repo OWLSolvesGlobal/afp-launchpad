@@ -15,10 +15,12 @@ Deno.serve(async (req) => {
     const auth = req.headers.get("Authorization") ?? "";
 
     const userClient = createClient(url, anon, { global: { headers: { Authorization: auth } } });
-    const { data: { user } } = await userClient.auth.getUser();
-    if (!user) return json({ error: "Unauthorized" }, 401);
+    const token = auth.replace(/^Bearer\s+/i, "");
+    const { data: claims, error: claimsErr } = await userClient.auth.getClaims(token);
+    if (claimsErr || !claims?.claims?.sub) return json({ error: "Unauthorized" }, 401);
+    const userId = claims.claims.sub as string;
     const { data: roleRow } = await userClient
-      .from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+      .from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
     if (!roleRow) return json({ error: "Forbidden" }, 403);
 
     const { user_ids } = await req.json().catch(() => ({}));
