@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { AdminGate } from "@/components/admin/AdminGate";
@@ -84,7 +85,10 @@ function installTrigger() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main id="main" className="flex-1 container pt-28 pb-24 max-w-4xl">
-        <div className="eyebrow text-graphite mb-3">Admin / Sync</div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="eyebrow text-graphite">Admin / Sync</div>
+          <Link to="/admin/images" className="eyebrow text-xs underline underline-offset-4">Manage images →</Link>
+        </div>
         <h1 className="display-lg mb-2">Catalog sync<span className="text-safety">.</span></h1>
         <p className="text-sm text-graphite mb-8">
           Pull the latest catalog from the Google Sheet into the database.
