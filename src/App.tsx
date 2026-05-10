@@ -15,6 +15,7 @@ import Auth from "./pages/Auth.tsx";
 import AdminUpload from "./pages/admin/AdminUpload.tsx";
 import AdminSync from "./pages/admin/AdminSync.tsx";
 import AdminImages from "./pages/admin/AdminImages.tsx";
+import AdminPartners from "./pages/admin/AdminPartners.tsx";
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/site/CartDrawer";
 import { ScrollToTop } from "@/components/site/ScrollToTop";
@@ -50,6 +51,8 @@ const App = () => (
             <Route path="/admin/upload" element={<AdminUpload />} />
             <Route path="/admin/sync" element={<AdminSync />} />
             <Route path="/admin/images" element={<AdminImages />} />
+            <Route path="/admin/partners" element={<AdminPartners />} />
+            <Route path="/admin/partnerships" element={<AdminPartners />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
