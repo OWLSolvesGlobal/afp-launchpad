@@ -32,6 +32,72 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_ledger: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          expires_at: string
+          id: string
+          order_ref: string | null
+          reason: string
+          source_code: string | null
+          unlocks_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          order_ref?: string | null
+          reason: string
+          source_code?: string | null
+          unlocks_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          order_ref?: string | null
+          reason?: string
+          source_code?: string | null
+          unlocks_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      partner_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          credit_value_cents: number
+          influencer_user_id: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          credit_value_cents: number
+          influencer_user_id: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          credit_value_cents?: number
+          influencer_user_id?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_stock: {
         Row: {
           color: string
@@ -183,6 +249,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      available_credit_cents: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
