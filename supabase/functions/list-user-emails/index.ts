@@ -1,5 +1,5 @@
 // Admin-only: returns { id: email } map for a given list of user UUIDs.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.105.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
