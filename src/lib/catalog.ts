@@ -15,6 +15,7 @@ export interface Product {
   colors: { name: string; hex: string }[];
   sizes: string[];
   image: string;
+  images: string[];
   imageAlt: string;
   badge?: string | null;
 }
@@ -27,7 +28,11 @@ export interface StockEntry {
 
 export const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
-const mapProduct = (row: any): Product => ({
+const mapProduct = (row: any): Product => {
+  const images: string[] = Array.isArray(row.images) && row.images.length
+    ? row.images
+    : row.image_url ? [row.image_url] : [];
+  return {
   id: row.id,
   slug: row.slug,
   name: row.name,
@@ -37,10 +42,12 @@ const mapProduct = (row: any): Product => ({
   compareAt: row.compare_at_cents ?? undefined,
   colors: Array.isArray(row.colors) ? row.colors : [],
   sizes: Array.isArray(row.sizes) ? row.sizes : [],
-  image: row.image_url || placeholder,
+  image: images[0] || placeholder,
+  images,
   imageAlt: row.image_alt || row.name,
   badge: row.badge ?? null,
-});
+};
+};
 
 export const useProducts = () =>
   useQuery({
