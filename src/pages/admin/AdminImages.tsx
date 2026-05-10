@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
-  Loader2, Trash2, Star, UploadCloud, Search, Check, AlertCircle, RefreshCw, Pencil, ExternalLink, Boxes, ChevronDown, ChevronUp, Palette, Plus, DollarSign, X,
+  Loader2, Trash2, Star, UploadCloud, Search, Check, AlertCircle, RefreshCw, Pencil, ExternalLink, Boxes, ChevronDown, ChevronUp, Palette, Plus, DollarSign, X, LayoutGrid, List as ListIcon,
 } from "lucide-react";
 import { StockGrid } from "@/components/admin/StockGrid";
 import { ColorsEditor, type ColorWay } from "@/components/admin/ColorsEditor";
@@ -102,6 +102,20 @@ function Workbench() {
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"all" | "missing" | "men" | "women">("all");
   const [creating, setCreating] = useState(false);
+  const [view, setView] = useState<"grid" | "list">(() => {
+    if (typeof window === "undefined") return "grid";
+    return (localStorage.getItem("admin-products-view") as "grid" | "list") || "grid";
+  });
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    try { localStorage.setItem("admin-products-view", view); } catch { /* noop */ }
+  }, [view]);
+  const toggleExpanded = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
 
   const load = async () => {
     setLoading(true);
@@ -442,6 +456,26 @@ function Workbench() {
             >
               <Plus className="w-3 h-3" /> New product
             </button>
+            <div className="flex border border-border" role="group" aria-label="View mode">
+              <button
+                type="button"
+                onClick={() => setView("grid")}
+                aria-pressed={view === "grid"}
+                title="Grid view"
+                className={`p-1.5 ${view === "grid" ? "bg-ink text-bone" : "text-graphite hover:text-ink"}`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("list")}
+                aria-pressed={view === "list"}
+                title="List view"
+                className={`p-1.5 border-l border-border ${view === "list" ? "bg-ink text-bone" : "text-graphite hover:text-ink"}`}
+              >
+                <ListIcon className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -454,7 +488,7 @@ function Workbench() {
 
         {loading ? (
           <div className="py-24 text-center text-graphite eyebrow">Loading…</div>
-        ) : (
+        ) : view === "list" ? (
           <ul className="space-y-3">
             {filtered.map((row) => (
               <ProductRow
@@ -475,6 +509,41 @@ function Workbench() {
               </li>
             )}
           </ul>
+        ) : (
+          <>
+            <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {filtered.map((row) => (
+                <ProductTile
+                  key={row.id}
+                  row={row}
+                  expanded={expanded.has(row.id)}
+                  onToggle={() => toggleExpanded(row.id)}
+                />
+              ))}
+              {!filtered.length && (
+                <li className="col-span-full py-16 text-center text-sm text-graphite border border-dashed border-border">
+                  Nothing matches.
+                </li>
+              )}
+            </ul>
+            {filtered
+              .filter((r) => expanded.has(r.id))
+              .map((row) => (
+                <div key={`exp-${row.id}`} className="mt-4">
+                  <ProductRow
+                    row={row}
+                    onFiles={handleFiles}
+                    onRemove={removeAt}
+                    onPrimary={makePrimary}
+                    onNameChange={onNameChange}
+                    onSlugChange={onSlugChange}
+                    onColorsChange={onColorsChange}
+                    onPriceChange={onPriceChange}
+                    onDelete={onDelete}
+                  />
+                </div>
+              ))}
+          </>
         )}
       </main>
       <Footer />
@@ -499,6 +568,66 @@ function StateChip({ state, err }: { state: SaveState; err?: string }) {
     </span>
   );
   return null;
+}
+
+function ProductTile({
+  row, expanded, onToggle,
+}: {
+  row: Row;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const cover = row.images[0];
+  const priceUsd = (row.priceCents / 100).toFixed(2);
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className={`group w-full text-left bg-card border ${
+          expanded ? "border-ink ring-1 ring-ink" : "border-border hover:border-ink/60"
+        } transition-colors`}
+      >
+        <div className="aspect-square bg-muted relative overflow-hidden">
+          {cover ? (
+            <img
+              src={cover}
+              alt={row.name}
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <div className="absolute inset-0 grid place-items-center text-graphite text-[10px] eyebrow">
+              No image
+            </div>
+          )}
+          {row.images.length > 1 && (
+            <span className="absolute top-1.5 right-1.5 bg-ink/80 text-bone text-[9px] eyebrow px-1.5 py-0.5">
+              {row.images.length}
+            </span>
+          )}
+          {row.state === "saving" && (
+            <span className="absolute bottom-1.5 left-1.5 bg-background/90 px-1.5 py-0.5">
+              <Loader2 className="w-3 h-3 animate-spin" />
+            </span>
+          )}
+        </div>
+        <div className="p-2">
+          <div className="text-[9px] eyebrow text-graphite truncate">
+            {row.gender} · {row.category}
+          </div>
+          <div className="text-xs font-medium truncate mt-0.5">{row.name || row.id}</div>
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-[10px] text-graphite">${priceUsd}</span>
+            <span className="text-[9px] eyebrow text-safety inline-flex items-center gap-0.5">
+              {expanded ? <><ChevronUp className="w-2.5 h-2.5" /> close</> : <><Pencil className="w-2.5 h-2.5" /> edit</>}
+            </span>
+          </div>
+        </div>
+      </button>
+    </li>
+  );
 }
 
 function ProductRow({

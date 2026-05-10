@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { AdminGate } from "@/components/admin/AdminGate";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { AdminGate } from "@/components/admin/AdminGate";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -370,6 +371,7 @@ function PartnersInner() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1 container pt-28 pb-16 space-y-12">
+        <AdminNav />
         <div>
           <div className="eyebrow text-graphite mb-2">Admin</div>
           <h1 className="display-md">Partnerships.</h1>
