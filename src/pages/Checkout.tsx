@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useCart, formatMoney } from "@/context/CartContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { CheckoutSkeleton } from "@/components/site/skeletons/CheckoutSkeleton";
 
 type Fulfillment = "delivery" | "pickup";
 
@@ -32,9 +33,12 @@ export default function Checkout() {
   const navigate = useNavigate();
   const [fulfillment, setFulfillment] = useState<Fulfillment>("delivery");
   const [pickupLocation, setPickupLocation] = useState(PICKUP_LOCATIONS[0].id);
+  const [hydrating, setHydrating] = useState(true);
 
   useEffect(() => {
     document.title = "Checkout — Alo Fitness Pro";
+    const t = window.setTimeout(() => setHydrating(false), 450);
+    return () => window.clearTimeout(t);
   }, []);
 
   const shipping = useMemo(() => {
@@ -57,6 +61,8 @@ export default function Checkout() {
     clear();
     navigate("/");
   };
+
+  if (hydrating) return <CheckoutSkeleton />;
 
   if (count === 0) {
     return (
