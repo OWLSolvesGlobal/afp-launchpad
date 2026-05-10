@@ -59,18 +59,25 @@ function dollarsToCents(raw: string): number {
 
 async function fetchSheet(spreadsheetId: string, range: string, lovableKey: string, sheetsKey: string) {
   const url = `${GATEWAY_URL}/spreadsheets/${spreadsheetId}/values/${range}`;
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": sheetsKey,
-    },
-  });
-  if (!res.ok) {
+  let lastErr = "";
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": sheetsKey,
+      },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return (data.values ?? []) as string[][];
+    }
     const body = await res.text();
-    throw new Error(`Sheets fetch failed [${res.status}] for ${range}: ${body}`);
+    lastErr = `[${res.status}] ${body}`;
+    // Retry on transient gateway/upstream failures.
+    if (![502, 503, 504, 408, 429].includes(res.status)) break;
+    await new Promise((r) => setTimeout(r, 500 * attempt));
   }
-  const data = await res.json();
-  return (data.values ?? []) as string[][];
+  throw new Error(`Sheets fetch failed for ${range}: ${lastErr}`);
 }
 
 Deno.serve(async (req) => {
@@ -131,10 +138,9 @@ Deno.serve(async (req) => {
   let rowsProcessed = 0;
 
   try {
-    const [productValues, stockValues] = await Promise.all([
-      fetchSheet(SHEET_ID, "Products!A1:Z1000", LOVABLE_API_KEY, GOOGLE_SHEETS_API_KEY),
-      fetchSheet(SHEET_ID, "Stock!A1:Z5000", LOVABLE_API_KEY, GOOGLE_SHEETS_API_KEY),
-    ]);
+    // Run sequentially: gateway occasionally rejects parallel requests with 503.
+    const productValues = await fetchSheet(SHEET_ID, "Products!A1:Z1000", LOVABLE_API_KEY, GOOGLE_SHEETS_API_KEY);
+    const stockValues = await fetchSheet(SHEET_ID, "Stock!A1:Z5000", LOVABLE_API_KEY, GOOGLE_SHEETS_API_KEY);
 
     const productRows = parseRows(productValues);
     const stockRows = parseRows(stockValues);
