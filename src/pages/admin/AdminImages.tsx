@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
-  Loader2, Trash2, Star, UploadCloud, Search, Check, AlertCircle, RefreshCw, Pencil, ExternalLink, Boxes, ChevronDown, ChevronUp,
+  Loader2, Trash2, Star, UploadCloud, Search, Check, AlertCircle, RefreshCw, Pencil, ExternalLink, Boxes, ChevronDown, ChevronUp, Palette,
 } from "lucide-react";
 import { StockGrid } from "@/components/admin/StockGrid";
+import { ColorsEditor, type ColorWay } from "@/components/admin/ColorsEditor";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -22,7 +23,7 @@ interface Row {
   category: string;
   images: string[];
   sizes: string[];
-  colors: { name: string; hex?: string }[];
+  colors: ColorWay[];
   busy: boolean;
   // edit state
   draftName: string;
@@ -188,6 +189,51 @@ function Workbench() {
     queueSave(row, row.draftName, val);
   };
 
+  // ============ COLORS ============
+  const onColorsChange = async (row: Row, next: ColorWay[]) => {
+    // Normalise: dedupe by lowercased name, ensure hex starts with #
+    const seen = new Set<string>();
+    const clean = next
+      .map((c) => ({ name: c.name.trim(), hex: (c.hex || "#000000").trim() }))
+      .filter((c) => c.name && !seen.has(c.name.toLowerCase()) && seen.add(c.name.toLowerCase()))
+      .map((c) => ({ name: c.name, hex: c.hex.startsWith("#") ? c.hex : `#${c.hex}` }));
+
+    const removed = row.colors.filter((c) => !clean.some((n) => n.name.toLowerCase() === c.name.toLowerCase()));
+
+    // Optimistic UI
+    update(row.id, { colors: clean, state: "saving", err: undefined });
+
+    // 1. DB write
+    const { error } = await supabase
+      .from("products")
+      .update({ colors: clean })
+      .eq("id", row.id);
+    if (error) {
+      update(row.id, { colors: row.colors, state: "error", err: error.message });
+      return;
+    }
+
+    // 2. Drop stock rows for removed colorways
+    if (removed.length) {
+      await supabase
+        .from("product_stock")
+        .delete()
+        .eq("product_id", row.id)
+        .in("color", removed.map((c) => c.name));
+    }
+
+    // 3. Push to sheet (Name:#hex|Name2:#hex2)
+    const serialized = clean.map((c) => `${c.name}:${c.hex}`).join("|");
+    try {
+      await pushToSheet(row.id, { colors: serialized });
+    } catch (e: any) {
+      update(row.id, { state: "error", err: `Saved on site, sheet failed: ${e.message}` });
+      return;
+    }
+    update(row.id, { state: "saved" });
+    window.setTimeout(() => update(row.id, { state: "idle" }), 1500);
+  };
+
   // ============ FILTERED VIEW ============
   const filtered = useMemo(() => {
     let r = rows;
@@ -275,6 +321,7 @@ function Workbench() {
                 onPrimary={makePrimary}
                 onNameChange={onNameChange}
                 onSlugChange={onSlugChange}
+                onColorsChange={onColorsChange}
               />
             ))}
             {!filtered.length && (
