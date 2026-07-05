@@ -99,7 +99,7 @@ export const Hero = () => {
               className="group block absolute inset-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               <img
-                src={mensBlack}
+                src={mensBlack.url}
                 alt="AFP male athlete in black performance set"
                 className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
               />

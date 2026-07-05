@@ -8,7 +8,7 @@ import accImg from "@/assets/afp-golf-dress.jpg";
 
 const tiles = [
   { to: "/shop/women",          label: "Women",     img: womenImg, count: "32 styles", tint: "hsl(var(--lilac))" },
-  { to: "/shop/men",            label: "Men",       img: menImg,   count: "18 styles", tint: "hsl(var(--sand))"  },
+  { to: "/shop/men",            label: "Men",       img: menImg.url,   count: "18 styles", tint: "hsl(var(--sand))"  },
   { to: "/shop/women?sort=new", label: "Sets",      img: setImg,   count: "Match top to bottom", tint: "hsl(var(--sand))" },
   { to: "/shop/women?sort=best",label: "Tennis & Golf", img: accImg, count: "Court ready", tint: "hsl(var(--sky))" },
 ];

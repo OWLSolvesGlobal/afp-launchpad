@@ -139,7 +139,7 @@ export default function About() {
               <div className="relative">
                 <div className="aspect-[4/5] overflow-hidden bg-muted">
                   <img
-                    src={ashleeApple}
+                    src={ashleeApple.url}
                     alt="AFP lime-green romper paired with a fresh green apple"
                     loading="lazy"
                     className="w-full h-full object-cover"
