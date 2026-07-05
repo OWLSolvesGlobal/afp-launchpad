@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronRight, ChevronLeft, Minus, Plus, Truck, RotateCcw, ShieldCheck } from "lucide-react";
+import { ChevronRight, ChevronLeft, Minus, Plus, Truck, RotateCcw, ShieldCheck, Expand, X } from "lucide-react";
 import { Header } from "@/components/site/Header";
+import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Footer } from "@/components/site/Footer";
 import { ProductCard } from "@/components/site/ProductCard";
 import {
@@ -30,6 +32,7 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [qty, setQty] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     if (!product) return;
@@ -95,13 +98,26 @@ export default function ProductDetail() {
             transition={{ duration: 0.6 }}
           >
             <div className="aspect-[4/5] overflow-hidden bg-muted relative group">
-              <img
-                src={(product.images[activeImage] ?? product.image)}
-                alt={product.imageAlt}
-                width={1200}
-                height={1500}
-                className="w-full h-full object-cover"
-              />
+              <button
+                type="button"
+                onClick={() => setLightboxOpen(true)}
+                aria-label="Expand image"
+                className="block w-full h-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+              >
+                <img
+                  src={(product.images[activeImage] ?? product.image)}
+                  alt={product.imageAlt}
+                  width={1200}
+                  height={1500}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+              <span
+                className="absolute top-3 right-3 w-9 h-9 grid place-items-center bg-bone/90 text-ink opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
+                aria-hidden="true"
+              >
+                <Expand className="w-4 h-4" />
+              </span>
               {product.images.length > 1 && (
                 <>
                   <button
