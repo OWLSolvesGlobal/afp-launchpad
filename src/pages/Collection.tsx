@@ -36,12 +36,14 @@ export default function Collection() {
         <section className="container pt-24 md:pt-32 pb-8 md:pb-12">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-sm text-neutral-500 hover:text-black mb-6"
+            aria-label="Back to home page"
+            className="flex w-fit items-center gap-2 text-sm text-neutral-500 hover:text-black mb-8"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to home
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to home</span>
           </Link>
           <span
-            className="text-[11px] font-bold tracking-[0.2em] uppercase"
+            className="block text-[11px] font-bold tracking-[0.2em] uppercase"
             style={{ color: TURQUOISE }}
           >
             Collection
