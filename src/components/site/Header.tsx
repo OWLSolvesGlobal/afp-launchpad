@@ -9,10 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const nav = [
-  { to: "/shop/men", label: "Men" },
-  { to: "/shop/women", label: "Women" },
-  { to: "/shop/men?sort=new", label: "New Drops" },
-  { to: "/about", label: "About" },
+  { to: "/collection/alobabes", label: "Women" },
+  { to: "/collection/afp-men", label: "Men" },
+  { to: "/collection/afplounge", label: "Lounge" },
+  { to: "/collection/add-ons", label: "Add-Ons" },
 ];
 
 export const Header = ({ transparent = false }: { transparent?: boolean }) => {

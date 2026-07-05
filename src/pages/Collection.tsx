@@ -86,12 +86,25 @@ export default function Collection() {
               </div>
             </div>
           ) : (
+            <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {items.map((p) => (
                 <ProductCard key={p.name} p={p} />
               ))}
-              <ComingSoonCard collectionLabel={collection.label} />
             </div>
+            <p className="mt-10 text-center text-sm text-neutral-500">
+              More {collection.label} pieces landing soon —{" "}
+              <a
+                href={waLink(`Hi! Notify me when new ${collection.label} drops.`)}
+                target="_blank"
+                rel="noreferrer"
+                className="underline font-semibold text-black hover:opacity-70"
+              >
+                get notified on WhatsApp
+              </a>
+              .
+            </p>
+            </>
           )}
         </section>
       </main>
