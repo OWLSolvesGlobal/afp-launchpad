@@ -279,7 +279,35 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      product_stock_availability: {
+        Row: {
+          color: string | null
+          in_stock: boolean | null
+          product_id: string | null
+          size: string | null
+        }
+        Insert: {
+          color?: string | null
+          in_stock?: never
+          product_id?: string | null
+          size?: string | null
+        }
+        Update: {
+          color?: string | null
+          in_stock?: never
+          product_id?: string | null
+          size?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_stock_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       available_credit_cents: { Args: { _user_id: string }; Returns: number }
