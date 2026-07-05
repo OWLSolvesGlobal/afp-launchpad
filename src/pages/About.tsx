@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import ashleePink from "@/assets/ashlee-pink.jpg";
-import ashleeApple from "@/assets/ashlee-apple.jpg";
+import ashleeApple from "@/assets/ashlee-apple.jpg.asset.json";
 import ashleeBlue from "@/assets/ashlee-blue.jpg";
 import ashleePool from "@/assets/ashlee-pool.jpg";
 import ashleeGolf from "@/assets/ashlee-golf.jpg";
@@ -139,7 +139,7 @@ export default function About() {
               <div className="relative">
                 <div className="aspect-[4/5] overflow-hidden bg-muted">
                   <img
-                    src={ashleeApple}
+                    src={ashleeApple.url}
                     alt="AFP lime-green romper paired with a fresh green apple"
                     loading="lazy"
                     className="w-full h-full object-cover"

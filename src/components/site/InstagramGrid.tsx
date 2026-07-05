@@ -14,8 +14,8 @@ import { motion } from "framer-motion";
 import igGolfDress from "@/assets/afp-golf-dress.jpg";
 import igLime from "@/assets/afp-lime-romper.jpg";
 import igPinkPool from "@/assets/afp-pink-pool.jpg";
-import igMensBlack from "@/assets/afp-mens-black.jpg";
-import igMensWhite from "@/assets/afp-mens-white.jpg";
+import igMensBlack from "@/assets/afp-mens-black.jpg.asset.json";
+import igMensWhite from "@/assets/afp-mens-white.jpg.asset.json";
 import igPurple from "@/assets/afp-purple-romper.jpg";
 import igBlueRomper from "@/assets/afp-blue-romper.jpg";
 import igBlackJump from "@/assets/afp-black-jumpsuit.jpg";
@@ -36,10 +36,10 @@ const tiles: Tile[] = [
   { src: igLime,       alt: "AFP athlete in lime green seamless romper",        caption: "Lime season.",        likes: "4.2k", href: IG_URL, real: true },
   { src: igGolfDress,  alt: "AFP athlete in navy golf dress",                   caption: "On the green.",       likes: "3.1k", href: IG_URL, real: true },
   { src: igPinkPool,   alt: "AFP athlete in pink set poolside",                 caption: "Pool day energy.",    likes: "5.4k", href: IG_URL, real: true },
-  { src: igMensWhite,  alt: "AFP male athlete in white tee and black shorts",   caption: "The clean fit.",      likes: "2.8k", href: IG_URL, real: true },
+  { src: igMensWhite.url,  alt: "AFP male athlete in white tee and black shorts",   caption: "The clean fit.",      likes: "2.8k", href: IG_URL, real: true },
   { src: igPurple,     alt: "AFP athlete in purple zip romper",                 caption: "Signature romper.",   likes: "6.1k", href: IG_URL, real: true },
   { src: igBlueRomper, alt: "AFP athlete in sky blue romper against terracotta wall", caption: "Sun-soaked.",   likes: "3.7k", href: IG_URL, real: true },
-  { src: igMensBlack,  alt: "AFP male athlete head to toe in black",            caption: "All black everything.", likes: "2.2k", href: IG_URL, real: true },
+  { src: igMensBlack.url,  alt: "AFP male athlete head to toe in black",            caption: "All black everything.", likes: "2.2k", href: IG_URL, real: true },
   { src: igGolfDuo,    alt: "Two athletes on the green in AFP visors and sets", caption: "Off the platform.",   likes: "1.9k", href: IG_URL, real: true },
   { src: igBlackJump,  alt: "AFP athlete in black halter jumpsuit in courtyard",caption: "Built to wear.",      likes: "4.0k", href: IG_URL, real: true },
 ];

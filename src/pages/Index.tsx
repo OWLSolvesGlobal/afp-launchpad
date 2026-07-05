@@ -5,7 +5,7 @@ import { Header } from "@/components/site/Header";
 import blueFront from "@/assets/product-blue-aura-set-front.jpg.asset.json";
 import loungie from "@/assets/accent-new-loungie-colors.jpg.asset.json";
 import lockers from "@/assets/accent-gym-lockers-lifestyle.jpg.asset.json";
-import mensTile from "@/assets/afp-mens-black.jpg";
+import mensTile from "@/assets/afp-mens-black.jpg.asset.json";
 import aloBabesTile from "@/assets/ashlee-blue.jpg";
 import {
   LIME,
@@ -31,7 +31,7 @@ const Index = () => {
   const collections: { slug: CollectionSlug; label: string; img: string }[] = [
     { slug: "alobabes", label: "AloBabes", img: aloBabesTile },
     { slug: "afplounge", label: "AFPLounge", img: loungie.url },
-    { slug: "afp-men", label: "AFP MEN", img: mensTile },
+    { slug: "afp-men", label: "AFP MEN", img: mensTile.url },
     { slug: "add-ons", label: "Add-Ons", img: productsByCollection("add-ons")[0]?.image ?? loungie.url },
   ];
 
@@ -191,7 +191,7 @@ const Index = () => {
             className="group relative block overflow-hidden rounded-3xl bg-black text-white min-h-[320px] md:min-h-[420px]"
           >
             <img
-              src={mensTile}
+              src={mensTile.url}
               alt="AFP MEN — built for the grind"
               loading="lazy"
               className="absolute inset-0 w-full h-full object-cover opacity-70 transition-transform duration-700 group-hover:scale-105"

@@ -11,6 +11,9 @@ import zipBack from "@/assets/product-zip-jacket-sets-duo-back.jpg.asset.json";
 import longsleeve from "@/assets/product-longsleeve-shorts-sets-duo.jpg.asset.json";
 import babydoll from "@/assets/product-babydoll-romper-card.jpg.asset.json";
 import shaker from "@/assets/product-afp-shaker-bottles.jpg.asset.json";
+import mensBlackSet from "@/assets/afp-mens-black.jpg.asset.json";
+import mensWhiteSet from "@/assets/afp-mens-white.jpg.asset.json";
+import ashleeApple from "@/assets/ashlee-apple.jpg.asset.json";
 
 export const WA = "https://wa.me/12462520102";
 export const waLink = (msg: string) => `${WA}?text=${encodeURIComponent(msg)}`;
@@ -116,6 +119,40 @@ export const products: Product[] = [
     ],
     sizes: ["One size"],
     collections: ["add-ons"],
+  },
+  {
+    name: "AFP Lime Romper",
+    price: "DM for price",
+    image: ashleeApple.url,
+    colors: [{ name: "Lime", hex: LIME }],
+    sizes: ["S", "M", "L"],
+    tag: "SIGNATURE",
+    collections: ["alobabes"],
+  },
+  {
+    name: "AFP MEN Performance Set — Black",
+    price: "DM for price",
+    image: mensBlackSet.url,
+    gallery: [mensWhiteSet.url],
+    colors: [
+      { name: "Black", hex: "#111" },
+      { name: "White", hex: "#f5f5f5" },
+    ],
+    sizes: ["S", "M", "L", "XL"],
+    tag: "NEW",
+    collections: ["afp-men"],
+  },
+  {
+    name: "AFP MEN Tee + Shorts — White",
+    price: "DM for price",
+    image: mensWhiteSet.url,
+    gallery: [mensBlackSet.url],
+    colors: [
+      { name: "White", hex: "#f5f5f5" },
+      { name: "Black", hex: "#111" },
+    ],
+    sizes: ["S", "M", "L", "XL"],
+    collections: ["afp-men"],
   },
 ];
 
