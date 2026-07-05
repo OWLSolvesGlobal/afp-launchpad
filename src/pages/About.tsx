@@ -135,14 +135,13 @@ export default function About() {
                   >
                     The Standard
                   </span>
-                  <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[0.95] mb-6">
-                    Nothing leaves the rack
-                    <br />
-                    until it earns its place.
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-[1.05] mb-5">
+                    We provide pieces we actually live in, train in, move in
+                    and unwind in.
                   </h2>
                   <p className="font-serif italic text-xl md:text-2xl leading-snug text-white/90">
-                    We only stock pieces we actually live in, train in, move in
-                    and unwind in.
+                    Nothing leaves the rack until it earns its place in my
+                    routine.
                   </p>
                 </div>
               </div>
