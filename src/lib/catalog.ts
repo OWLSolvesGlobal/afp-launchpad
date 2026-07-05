@@ -88,12 +88,17 @@ export const useStock = (productId: string | undefined) =>
     queryKey: ["stock", productId],
     enabled: !!productId,
     queryFn: async (): Promise<StockEntry[]> => {
-      const { data, error } = await supabase
-        .from("product_stock")
-        .select("size,color,quantity")
-        .eq("product_id", productId!);
+      const { data, error } = await supabase.rpc("get_product_availability", {
+        _product_id: productId!,
+      });
       if (error) throw error;
-      return data ?? [];
+      // Map availability booleans back to quantity-shaped entries so the
+      // existing helpers (sizeAvailable/colorAvailable) keep working.
+      return (data ?? []).map((row: { size: string; color: string; in_stock: boolean }) => ({
+        size: row.size,
+        color: row.color,
+        quantity: row.in_stock ? 1 : 0,
+      }));
     },
     staleTime: 30_000,
   });
