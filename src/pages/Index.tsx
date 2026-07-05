@@ -154,9 +154,10 @@ const Index = () => {
           </div>
         </section>
 
+        <FeaturedCarousel />
+
         {/* FEATURED PRODUCTS */}
         <section id="shop" className="bg-neutral-50 py-16 md:py-24">
-          <FeaturedCarousel />
           <div className="container">
             <div className="flex items-end justify-between mb-8 md:mb-10">
               <div>
