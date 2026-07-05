@@ -3,6 +3,7 @@ import { Instagram, MessageCircle, MapPin, Clock, ArrowRight } from "lucide-reac
 import { Header } from "@/components/site/Header";
 import blueFront from "@/assets/product-blue-aura-set-front.jpg.asset.json";
 import blueBack from "@/assets/product-blue-aura-set-back.jpg.asset.json";
+import twoPieceFront from "@/assets/product-two-piece-set-black-red-front.jpg.asset.json";
 import twoPieceBack from "@/assets/product-two-piece-set-black-red-back.jpg.asset.json";
 import vbackFront from "@/assets/product-vback-sets-3colors-front.jpg.asset.json";
 import vbackBack from "@/assets/product-vback-sets-3colors-back.jpg.asset.json";
@@ -11,8 +12,8 @@ import zipBack from "@/assets/product-zip-jacket-sets-duo-back.jpg.asset.json";
 import longsleeve from "@/assets/product-longsleeve-shorts-sets-duo.jpg.asset.json";
 import babydoll from "@/assets/product-babydoll-romper-card.jpg.asset.json";
 import shaker from "@/assets/product-afp-shaker-bottles.jpg.asset.json";
-import loungie from "@/assets/afp-lime-romper.jpg";
-import lockers from "@/assets/hero-iron.jpg";
+import loungie from "@/assets/accent-new-loungie-colors.jpg.asset.json";
+import lockers from "@/assets/accent-gym-lockers-lifestyle.jpg.asset.json";
 import mensTile from "@/assets/afp-mens-black.jpg";
 import aloBabesTile from "@/assets/ashlee-blue.jpg";
 
@@ -45,7 +46,8 @@ const products: Product[] = [
   {
     name: "Two Piece Set",
     price: "$100",
-    image: twoPieceBack.url,
+    image: twoPieceFront.url,
+    gallery: [twoPieceBack.url],
     colors: [
       { name: "Black", hex: "#111" },
       { name: "Red", hex: "#e63946" },
@@ -222,7 +224,7 @@ const Index = () => {
 
   const collections = [
     { label: "AloBabes", img: aloBabesTile, href: waLink("Hi! Tell me about AloBabes.") },
-    { label: "AFPLounge", img: loungie, href: waLink("Hi! I'm interested in AFPLounge pieces.") },
+    { label: "AFPLounge", img: loungie.url, href: waLink("Hi! I'm interested in AFPLounge pieces.") },
     { label: "AFP MEN", img: mensTile, href: waLink("Hi! Show me the AFP MEN collection.") },
     { label: "Add-Ons", img: shaker.url, href: waLink("Hi! I'd like to see AFP add-ons.") },
   ];
@@ -366,7 +368,7 @@ const Index = () => {
         {/* LIFESTYLE BAND */}
         <section className="relative h-[420px] md:h-[520px] overflow-hidden">
           <img
-            src={lockers}
+            src={lockers.url}
             alt="AFP lifestyle"
             className="absolute inset-0 w-full h-full object-cover"
           />
