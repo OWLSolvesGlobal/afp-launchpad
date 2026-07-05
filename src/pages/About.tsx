@@ -93,22 +93,29 @@ export default function About() {
         <section
           className="border-y border-black overflow-hidden py-5"
           style={{ background: LIME }}
+          aria-labelledby="marquee-label"
         >
-          <div className="flex gap-12 whitespace-nowrap animate-[scroll_40s_linear_infinite] uppercase text-xl md:text-2xl tracking-[0.25em] font-black text-black">
+          <p id="marquee-label" className="sr-only">
+            AFP values: Discipline, Sweat, Style, Strength, Self-Belief, Showtime.
+          </p>
+          <div
+            aria-hidden="true"
+            className="flex gap-12 whitespace-nowrap animate-[scroll_40s_linear_infinite] motion-reduce:animate-none uppercase text-xl md:text-2xl tracking-[0.25em] font-black text-black"
+          >
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex gap-12 shrink-0 items-center">
                 <span>Discipline</span>
-                <span aria-hidden>·</span>
+                <span>·</span>
                 <span>Sweat</span>
-                <span aria-hidden>·</span>
+                <span>·</span>
                 <span>Style</span>
-                <span aria-hidden>·</span>
+                <span>·</span>
                 <span>Strength</span>
-                <span aria-hidden>·</span>
+                <span>·</span>
                 <span>Self-Belief</span>
-                <span aria-hidden>·</span>
+                <span>·</span>
                 <span>Showtime</span>
-                <span aria-hidden>·</span>
+                <span>·</span>
               </div>
             ))}
           </div>
@@ -256,34 +263,36 @@ export default function About() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 to="/collection/alobabes"
-                className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full font-bold text-black transition-transform hover:scale-[1.02]"
+                className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full font-bold text-black transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/60"
                 style={{ background: LIME }}
               >
-                Shop Women <ArrowRight className="w-4 h-4" />
+                Shop Women <ArrowRight aria-hidden="true" className="w-4 h-4" />
               </Link>
               <Link
                 to="/collection/afp-men"
-                className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full font-bold text-white border-2 border-white hover:bg-white hover:text-black transition-colors"
+                className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full font-bold text-white border-2 border-white hover:bg-white hover:text-black transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/60"
               >
-                Shop Men <ArrowRight className="w-4 h-4" />
+                Shop Men <ArrowRight aria-hidden="true" className="w-4 h-4" />
               </Link>
               <a
                 href={waLink("Hi AFP! I have a question about your story.")}
                 target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full font-bold text-black"
+                rel="noopener noreferrer"
+                aria-label="Chat with AFP on WhatsApp (opens in a new tab)"
+                className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full font-bold text-black focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/60"
                 style={{ background: "#25D366" }}
               >
-                <MessageCircle className="w-4 h-4" /> WhatsApp Us
+                <MessageCircle aria-hidden="true" className="w-4 h-4" /> WhatsApp Us
               </a>
             </div>
             <a
               href="https://instagram.com/alofitnesspro"
               target="_blank"
-              rel="noreferrer"
-              className="mt-8 inline-flex items-center gap-2 text-sm text-white/70 hover:text-white"
+              rel="noopener noreferrer"
+              aria-label="Follow AFP on Instagram (opens in a new tab)"
+              className="mt-8 inline-flex items-center gap-2 text-sm text-white/70 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-full px-2 py-1"
             >
-              <Instagram className="w-4 h-4" /> @alofitnesspro
+              <Instagram aria-hidden="true" className="w-4 h-4" /> @alofitnesspro
             </a>
           </div>
         </section>
