@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import limeRomper from "@/assets/afp-lime-romper.jpg";
-import mensBlack from "@/assets/afp-mens-black.jpg";
+import mensBlack from "@/assets/afp-mens-black.jpg.asset.json";
 
 export const Hero = () => {
   return (

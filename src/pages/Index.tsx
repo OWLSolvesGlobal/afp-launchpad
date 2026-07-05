@@ -5,7 +5,7 @@ import { Header } from "@/components/site/Header";
 import blueFront from "@/assets/product-blue-aura-set-front.jpg.asset.json";
 import loungie from "@/assets/accent-new-loungie-colors.jpg.asset.json";
 import lockers from "@/assets/accent-gym-lockers-lifestyle.jpg.asset.json";
-import mensTile from "@/assets/afp-mens-black.jpg";
+import mensTile from "@/assets/afp-mens-black.jpg.asset.json";
 import aloBabesTile from "@/assets/ashlee-blue.jpg";
 import {
   LIME,

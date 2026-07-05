@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import ashleePink from "@/assets/ashlee-pink.jpg";
-import ashleeApple from "@/assets/ashlee-apple.jpg";
+import ashleeApple from "@/assets/ashlee-apple.jpg.asset.json";
 import ashleeBlue from "@/assets/ashlee-blue.jpg";
 import ashleePool from "@/assets/ashlee-pool.jpg";
 import ashleeGolf from "@/assets/ashlee-golf.jpg";

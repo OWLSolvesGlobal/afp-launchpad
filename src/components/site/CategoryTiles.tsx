@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import womenImg from "@/assets/afp-purple-romper.jpg";
-import menImg from "@/assets/afp-mens-white.jpg";
+import menImg from "@/assets/afp-mens-white.jpg.asset.json";
 import setImg from "@/assets/afp-black-jumpsuit.jpg";
 import accImg from "@/assets/afp-golf-dress.jpg";
 
