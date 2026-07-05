@@ -82,6 +82,20 @@ const Index = () => {
                   <MessageCircle className="w-4 h-4" /> WhatsApp Us
                 </a>
               </div>
+              <Link
+                to="/collection/afp-men"
+                className="mt-4 inline-flex items-center gap-3 text-sm font-semibold text-black hover:opacity-70 group"
+              >
+                <span
+                  className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-[0.2em] uppercase px-2.5 py-1 rounded-full text-black"
+                  style={{ background: LIME }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
+                  In Stock
+                </span>
+                Shop AFP MEN — real product now live
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </Link>
             </div>
 
             <div className="order-1 md:order-2 relative">
