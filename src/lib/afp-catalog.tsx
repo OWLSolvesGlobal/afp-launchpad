@@ -15,7 +15,7 @@ import mensBlackSet from "@/assets/afp-mens-black.jpg.asset.json";
 import mensWhiteSet from "@/assets/afp-mens-white.jpg.asset.json";
 import ashleeApple from "@/assets/ashlee-apple.jpg.asset.json";
 
-export const WA = "https://wa.me/12462520102";
+export const WA = "https://wa.me/12468364327";
 export const waLink = (msg: string) => `${WA}?text=${encodeURIComponent(msg)}`;
 export const TURQUOISE = "#00b5e2";
 export const LIME = "#c5e86c";
