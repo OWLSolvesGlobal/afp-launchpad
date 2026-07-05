@@ -93,7 +93,7 @@ const Index = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
                   In Stock
                 </span>
-                Shop AFP MEN — real product now live
+                Shop AFP MEN
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
