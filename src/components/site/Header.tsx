@@ -13,6 +13,7 @@ const nav = [
   { to: "/collection/afp-men", label: "Men" },
   { to: "/collection/afplounge", label: "Lounge" },
   { to: "/collection/add-ons", label: "Add-Ons" },
+  { to: "/about", label: "About" },
 ];
 
 export const Header = ({ transparent = false }: { transparent?: boolean }) => {

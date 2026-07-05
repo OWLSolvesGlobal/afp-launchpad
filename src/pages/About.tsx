@@ -220,13 +220,13 @@ export default function About() {
               className="flex flex-col sm:flex-row gap-4 justify-center"
             >
               <Link
-                to="/shop/women"
+                to="/collection/alobabes"
                 className="bg-bone text-ink px-8 py-4 eyebrow hover:bg-safety hover:text-bone transition-colors"
               >
                 Shop Women
               </Link>
               <Link
-                to="/shop/men"
+                to="/collection/afp-men"
                 className="border border-bone text-bone px-8 py-4 eyebrow hover:bg-bone hover:text-ink transition-colors"
               >
                 Shop Men
