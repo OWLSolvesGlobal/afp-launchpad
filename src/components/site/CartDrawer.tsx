@@ -42,9 +42,14 @@ export const CartDrawer = () => {
               <div className="font-serif text-2xl">Your bag is empty</div>
               <p className="text-sm text-graphite mt-2">Add a piece to get started.</p>
             </div>
-            <Button variant="afp-primary" size="afp" onClick={closeCart} asChild>
-              <Link to="/shop/women">Shop Women</Link>
-            </Button>
+            <Link
+              to="/shop/women"
+              onClick={closeCart}
+              className="inline-flex items-center justify-center rounded-full px-8 h-12 text-sm font-bold uppercase tracking-wider text-black hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground/20"
+              style={{ background: LIME }}
+            >
+              Shop Women
+            </Link>
           </div>
         ) : (
           <>
@@ -54,7 +59,8 @@ export const CartDrawer = () => {
                   <Link
                     to={`/product/${item.slug}`}
                     onClick={closeCart}
-                    className="w-24 h-28 bg-muted overflow-hidden shrink-0 rounded-2xl"
+                    aria-label={`View ${item.name}`}
+                    className="w-24 h-28 bg-muted overflow-hidden shrink-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
                   >
                     <img
                       src={item.image}
