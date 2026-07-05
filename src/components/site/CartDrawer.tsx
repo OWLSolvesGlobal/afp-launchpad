@@ -54,7 +54,8 @@ export const CartDrawer = () => {
                   <Link
                     to={`/product/${item.slug}`}
                     onClick={closeCart}
-                    className="w-24 h-28 bg-muted overflow-hidden shrink-0 rounded-2xl"
+                    aria-label={`View ${item.name}`}
+                    className="w-24 h-28 bg-muted overflow-hidden shrink-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
                   >
                     <img
                       src={item.image}
