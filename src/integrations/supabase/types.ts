@@ -283,6 +283,14 @@ export type Database = {
     }
     Functions: {
       available_credit_cents: { Args: { _user_id: string }; Returns: number }
+      get_product_availability: {
+        Args: { _product_id: string }
+        Returns: {
+          color: string
+          in_stock: boolean
+          size: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
