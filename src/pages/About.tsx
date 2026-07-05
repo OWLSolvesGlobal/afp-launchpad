@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { ArrowRight, Instagram, MessageCircle } from "lucide-react";
 import { Header } from "@/components/site/Header";
-import { Footer } from "@/components/site/Footer";
 import ashleePink from "@/assets/ashlee-pink.jpg";
 import ashleeApple from "@/assets/ashlee-apple.jpg.asset.json";
 import ashleeBlue from "@/assets/ashlee-blue.jpg";
 import ashleePool from "@/assets/ashlee-pool.jpg";
-import ashleeGolf from "@/assets/ashlee-golf.jpg";
+import { LIME, TURQUOISE, waLink } from "@/lib/afp-catalog";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -31,75 +31,90 @@ export default function About() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-white text-neutral-900">
       <Header />
 
       <main id="main">
-        {/* ============ HERO ============ */}
-        <section className="relative pt-28 md:pt-36 pb-16 md:pb-24 overflow-hidden">
-          <div className="container grid grid-cols-12 gap-6 md:gap-10 items-end">
-            <div className="col-span-12 md:col-span-7 lg:col-span-6">
-              <motion.div {...fadeUp} className="eyebrow text-graphite mb-6">
-                — Our Story
-              </motion.div>
+        {/* ============ HERO — matches Index hero pattern ============ */}
+        <section className="relative overflow-hidden bg-white pt-20 md:pt-24">
+          <div className="container grid md:grid-cols-2 gap-8 md:gap-12 items-center py-10 md:py-20">
+            <div className="order-2 md:order-1">
+              <span
+                className="inline-block text-[11px] font-bold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full"
+                style={{ background: LIME }}
+              >
+                Meet the Founder
+              </span>
               <motion.h1
                 {...fadeUp}
-                transition={{ ...fadeUp.transition, delay: 0.05 }}
-                className="font-display text-[10vw] md:text-[6.5vw] lg:text-[5.5vw] leading-[0.92] tracking-tight"
+                className="mt-5 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight"
               >
-                Built by the<br />
-                <span className="italic font-light">unstoppable.</span><br />
-                Worn by the<br />
-                <span className="bg-ink text-bone px-3 inline-block">relentless.</span>
+                Built by the
+                <br />
+                <span style={{ color: TURQUOISE }}>unstoppable.</span>
+                <br />
+                Worn by the{" "}
+                <em className="italic font-serif font-normal">relentless.</em>
               </motion.h1>
               <motion.p
                 {...fadeUp}
-                transition={{ ...fadeUp.transition, delay: 0.15 }}
-                className="mt-8 max-w-md text-base md:text-lg text-graphite leading-relaxed"
+                transition={{ ...fadeUp.transition, delay: 0.1 }}
+                className="mt-6 max-w-md text-base md:text-lg text-neutral-600"
               >
-                AFP wasn't built in a boardroom. It started in training spaces and early
-                mornings—but grew into something made for movement, rest and everything in
-                between.
+                AFP wasn't built in a boardroom. It started in training spaces
+                and early mornings — and grew into something made for movement,
+                rest and everything in between.
               </motion.p>
             </div>
 
             <motion.div
               {...fadeUp}
-              transition={{ ...fadeUp.transition, delay: 0.2 }}
-              className="col-span-12 md:col-span-5 lg:col-span-6"
+              transition={{ ...fadeUp.transition, delay: 0.15 }}
+              className="order-1 md:order-2 relative"
             >
-              <div className="relative">
-                <div className="aspect-[3/4] overflow-hidden bg-muted">
-                  <img
-                    src={ashleePink}
-                    alt="AFP signature pink zip-front romper"
-                    className="w-full h-full object-cover"
-                    width={832}
-                    height={1216}
-                  />
-                </div>
+              <div
+                className="absolute -inset-6 md:-inset-10 rounded-[2.5rem] -z-0"
+                style={{ background: `linear-gradient(135deg, ${TURQUOISE}22, ${LIME}44)` }}
+              />
+              <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden bg-neutral-100">
+                <img
+                  src={ashleePink}
+                  alt="Ashlee, founder of AFP, in the signature pink zip-front romper"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  width={832}
+                  height={1216}
+                />
               </div>
             </motion.div>
           </div>
         </section>
 
-        {/* ============ MARQUEE ============ */}
-        <section className="border-y border-border bg-background text-foreground overflow-hidden py-6">
-          <div className="flex gap-12 whitespace-nowrap animate-[scroll_40s_linear_infinite] font-stencil uppercase text-2xl md:text-3xl tracking-widest">
+        {/* ============ MARQUEE (kept, restyled to match brand) ============ */}
+        <section
+          className="border-y border-black overflow-hidden py-5"
+          style={{ background: LIME }}
+        >
+          <div className="flex gap-12 whitespace-nowrap animate-[scroll_40s_linear_infinite] uppercase text-xl md:text-2xl tracking-[0.25em] font-black text-black">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex gap-12 shrink-0">
+              <div key={i} className="flex gap-12 shrink-0 items-center">
                 <span>Discipline</span>
+                <span aria-hidden>·</span>
                 <span>Sweat</span>
+                <span aria-hidden>·</span>
                 <span>Style</span>
+                <span aria-hidden>·</span>
                 <span>Strength</span>
+                <span aria-hidden>·</span>
                 <span>Self-Belief</span>
+                <span aria-hidden>·</span>
                 <span>Showtime</span>
+                <span aria-hidden>·</span>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ============ FULL-BLEED B/W TRAINING IMAGE ============ */}
+        {/* ============ THE STANDARD ============ */}
         <section className="relative">
           <div className="relative aspect-[4/5] sm:aspect-[16/10] md:aspect-[16/9] overflow-hidden">
             <img
@@ -110,21 +125,24 @@ export default function About() {
               width={1408}
               height={896}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-ink/85 via-ink/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent" />
             <div className="absolute inset-0 flex items-center">
               <div className="container">
-                <div className="max-w-xl text-bone">
-                  <div className="font-stencil uppercase text-xs md:text-sm tracking-[0.3em] mb-4 text-safety">
-                    — The Standard
-                  </div>
-                  <h2 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[0.95] mb-6">
+                <div className="max-w-xl text-white">
+                  <span
+                    className="inline-block text-[11px] font-bold tracking-[0.25em] uppercase mb-5"
+                    style={{ color: LIME }}
+                  >
                     The Standard
+                  </span>
+                  <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[0.95] mb-6">
+                    Nothing leaves the rack
+                    <br />
+                    until it earns its place.
                   </h2>
-                  <p className="font-display text-xl md:text-2xl lg:text-3xl leading-[1.15] italic text-bone/95">
-                    We provide pieces we actually live in, train in, move in, and unwind in.
-                  </p>
-                  <p className="mt-5 font-display text-lg md:text-xl lg:text-2xl leading-[1.2] italic text-bone/90">
-                    Nothing leaves the rack until it earns its place in my routine.
+                  <p className="font-serif italic text-xl md:text-2xl leading-snug text-white/90">
+                    We only stock pieces we actually live in, train in, move in
+                    and unwind in.
                   </p>
                 </div>
               </div>
@@ -132,23 +150,29 @@ export default function About() {
           </div>
         </section>
 
-        {/* ============ APPLE / LETTER TO THE READER ============ */}
-        <section className="py-20 md:py-32">
-          <div className="container grid grid-cols-12 gap-6 md:gap-12 items-center">
-            <motion.div {...fadeUp} className="col-span-12 md:col-span-6 lg:col-span-5 md:order-2">
+        {/* ============ LETTER TO THE READER ============ */}
+        <section className="bg-neutral-50 py-20 md:py-28">
+          <div className="container grid grid-cols-12 gap-8 md:gap-14 items-center">
+            <motion.div
+              {...fadeUp}
+              className="col-span-12 md:col-span-6 md:order-2"
+            >
               <div className="relative">
-                <div className="aspect-[4/5] overflow-hidden bg-muted">
+                <div
+                  className="absolute -inset-4 md:-inset-6 rounded-[2rem] -z-0"
+                  style={{ background: `linear-gradient(135deg, ${LIME}66, ${TURQUOISE}22)` }}
+                />
+                <div className="relative aspect-[4/5] rounded-[1.75rem] overflow-hidden bg-neutral-100">
                   <img
                     src={ashleeApple.url}
-                    alt="AFP lime-green romper paired with a fresh green apple"
+                    alt="Ashlee in the AFP lime-green romper, holding a green apple"
                     loading="lazy"
                     className="w-full h-full object-cover"
                     width={832}
                     height={1216}
                   />
                 </div>
-                {/* Small inset — pool look */}
-                <div className="hidden md:block absolute -bottom-8 -left-8 w-32 lg:w-40 aspect-[4/5] overflow-hidden border-4 border-bone shadow-lg">
+                <div className="hidden md:block absolute -bottom-6 -left-6 w-32 lg:w-40 aspect-[4/5] overflow-hidden rounded-2xl border-4 border-white shadow-xl">
                   <img
                     src={ashleePool}
                     alt="AFP pink poolside set"
@@ -161,42 +185,54 @@ export default function About() {
               </div>
             </motion.div>
 
-            <div className="col-span-12 md:col-span-6 lg:col-span-7 md:order-1">
-              <motion.div {...fadeUp} className="eyebrow text-graphite mb-4">— A Letter to You</motion.div>
+            <div className="col-span-12 md:col-span-6 md:order-1">
+              <span
+                className="text-[11px] font-bold tracking-[0.2em] uppercase"
+                style={{ color: TURQUOISE }}
+              >
+                A Letter to You
+              </span>
               <motion.h2
                 {...fadeUp}
                 transition={{ ...fadeUp.transition, delay: 0.05 }}
-                className="font-display text-3xl md:text-5xl leading-[1.05] mb-8 max-w-xl"
+                className="mt-3 text-3xl md:text-5xl font-black tracking-tight leading-[1.05] mb-8 max-w-xl"
               >
-                If you're reading this, you're already one of us.
+                If you're reading this,
+                <br />
+                you're already{" "}
+                <span style={{ color: TURQUOISE }}>one of us.</span>
               </motion.h2>
 
               <motion.div
                 {...fadeUp}
                 transition={{ ...fadeUp.transition, delay: 0.1 }}
-                className="space-y-5 text-base md:text-lg text-graphite leading-relaxed max-w-xl"
+                className="space-y-5 text-base md:text-lg text-neutral-700 leading-relaxed max-w-xl"
               >
                 <p>
-                  I started AFP because I was tired of choosing between clothes that performed
-                  and clothes that <em className="text-ink not-italic font-medium">felt like me</em>.
-                  Tired of activewear designed for someone else's body, someone else's life.
+                  I started AFP because I was tired of choosing between clothes
+                  that performed and clothes that{" "}
+                  <em className="text-black not-italic font-semibold">
+                    felt like me
+                  </em>
+                  . Tired of activewear designed for someone else's body,
+                  someone else's life.
                 </p>
                 <p>
-                  So I built it myself. Every fabric is chosen for the woman pushing through a
-                  6 a.m. lift, the man chasing a PR, the kid lacing up for their first practice,
-                  the entrepreneur squeezing yoga between meetings. <span className="text-ink font-medium">
-                  Fitness fashion for the unstoppable you.</span>
+                  So I built it myself. Every fabric is chosen for the woman
+                  pushing through a 6 a.m. lift, the man chasing a PR, the kid
+                  lacing up for their first practice, the entrepreneur
+                  squeezing yoga between meetings.{" "}
+                  <span className="text-black font-semibold">
+                    Fitness fashion for the unstoppable you.
+                  </span>
                 </p>
                 <p>
-                  Whether you're chasing a podium, a personal best, or just the version of
-                  yourself who shows up — AFP is for you. Wear it loud. Wear it sweaty. Wear it
-                  proud.
+                  Whether you're chasing a podium, a personal best, or just
+                  the version of yourself who shows up — AFP is for you. Wear
+                  it loud. Wear it sweaty. Wear it proud.
                 </p>
-                <p className="font-display text-2xl text-ink mt-8">
-                  See you at the start line.
-                </p>
-                <p className="font-stencil uppercase text-xs tracking-widest text-graphite">
-                  — AFP / Alo Fitness Pro
+                <p className="pt-2 text-xs font-bold tracking-[0.25em] uppercase text-neutral-500">
+                  — Ashlee · Founder, Alo Fitness Pro
                 </p>
               </motion.div>
             </div>
@@ -204,39 +240,55 @@ export default function About() {
         </section>
 
         {/* ============ CTA ============ */}
-        <section className="bg-ink text-bone py-20 md:py-32">
+        <section className="bg-black text-white py-20 md:py-28">
           <div className="container text-center">
-            <motion.div {...fadeUp} className="eyebrow text-safety mb-4">— Join the Movement</motion.div>
-            <motion.h2
-              {...fadeUp}
-              transition={{ ...fadeUp.transition, delay: 0.05 }}
-              className="font-display text-4xl md:text-6xl lg:text-7xl leading-[0.95] mb-10 max-w-3xl mx-auto"
+            <span
+              className="inline-block text-[11px] font-bold tracking-[0.25em] uppercase px-3 py-1.5 rounded-full text-black mb-6"
+              style={{ background: LIME }}
             >
-              <span className="italic font-light">Are you in?</span>
-            </motion.h2>
-            <motion.div
-              {...fadeUp}
-              transition={{ ...fadeUp.transition, delay: 0.1 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center"
-            >
+              Join the Movement
+            </span>
+            <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-[0.95] mb-10 max-w-3xl mx-auto">
+              Are you{" "}
+              <em className="italic font-serif font-normal" style={{ color: TURQUOISE }}>
+                in?
+              </em>
+            </h2>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 to="/collection/alobabes"
-                className="bg-bone text-ink px-8 py-4 eyebrow hover:bg-safety hover:text-bone transition-colors"
+                className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full font-bold text-black transition-transform hover:scale-[1.02]"
+                style={{ background: LIME }}
               >
-                Shop Women
+                Shop Women <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 to="/collection/afp-men"
-                className="border border-bone text-bone px-8 py-4 eyebrow hover:bg-bone hover:text-ink transition-colors"
+                className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full font-bold text-white border-2 border-white hover:bg-white hover:text-black transition-colors"
               >
-                Shop Men
+                Shop Men <ArrowRight className="w-4 h-4" />
               </Link>
-            </motion.div>
+              <a
+                href={waLink("Hi AFP! I have a question about your story.")}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full font-bold text-black"
+                style={{ background: "#25D366" }}
+              >
+                <MessageCircle className="w-4 h-4" /> WhatsApp Us
+              </a>
+            </div>
+            <a
+              href="https://instagram.com/alofitnesspro"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-8 inline-flex items-center gap-2 text-sm text-white/70 hover:text-white"
+            >
+              <Instagram className="w-4 h-4" /> @alofitnesspro
+            </a>
           </div>
         </section>
       </main>
-
-      <Footer />
 
       {/* Marquee keyframes */}
       <style>{`
