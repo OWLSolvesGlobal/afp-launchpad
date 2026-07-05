@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronRight, ChevronLeft, Minus, Plus, Truck, RotateCcw, ShieldCheck } from "lucide-react";
+import { ChevronRight, ChevronLeft, Minus, Plus, Truck, RotateCcw, ShieldCheck, Expand } from "lucide-react";
 import { Header } from "@/components/site/Header";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Footer } from "@/components/site/Footer";
 import { ProductCard } from "@/components/site/ProductCard";
 import {
@@ -30,6 +32,7 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [qty, setQty] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     if (!product) return;
@@ -95,13 +98,26 @@ export default function ProductDetail() {
             transition={{ duration: 0.6 }}
           >
             <div className="aspect-[4/5] overflow-hidden bg-muted relative group">
-              <img
-                src={(product.images[activeImage] ?? product.image)}
-                alt={product.imageAlt}
-                width={1200}
-                height={1500}
-                className="w-full h-full object-cover"
-              />
+              <button
+                type="button"
+                onClick={() => setLightboxOpen(true)}
+                aria-label="Expand image"
+                className="block w-full h-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+              >
+                <img
+                  src={(product.images[activeImage] ?? product.image)}
+                  alt={product.imageAlt}
+                  width={1200}
+                  height={1500}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+              <span
+                className="absolute top-3 right-3 w-9 h-9 grid place-items-center bg-bone/90 text-ink opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
+                aria-hidden="true"
+              >
+                <Expand className="w-4 h-4" />
+              </span>
               {product.images.length > 1 && (
                 <>
                   <button
@@ -346,6 +362,45 @@ export default function ProductDetail() {
       </main>
 
       <Footer />
+
+      {/* Image lightbox */}
+      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+        <DialogContent className="max-w-5xl w-[95vw] p-0 bg-background border-0 shadow-2xl">
+          <VisuallyHidden>
+            <DialogTitle>{product.name} — enlarged image</DialogTitle>
+          </VisuallyHidden>
+          <div className="relative bg-muted">
+            <img
+              src={product.images[activeImage] ?? product.image}
+              alt={product.imageAlt}
+              className="w-full h-auto max-h-[85vh] object-contain"
+            />
+            {product.images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setActiveImage((i) => (i - 1 + product.images.length) % product.images.length)}
+                  aria-label="Previous image"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 grid place-items-center bg-bone/90 text-ink hover:bg-ink hover:text-bone transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveImage((i) => (i + 1) % product.images.length)}
+                  aria-label="Next image"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 grid place-items-center bg-bone/90 text-ink hover:bg-ink hover:text-bone transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+                <span className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-ink/80 text-bone text-[10px] eyebrow px-2 py-1">
+                  {activeImage + 1} / {product.images.length}
+                </span>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

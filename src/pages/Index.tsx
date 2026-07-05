@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Instagram, MessageCircle, MapPin, Clock, ArrowRight } from "lucide-react";
 import { Header } from "@/components/site/Header";
-import { FeaturedCarousel } from "@/components/site/FeaturedCarousel";
 import blueFront from "@/assets/product-blue-aura-set-front.jpg.asset.json";
 import loungie from "@/assets/accent-new-loungie-colors.jpg.asset.json";
 import lockers from "@/assets/accent-gym-lockers-lifestyle.jpg.asset.json";
@@ -36,7 +35,7 @@ const Index = () => {
     { slug: "add-ons", label: "Add-Ons", img: productsByCollection("add-ons")[0]?.image ?? loungie.url },
   ];
 
-  const featured = products.filter((p) => p.collections.includes("alobabes"));
+  const aloBabes = products.filter((p) => p.collections.includes("alobabes"));
   const addOns = productsByCollection("add-ons");
 
   return (
@@ -154,9 +153,7 @@ const Index = () => {
           </div>
         </section>
 
-        <FeaturedCarousel />
-
-        {/* FEATURED PRODUCTS */}
+        {/* ALOBABES SHOP */}
         <section id="shop" className="bg-neutral-50 py-16 md:py-24">
           <div className="container">
             <div className="flex items-end justify-between mb-8 md:mb-10">
@@ -168,7 +165,7 @@ const Index = () => {
                   Shop
                 </span>
                 <h2 className="mt-2 text-3xl md:text-5xl font-black tracking-tight">
-                  Featured Fits
+                  AloBabes
                 </h2>
               </div>
               <a
@@ -182,7 +179,7 @@ const Index = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {featured.map((p) => (
+              {aloBabes.map((p) => (
                 <ProductCard key={p.name} p={p} />
               ))}
             </div>
