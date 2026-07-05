@@ -256,7 +256,7 @@ export default function Checkout() {
                         type="button"
                         onClick={() => setPickupLocation(loc.id)}
                         className={cn(
-                          "w-full text-left border p-5 transition-colors flex items-start justify-between gap-4",
+                          "w-full text-left border p-5 transition-colors flex items-start justify-between gap-4 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40",
                           active
                             ? "border-foreground bg-foreground/[0.02]"
                             : "border-border hover:border-foreground/40"
