@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronRight, ChevronLeft, Minus, Plus, Truck, RotateCcw, ShieldCheck, Expand, X } from "lucide-react";
+import { ChevronRight, ChevronLeft, Minus, Plus, Truck, RotateCcw, ShieldCheck, Expand } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
