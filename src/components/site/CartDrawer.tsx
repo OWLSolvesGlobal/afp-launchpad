@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Minus, Plus, X, ShoppingBag } from "lucide-react";
+import { Minus, Plus, X, ShoppingBag, MessageCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCart, formatMoney } from "@/context/CartContext";
+import { LIME, waLink } from "@/lib/afp-catalog";
 
 export const CartDrawer = () => {
   const { items, isOpen, closeCart, updateQuantity, removeItem, subtotal, count } = useCart();
@@ -12,6 +13,18 @@ export const CartDrawer = () => {
     closeCart();
     navigate("/checkout");
   };
+
+  const waMessage =
+    items.length === 0
+      ? "Hi AFP!"
+      : `Hi AFP! I'd like to order:\n${items
+          .map(
+            (i) =>
+              `• ${i.name} — ${i.color} / ${i.size} × ${i.quantity} (${formatMoney(
+                i.price * i.quantity,
+              )})`,
+          )
+          .join("\n")}\n\nSubtotal: ${formatMoney(subtotal)}`;
 
   return (
     <Sheet open={isOpen} onOpenChange={(o) => (o ? null : closeCart())}>
@@ -41,49 +54,50 @@ export const CartDrawer = () => {
                   <Link
                     to={`/product/${item.slug}`}
                     onClick={closeCart}
-                    className="w-20 h-24 bg-muted overflow-hidden shrink-0"
+                    className="w-24 h-28 bg-muted overflow-hidden shrink-0 rounded-2xl"
                   >
                     <img
                       src={item.image}
                       alt={item.name}
                       className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                   </Link>
                   <div className="flex-1 min-w-0 flex flex-col">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <h4 className="text-sm font-medium truncate">{item.name}</h4>
+                        <h4 className="text-sm font-semibold truncate">{item.name}</h4>
                         <div className="text-[11px] text-graphite mt-1 uppercase tracking-wider">
                           {item.color} · {item.size}
                         </div>
                       </div>
                       <button
                         onClick={() => removeItem(item.id)}
-                        aria-label="Remove item"
-                        className="text-graphite hover:text-foreground transition-colors p-1 -mt-1 -mr-1"
+                        aria-label={`Remove ${item.name} from bag`}
+                        className="text-graphite hover:text-foreground transition-colors p-1 -mt-1 -mr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 rounded-full"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-4 h-4" aria-hidden="true" />
                       </button>
                     </div>
                     <div className="mt-auto flex items-end justify-between pt-3">
-                      <div className="inline-flex items-center border border-border">
+                      <div className="inline-flex items-center border border-border rounded-full">
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          aria-label="Decrease quantity"
-                          className="px-2 py-1 hover:bg-muted transition-colors"
+                          aria-label={`Decrease quantity of ${item.name}`}
+                          className="pl-3 pr-2 py-1.5 hover:bg-muted transition-colors rounded-l-full"
                         >
-                          <Minus className="w-3 h-3" />
+                          <Minus className="w-3 h-3" aria-hidden="true" />
                         </button>
                         <span className="px-3 text-xs tabular-nums">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          aria-label="Increase quantity"
-                          className="px-2 py-1 hover:bg-muted transition-colors"
+                          aria-label={`Increase quantity of ${item.name}`}
+                          className="pr-3 pl-2 py-1.5 hover:bg-muted transition-colors rounded-r-full"
                         >
-                          <Plus className="w-3 h-3" />
+                          <Plus className="w-3 h-3" aria-hidden="true" />
                         </button>
                       </div>
-                      <div className="text-sm font-medium">
+                      <div className="text-sm font-semibold tabular-nums">
                         {formatMoney(item.price * item.quantity)}
                       </div>
                     </div>
@@ -92,7 +106,7 @@ export const CartDrawer = () => {
               ))}
             </div>
 
-            <div className="border-t border-border px-6 py-5 space-y-4 bg-background">
+            <div className="border-t border-border px-6 py-5 space-y-3 bg-background">
               <div className="flex items-baseline justify-between">
                 <span className="eyebrow text-graphite">Subtotal</span>
                 <span className="font-serif text-2xl">{formatMoney(subtotal)}</span>
@@ -100,14 +114,22 @@ export const CartDrawer = () => {
               <p className="text-[11px] text-graphite uppercase tracking-wider">
                 Shipping & taxes calculated at checkout
               </p>
-              <Button
-                variant="afp-primary"
-                size="afp"
-                className="w-full"
+              <button
                 onClick={goToCheckout}
+                className="w-full inline-flex items-center justify-center rounded-full px-6 h-12 text-sm font-bold uppercase tracking-wider text-black hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground/20"
+                style={{ background: LIME }}
               >
                 Checkout — {formatMoney(subtotal)}
-              </Button>
+              </button>
+              <a
+                href={waLink(waMessage)}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Order on WhatsApp (opens in a new tab)"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-full px-6 h-11 text-xs font-semibold uppercase tracking-wider border border-foreground/20 hover:border-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
+              >
+                <MessageCircle aria-hidden="true" className="w-4 h-4" /> Order on WhatsApp
+              </a>
             </div>
           </>
         )}
