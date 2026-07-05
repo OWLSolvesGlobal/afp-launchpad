@@ -3,7 +3,7 @@ import { Link, useParams, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronRight, ChevronLeft, Minus, Plus, Truck, RotateCcw, ShieldCheck, Expand, X } from "lucide-react";
 import { Header } from "@/components/site/Header";
-import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Footer } from "@/components/site/Footer";
 import { ProductCard } from "@/components/site/ProductCard";
@@ -398,12 +398,6 @@ export default function ProductDetail() {
                 </span>
               </>
             )}
-            <DialogClose
-              aria-label="Close"
-              className="absolute top-3 right-3 w-10 h-10 grid place-items-center bg-bone/90 text-ink hover:bg-ink hover:text-bone transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </DialogClose>
           </div>
         </DialogContent>
       </Dialog>
