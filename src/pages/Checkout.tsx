@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, Store, Check } from "lucide-react";
+import { ArrowLeft, MapPin, Store, Check, MessageCircle } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,21 +11,22 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { CheckoutSkeleton } from "@/components/site/skeletons/CheckoutSkeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { LIME, waLink } from "@/lib/afp-catalog";
 
 type Fulfillment = "delivery" | "pickup";
 
 const PICKUP_LOCATIONS = [
   {
-    id: "downtown",
-    name: "AFP Flagship — Downtown",
-    address: "212 Market St, Floor 2",
-    hours: "Mon–Sat · 10am–7pm",
+    id: "st-michael",
+    name: "AFP HQ — St Michael",
+    address: "By appointment · St Michael, Barbados",
+    hours: "Mon–Sat · 10am–6pm",
   },
   {
-    id: "westside",
-    name: "AFP Westside Studio",
-    address: "48 Lakeview Ave",
-    hours: "Tue–Sun · 9am–6pm",
+    id: "bridgetown",
+    name: "AFP Drop — Bridgetown",
+    address: "Meet-up pickup arranged via WhatsApp",
+    hours: "Tue–Sat · 11am–5pm",
   },
 ];
 
@@ -71,11 +72,22 @@ export default function Checkout() {
   const shipping = useMemo(() => {
     if (fulfillment === "pickup") return 0;
     if (subtotal === 0) return 0;
-    return subtotal >= 15000 ? 0 : 800; // free over $150, else $8
+    return subtotal >= 30000 ? 0 : 1500; // free over BBD $300, else BBD $15 island-wide
   }, [fulfillment, subtotal]);
 
-  const tax = Math.round(subtotal * 0.08);
+  const tax = Math.round(subtotal * 0.175); // BBD VAT 17.5%
   const maxRedeemCents = Math.min(creditBalanceCents, Math.floor(subtotal / 2));
+  const waCheckoutMessage = useMemo(() => {
+    if (items.length === 0) return "Hi AFP!";
+    const lines = items.map(
+      (i) =>
+        `• ${i.name} — ${i.color} / ${i.size} × ${i.quantity} (${formatMoney(i.price * i.quantity)})`,
+    );
+    return `Hi AFP! I'd like to place this order:\n${lines.join("\n")}\n\nSubtotal: ${formatMoney(subtotal)}\n${
+      fulfillment === "pickup" ? "Pickup preferred." : "Please arrange delivery."
+    }`;
+  }, [items, subtotal, fulfillment]);
+
   const requestedRedeemCents = Math.max(
     0,
     Math.min(maxRedeemCents, Math.round((parseFloat(redeemDollars) || 0) * 100))
@@ -143,12 +155,12 @@ export default function Checkout() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
-      <main className="flex-1 container pt-24 md:pt-28 pb-16 md:pb-24">
+      <main id="main" className="flex-1 container pt-24 md:pt-28 pb-16 md:pb-24">
         <Link
           to="/shop/women"
-          className="inline-flex items-center gap-2 eyebrow text-graphite hover:text-foreground transition-colors mb-6"
+          className="inline-flex items-center gap-2 eyebrow text-graphite hover:text-foreground transition-colors mb-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 rounded-full px-1 py-1 -mx-1"
         >
-          <ArrowLeft className="w-3 h-3" /> Continue Shopping
+          <ArrowLeft className="w-3 h-3" aria-hidden="true" /> Continue Shopping
         </Link>
 
         <h1 className="display-lg mb-10 md:mb-14">Checkout.</h1>
@@ -191,16 +203,16 @@ export default function Checkout() {
                   onClick={() => setFulfillment("delivery")}
                   icon={<MapPin className="w-5 h-5" strokeWidth={1.5} />}
                   title="Delivery"
-                  subtitle="Ship to my address"
-                  meta={subtotal >= 15000 ? "Free over $150" : "From $8 · 2–5 days"}
+                  subtitle="Island-wide, Barbados"
+                  meta={subtotal >= 30000 ? "Free over BBD $300" : "From BBD $15 · 2–4 days"}
                 />
                 <FulfillmentCard
                   active={fulfillment === "pickup"}
                   onClick={() => setFulfillment("pickup")}
                   icon={<Store className="w-5 h-5" strokeWidth={1.5} />}
                   title="Store Pickup"
-                  subtitle="Collect in-store"
-                  meta="Free · Ready in 2 hours"
+                  subtitle="Meet-up in Barbados"
+                  meta="Free · Confirmed via WhatsApp"
                 />
               </div>
             </section>
@@ -244,7 +256,7 @@ export default function Checkout() {
                         type="button"
                         onClick={() => setPickupLocation(loc.id)}
                         className={cn(
-                          "w-full text-left border p-5 transition-colors flex items-start justify-between gap-4",
+                          "w-full text-left border p-5 transition-colors flex items-start justify-between gap-4 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40",
                           active
                             ? "border-foreground bg-foreground/[0.02]"
                             : "border-border hover:border-foreground/40"
@@ -336,7 +348,7 @@ export default function Checkout() {
 
           {/* RIGHT — order summary */}
           <aside className="lg:col-span-5">
-            <div className="lg:sticky lg:top-24 border border-border p-6 md:p-8 space-y-6 bg-card">
+            <div className="lg:sticky lg:top-24 rounded-[2rem] border border-border p-6 md:p-8 space-y-6 bg-card">
               <div className="flex items-baseline justify-between">
                 <h2 className="eyebrow text-graphite">Order Summary</h2>
                 <span className="text-xs text-graphite">{count} {count === 1 ? "item" : "items"}</span>
@@ -345,21 +357,26 @@ export default function Checkout() {
               <div className="divide-y divide-border">
                 {items.map((item) => (
                   <div key={item.id} className="py-3 flex gap-3">
-                    <div className="w-16 h-20 bg-muted overflow-hidden shrink-0 relative">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                      <span className="absolute -top-1 -right-1 bg-foreground text-background text-[10px] w-5 h-5 grid place-items-center rounded-full">
+                    <div className="w-20 h-24 bg-muted overflow-hidden shrink-0 relative rounded-2xl">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
+                      <span className="absolute -top-1.5 -right-1.5 bg-foreground text-background text-[10px] w-5 h-5 grid place-items-center rounded-full font-semibold tabular-nums">
                         {item.quantity}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                       <div>
-                        <div className="text-sm font-medium truncate">{item.name}</div>
+                        <div className="text-sm font-semibold truncate">{item.name}</div>
                         <div className="text-[11px] text-graphite uppercase tracking-wider mt-0.5">
                           {item.color} · {item.size}
                         </div>
                       </div>
                     </div>
-                    <div className="text-sm font-medium">{formatMoney(item.price * item.quantity)}</div>
+                    <div className="text-sm font-semibold tabular-nums">{formatMoney(item.price * item.quantity)}</div>
                   </div>
                 ))}
               </div>
@@ -370,7 +387,7 @@ export default function Checkout() {
                   label={fulfillment === "pickup" ? "Pickup" : "Shipping"}
                   value={shipping === 0 ? "Free" : formatMoney(shipping)}
                 />
-                <Row label="Estimated tax" value={formatMoney(tax)} />
+                <Row label="VAT (17.5%)" value={formatMoney(tax)} />
                 {requestedRedeemCents > 0 && (
                   <Row label="Store credit" value={`-${formatMoney(requestedRedeemCents)}`} />
                 )}
@@ -381,12 +398,33 @@ export default function Checkout() {
                 <span className="font-serif text-3xl">{formatMoney(total)}</span>
               </div>
 
-              <Button type="submit" variant="afp-primary" size="afp" className="w-full" disabled={submitting}>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full inline-flex items-center justify-center rounded-full px-6 h-12 text-sm font-bold uppercase tracking-wider text-black hover:opacity-90 transition-opacity disabled:opacity-60 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground/20"
+                style={{ background: LIME }}
+              >
                 {submitting ? "Placing…" : fulfillment === "pickup" ? "Place Pickup Order" : "Place Order"}
-              </Button>
+              </button>
+
+              <div className="relative py-1 flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-graphite">
+                <span className="flex-1 h-px bg-border" />
+                <span>or</span>
+                <span className="flex-1 h-px bg-border" />
+              </div>
+
+              <a
+                href={waLink(waCheckoutMessage)}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Send this order to AFP on WhatsApp (opens in a new tab)"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-full px-6 h-12 text-sm font-semibold uppercase tracking-wider border border-foreground/20 hover:border-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
+              >
+                <MessageCircle aria-hidden="true" className="w-4 h-4" /> Order on WhatsApp
+              </a>
 
               <p className="text-[11px] text-graphite text-center uppercase tracking-wider">
-                Secure checkout · Demo payment
+                Secure checkout · Prices in BBD
               </p>
             </div>
           </aside>
@@ -419,7 +457,7 @@ const FulfillmentCard = ({ active, onClick, icon, title, subtitle, meta }: Fulfi
     type="button"
     onClick={onClick}
     className={cn(
-      "border p-5 text-left transition-colors flex flex-col gap-3 h-full",
+      "border p-5 text-left transition-colors flex flex-col gap-3 h-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40",
       active
         ? "border-foreground bg-foreground/[0.02]"
         : "border-border hover:border-foreground/40"
