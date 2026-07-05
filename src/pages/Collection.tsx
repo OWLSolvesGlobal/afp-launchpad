@@ -90,8 +90,19 @@ export default function Collection() {
               {items.map((p) => (
                 <ProductCard key={p.name} p={p} />
               ))}
-              <ComingSoonCard collectionLabel={collection.label} />
             </div>
+            <p className="mt-10 text-center text-sm text-neutral-500">
+              More {collection.label} pieces landing soon —{" "}
+              <a
+                href={waLink(`Hi! Notify me when new ${collection.label} drops.`)}
+                target="_blank"
+                rel="noreferrer"
+                className="underline font-semibold text-black hover:opacity-70"
+              >
+                get notified on WhatsApp
+              </a>
+              .
+            </p>
           )}
         </section>
       </main>
