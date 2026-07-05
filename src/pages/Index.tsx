@@ -8,7 +8,6 @@ import lockers from "@/assets/accent-gym-lockers-lifestyle.jpg.asset.json";
 import mensTile from "@/assets/afp-mens-black.jpg";
 import aloBabesTile from "@/assets/ashlee-blue.jpg";
 import {
-  ComingSoonCard,
   LIME,
   ProductCard,
   TURQUOISE,
@@ -169,9 +168,59 @@ const Index = () => {
               {featured.map((p) => (
                 <ProductCard key={p.name} p={p} />
               ))}
-              <ComingSoonCard collectionLabel="AloBabes" />
             </div>
+            <p className="mt-8 text-center text-sm text-neutral-500">
+              More AloBabes drops on the way —{" "}
+              <a
+                href={waLink("Hi! Notify me when new AloBabes pieces drop.")}
+                target="_blank"
+                rel="noreferrer"
+                className="underline font-semibold text-black hover:opacity-70"
+              >
+                get first access on WhatsApp
+              </a>
+              .
+            </p>
           </div>
+        </section>
+
+        {/* AFP MEN BAND */}
+        <section className="container py-4 md:py-8">
+          <Link
+            to="/collection/afp-men"
+            className="group relative block overflow-hidden rounded-3xl bg-black text-white min-h-[320px] md:min-h-[420px]"
+          >
+            <img
+              src={mensTile}
+              alt="AFP MEN — built for the grind"
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover opacity-70 transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+            <div className="relative h-full p-8 md:p-14 flex flex-col justify-center max-w-xl">
+              <span
+                className="text-[11px] font-bold tracking-[0.25em] uppercase mb-3"
+                style={{ color: LIME }}
+              >
+                Now Open · AFP MEN
+              </span>
+              <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-[0.95]">
+                Built for
+                <br />
+                the grind.
+              </h2>
+              <p className="mt-4 text-white/80 max-w-sm">
+                Performance basics for the men who train heavy and dress sharp.
+                First pieces landing — be first in line.
+              </p>
+              <span
+                className="mt-6 inline-flex items-center gap-2 h-12 px-6 rounded-full font-bold text-black w-fit"
+                style={{ background: LIME }}
+              >
+                Shop AFP MEN <ArrowRight className="w-4 h-4" />
+              </span>
+            </div>
+          </Link>
         </section>
 
         {/* LIFESTYLE BAND */}
@@ -221,7 +270,6 @@ const Index = () => {
             {addOns.map((p) => (
               <ProductCard key={p.name} p={p} />
             ))}
-            <ComingSoonCard collectionLabel="Add-Ons" />
           </div>
         </section>
       </main>
