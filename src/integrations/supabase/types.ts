@@ -279,38 +279,18 @@ export type Database = {
       }
     }
     Views: {
-      product_stock_availability: {
-        Row: {
-          color: string | null
-          in_stock: boolean | null
-          product_id: string | null
-          size: string | null
-        }
-        Insert: {
-          color?: string | null
-          in_stock?: never
-          product_id?: string | null
-          size?: string | null
-        }
-        Update: {
-          color?: string | null
-          in_stock?: never
-          product_id?: string | null
-          size?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_stock_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       available_credit_cents: { Args: { _user_id: string }; Returns: number }
+      get_product_availability: {
+        Args: { _product_id: string }
+        Returns: {
+          color: string
+          in_stock: boolean
+          size: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
