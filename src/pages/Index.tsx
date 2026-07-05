@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Instagram, MessageCircle, MapPin, Clock, ArrowRight } from "lucide-react";
 import { Header } from "@/components/site/Header";
+import { FeaturedCarousel } from "@/components/site/FeaturedCarousel";
 import blueFront from "@/assets/product-blue-aura-set-front.jpg.asset.json";
 import loungie from "@/assets/accent-new-loungie-colors.jpg.asset.json";
 import lockers from "@/assets/accent-gym-lockers-lifestyle.jpg.asset.json";
@@ -152,6 +153,8 @@ const Index = () => {
             ))}
           </div>
         </section>
+
+        <FeaturedCarousel />
 
         {/* FEATURED PRODUCTS */}
         <section id="shop" className="bg-neutral-50 py-16 md:py-24">
