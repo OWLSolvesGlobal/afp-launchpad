@@ -142,9 +142,13 @@ export default function Checkout() {
           <div className="eyebrow text-graphite mb-4">Checkout</div>
           <h1 className="display-lg mb-6">Your bag is empty.</h1>
           <p className="text-graphite mb-8">Add something you love before checking out.</p>
-          <Button variant="afp-primary" size="afp" asChild>
-            <Link to="/shop/women">Continue Shopping</Link>
-          </Button>
+          <Link
+            to="/shop/women"
+            className="inline-flex items-center justify-center rounded-full px-8 h-12 text-sm font-bold uppercase tracking-wider text-black hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground/20"
+            style={{ background: LIME }}
+          >
+            Continue Shopping
+          </Link>
         </main>
         <Footer />
       </div>
