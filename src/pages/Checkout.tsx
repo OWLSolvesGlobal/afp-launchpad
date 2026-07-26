@@ -12,8 +12,9 @@ import { cn } from "@/lib/utils";
 import { CheckoutSkeleton } from "@/components/site/skeletons/CheckoutSkeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { LIME, waLink } from "@/lib/afp-catalog";
+import { calculateOrderTotal, maxRedeemableCents } from "@/lib/pricing";
 
-type Fulfillment = "delivery" | "pickup";
+import type { Fulfillment } from "@/lib/pricing";
 
 const PICKUP_LOCATIONS = [
   {
@@ -69,14 +70,9 @@ export default function Checkout() {
     return () => { cancel = true; };
   }, []);
 
-  const shipping = useMemo(() => {
-    if (fulfillment === "pickup") return 0;
-    if (subtotal === 0) return 0;
-    return subtotal >= 30000 ? 0 : 1500; // free over BBD $300, else BBD $15 island-wide
-  }, [fulfillment, subtotal]);
-
-  const tax = Math.round(subtotal * 0.175); // BBD VAT 17.5%
-  const maxRedeemCents = Math.min(creditBalanceCents, Math.floor(subtotal / 2));
+  // Pricing rules live in src/lib/pricing.ts so they can be unit tested and
+  // reused server-side when a payment processor is wired in.
+  const maxRedeemCents = maxRedeemableCents(creditBalanceCents, subtotal);
   const waCheckoutMessage = useMemo(() => {
     if (items.length === 0) return "Hi AFP!";
     const lines = items.map(
@@ -88,11 +84,17 @@ export default function Checkout() {
     }`;
   }, [items, subtotal, fulfillment]);
 
-  const requestedRedeemCents = Math.max(
-    0,
-    Math.min(maxRedeemCents, Math.round((parseFloat(redeemDollars) || 0) * 100))
-  );
-  const total = subtotal + shipping + tax - requestedRedeemCents;
+  const {
+    shippingCents: shipping,
+    taxCents: tax,
+    redeemedCents: requestedRedeemCents,
+    totalCents: total,
+  } = calculateOrderTotal({
+    subtotalCents: subtotal,
+    fulfillment,
+    creditBalanceCents,
+    redeemDollarsInput: redeemDollars,
+  });
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,0 +1,14 @@
+#!/bin/sh
+# Blocks a commit unless the project builds and the tests pass.
+# Enable with:  git config core.hooksPath .githooks
+# Bypass once (use sparingly):  git commit --no-verify
+
+set -e
+
+echo "pre-commit: building..."
+npm run build --silent
+
+echo "pre-commit: running tests..."
+npm test --silent
+
+echo "pre-commit: OK"

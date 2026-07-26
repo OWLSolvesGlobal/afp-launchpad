@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "deploy": "npm run build && wrangler deploy",
-    "cf:preview": "npm run build && wrangler dev"
+    "cf:preview": "npm run build && wrangler dev",
+    "verify": "npm run build && npm test"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

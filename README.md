@@ -19,7 +19,23 @@ npm run dev               # http://localhost:8080
 | `npm run build` | Production build into `dist/` |
 | `npm run preview` | Serve the production build locally |
 | `npm test` | Run the test suite |
+| `npm run verify` | Build **and** test — run this before every commit |
 | `npm run lint` | Lint |
+
+
+### Pre-commit checks
+
+`main` deploys straight to production, so nothing should be committed that
+doesn't build and pass tests. To have git enforce that automatically:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+That runs `npm run build && npm test` on every commit and blocks the commit if
+either fails. It adds about 40 seconds. If that becomes tiresome during rapid
+iteration, drop the build step from `.githooks/pre-commit` and rely on
+`npm run verify` before pushing instead.
 
 ---
 
