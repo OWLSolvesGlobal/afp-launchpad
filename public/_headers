@@ -17,14 +17,5 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=()
 
-# ---------------------------------------------------------------------------
-# TODO once the site is live: keep the free workers.dev URL out of Google.
-# After your first deploy, Cloudflare gives you a hostname that looks like
-#   afp-storefront.<your-account>.workers.dev
-# Uncomment the block below and paste that exact hostname in. Otherwise Google
-# indexes the temporary URL, and when alofitnesspro.com goes live you end up
-# competing against your own preview domain for your own brand name.
-#
 https://afp-launchpad.brandonlouis.workers.dev/*
    X-Robots-Tag: noindex
-# ---------------------------------------------------------------------------
