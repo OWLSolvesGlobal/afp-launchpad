@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Instagram, MessageCircle } from "lucide-react";
 import { Header } from "@/components/site/Header";
-import ashleePink from "@/assets/ashlee-pink.jpg";
-import ashleeApple from "@/assets/ashlee-apple.jpg";
-import ashleeBlue from "@/assets/ashlee-blue.jpg";
+import ashleePink from "@/assets/ashlee-pink.webp";
+import ashleeApple from "@/assets/ashlee-apple.webp";
+import ashleeBlue from "@/assets/ashlee-blue.webp";
 import ashleePool from "@/assets/ashlee-pool.jpg";
 import { LIME, TURQUOISE, waLink } from "@/lib/afp-catalog";
 

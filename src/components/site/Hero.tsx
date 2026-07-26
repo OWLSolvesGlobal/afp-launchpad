@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import limeRomper from "@/assets/afp-lime-romper.jpg";
-import mensBlack from "@/assets/afp-mens-black.jpg";
+import limeRomper from "@/assets/afp-lime-romper.webp";
+import mensBlack from "@/assets/afp-mens-black.webp";
 
 export const Hero = () => {
   return (

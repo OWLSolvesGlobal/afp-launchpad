@@ -2,11 +2,11 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Instagram, MessageCircle, MapPin, Clock, ArrowRight } from "lucide-react";
 import { Header } from "@/components/site/Header";
-import blueFront from "@/assets/product-blue-aura-set-front.jpg";
-import loungie from "@/assets/accent-new-loungie-colors.jpg";
-import lockers from "@/assets/accent-gym-lockers-lifestyle.jpg";
-import mensTile from "@/assets/afp-mens-black.jpg";
-import aloBabesTile from "@/assets/ashlee-blue.jpg";
+import blueFront from "@/assets/product-blue-aura-set-front.webp";
+import loungie from "@/assets/accent-new-loungie-colors.webp";
+import lockers from "@/assets/accent-gym-lockers-lifestyle.webp";
+import mensTile from "@/assets/afp-mens-black.webp";
+import aloBabesTile from "@/assets/ashlee-blue.webp";
 import {
   LIME,
   ProductCard,

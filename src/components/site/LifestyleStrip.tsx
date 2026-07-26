@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import pinkPool from "@/assets/afp-pink-pool.jpg";
-import blackJumpsuit from "@/assets/afp-black-jumpsuit.jpg";
-import blueRomper from "@/assets/afp-blue-romper.jpg";
-import purpleRomper from "@/assets/afp-purple-romper.jpg";
+import blackJumpsuit from "@/assets/afp-black-jumpsuit.webp";
+import blueRomper from "@/assets/afp-blue-romper.webp";
+import purpleRomper from "@/assets/afp-purple-romper.webp";
 
 const scenes = [
   { img: pinkPool,       label: "Poolside",   subtitle: "Recovery days",       tint: "hsl(var(--blush))" },

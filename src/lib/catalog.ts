@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import placeholder from "@/assets/product-mens-tee.jpg";
+import placeholder from "@/assets/product-mens-tee.webp";
 
 export type Gender = "men" | "women" | "unisex";
 

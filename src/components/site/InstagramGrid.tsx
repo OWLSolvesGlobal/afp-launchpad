@@ -12,14 +12,14 @@ import { motion } from "framer-motion";
 // ============================================================
 
 import igGolfDress from "@/assets/afp-golf-dress.jpg";
-import igLime from "@/assets/afp-lime-romper.jpg";
+import igLime from "@/assets/afp-lime-romper.webp";
 import igPinkPool from "@/assets/afp-pink-pool.jpg";
-import igMensBlack from "@/assets/afp-mens-black.jpg";
-import igMensWhite from "@/assets/afp-mens-white.jpg";
-import igPurple from "@/assets/afp-purple-romper.jpg";
-import igBlueRomper from "@/assets/afp-blue-romper.jpg";
-import igBlackJump from "@/assets/afp-black-jumpsuit.jpg";
-import igGolfDuo from "@/assets/ig-golf-duo.png";
+import igMensBlack from "@/assets/afp-mens-black.webp";
+import igMensWhite from "@/assets/afp-mens-white.webp";
+import igPurple from "@/assets/afp-purple-romper.webp";
+import igBlueRomper from "@/assets/afp-blue-romper.webp";
+import igBlackJump from "@/assets/afp-black-jumpsuit.webp";
+import igGolfDuo from "@/assets/ig-golf-duo.webp";
 
 type Tile = {
   src: string;
