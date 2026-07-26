@@ -25,6 +25,6 @@
 # indexes the temporary URL, and when alofitnesspro.com goes live you end up
 # competing against your own preview domain for your own brand name.
 #
-# https://afp-storefront.YOUR-ACCOUNT.workers.dev/*
-#   X-Robots-Tag: noindex
+https://afp-launchpad.brandonlouis.workers.dev/*
+   X-Robots-Tag: noindex
 # ---------------------------------------------------------------------------
