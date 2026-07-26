@@ -1,6 +1,7 @@
 // Pulls the catalog from the connected Google Sheet and upserts into the DB.
 // Auth: requires header `X-Sync-Token` matching SYNC_SHARED_SECRET, OR a signed-in admin user.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { sheetsFetch } from "../_shared/google-sheets.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,8 +9,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-sync-token",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_sheets/v4";
 
 interface SheetRow {
   [key: string]: string;
@@ -57,27 +56,12 @@ function dollarsToCents(raw: string): number {
   return Math.round(n * 100);
 }
 
-async function fetchSheet(spreadsheetId: string, range: string, lovableKey: string, sheetsKey: string) {
-  const url = `${GATEWAY_URL}/spreadsheets/${spreadsheetId}/values/${range}`;
-  let lastErr = "";
-  for (let attempt = 1; attempt <= 4; attempt++) {
-    const res = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "X-Connection-Api-Key": sheetsKey,
-      },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      return (data.values ?? []) as string[][];
-    }
-    const body = await res.text();
-    lastErr = `[${res.status}] ${body}`;
-    // Retry on transient gateway/upstream failures.
-    if (![502, 503, 504, 408, 429].includes(res.status)) break;
-    await new Promise((r) => setTimeout(r, 500 * attempt));
-  }
-  throw new Error(`Sheets fetch failed for ${range}: ${lastErr}`);
+async function fetchSheet(spreadsheetId: string, range: string) {
+  const res = await sheetsFetch(
+    `/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`,
+  );
+  const data = await res.json();
+  return (data.values ?? []) as string[][];
 }
 
 Deno.serve(async (req) => {
@@ -85,15 +69,9 @@ Deno.serve(async (req) => {
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  const GOOGLE_SHEETS_API_KEY = Deno.env.get("GOOGLE_SHEETS_API_KEY");
   const SHEET_ID = Deno.env.get("PRODUCTS_SHEET_ID");
   const SYNC_SECRET = Deno.env.get("SYNC_SHARED_SECRET");
 
-  if (!LOVABLE_API_KEY || !GOOGLE_SHEETS_API_KEY)
-    return new Response(JSON.stringify({ error: "Google Sheets connector not configured" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   if (!SHEET_ID)
     return new Response(JSON.stringify({ error: "PRODUCTS_SHEET_ID not set" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -139,8 +117,8 @@ Deno.serve(async (req) => {
 
   try {
     // Run sequentially: gateway occasionally rejects parallel requests with 503.
-    const productValues = await fetchSheet(SHEET_ID, "Products!A1:Z1000", LOVABLE_API_KEY, GOOGLE_SHEETS_API_KEY);
-    const stockValues = await fetchSheet(SHEET_ID, "Stock!A1:Z5000", LOVABLE_API_KEY, GOOGLE_SHEETS_API_KEY);
+    const productValues = await fetchSheet(SHEET_ID, "Products!A1:Z1000");
+    const stockValues = await fetchSheet(SHEET_ID, "Stock!A1:Z5000");
 
     const productRows = parseRows(productValues);
     const stockRows = parseRows(stockValues);

@@ -1,28 +1,45 @@
+import { Suspense, lazy } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import Shop from "./pages/Shop.tsx";
-import Collection from "./pages/Collection.tsx";
-import Checkout from "./pages/Checkout.tsx";
-import ProductDetail from "./pages/ProductDetail.tsx";
-import About from "./pages/About.tsx";
-import Contact from "./pages/Contact.tsx";
-import FAQ from "./pages/FAQ.tsx";
-import NotFound from "./pages/NotFound.tsx";
-import Auth from "./pages/Auth.tsx";
-import AdminUpload from "./pages/admin/AdminUpload.tsx";
-import AdminSync from "./pages/admin/AdminSync.tsx";
-import AdminImages from "./pages/admin/AdminImages.tsx";
-import AdminPartners from "./pages/admin/AdminPartners.tsx";
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/site/CartDrawer";
 import { ScrollToTop } from "@/components/site/ScrollToTop";
 import { RouteProgress } from "@/components/site/RouteProgress";
+import { LogoLoader } from "@/components/site/LogoLoader";
+
+// The landing page is eager — it's the first paint for most visitors and
+// should never wait on an extra network round-trip.
+import Index from "./pages/Index.tsx";
+
+// Everything else is split out. This keeps the storefront bundle small:
+// the 3D-heavy 404 page and the whole admin panel no longer ship to shoppers.
+const Shop = lazy(() => import("./pages/Shop.tsx"));
+const Collection = lazy(() => import("./pages/Collection.tsx"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail.tsx"));
+const Checkout = lazy(() => import("./pages/Checkout.tsx"));
+const About = lazy(() => import("./pages/About.tsx"));
+const Contact = lazy(() => import("./pages/Contact.tsx"));
+const FAQ = lazy(() => import("./pages/FAQ.tsx"));
+const Auth = lazy(() => import("./pages/Auth.tsx"));
+const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+
+const AdminUpload = lazy(() => import("./pages/admin/AdminUpload.tsx"));
+const AdminSync = lazy(() => import("./pages/admin/AdminSync.tsx"));
+const AdminImages = lazy(() => import("./pages/admin/AdminImages.tsx"));
+const AdminPartners = lazy(() => import("./pages/admin/AdminPartners.tsx"));
 
 const queryClient = new QueryClient();
+
+function RouteFallback() {
+  return (
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <LogoLoader label="Loading" />
+    </div>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -40,24 +57,26 @@ const App = () => (
           >
             Skip to main content
           </a>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/shop/:gender" element={<Shop />} />
-            <Route path="/collection/:slug" element={<Collection />} />
-            <Route path="/product/:slug" element={<ProductDetail />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/admin/upload" element={<AdminUpload />} />
-            <Route path="/admin/sync" element={<AdminSync />} />
-            <Route path="/admin/images" element={<AdminImages />} />
-            <Route path="/admin/partners" element={<AdminPartners />} />
-            <Route path="/admin/partnerships" element={<AdminPartners />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/shop/:gender" element={<Shop />} />
+              <Route path="/collection/:slug" element={<Collection />} />
+              <Route path="/product/:slug" element={<ProductDetail />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/admin/upload" element={<AdminUpload />} />
+              <Route path="/admin/sync" element={<AdminSync />} />
+              <Route path="/admin/images" element={<AdminImages />} />
+              <Route path="/admin/partners" element={<AdminPartners />} />
+              <Route path="/admin/partnerships" element={<AdminPartners />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
           <CartDrawer />
         </CartProvider>
       </BrowserRouter>

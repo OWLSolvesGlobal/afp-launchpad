@@ -1,6 +1,7 @@
 // Admin-only: mutate a single product row in the Google Sheet's `Products` tab.
 // Body: { id, action?: "update" | "create" | "delete", fields?: { [header]: value } }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { SHEETS_API, getAccessToken } from "../_shared/google-sheets.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,7 +9,20 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_sheets/v4";
+const GATEWAY_URL = SHEETS_API;
+
+/** Authed Sheets call that returns the raw Response (never throws on HTTP errors). */
+async function gwFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  const token = await getAccessToken();
+  return fetch(url, {
+    ...init,
+    headers: {
+      ...(init.headers ?? {}),
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+}
 
 function colLetter(idx: number): string {
   // 0-based -> A, B, ..., Z, AA, AB, ...
@@ -26,11 +40,9 @@ Deno.serve(async (req) => {
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  const GOOGLE_SHEETS_API_KEY = Deno.env.get("GOOGLE_SHEETS_API_KEY");
   const SHEET_ID = Deno.env.get("PRODUCTS_SHEET_ID");
 
-  if (!LOVABLE_API_KEY || !GOOGLE_SHEETS_API_KEY || !SHEET_ID) {
+  if (!SHEET_ID) {
     return new Response(JSON.stringify({ error: "Sheets connector not configured" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -87,12 +99,7 @@ Deno.serve(async (req) => {
 
   // 1. Read sheet to locate row + columns
   const readUrl = `${GATEWAY_URL}/spreadsheets/${SHEET_ID}/values/Products!A1:Z1000`;
-  const readRes = await fetch(readUrl, {
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": GOOGLE_SHEETS_API_KEY,
-    },
-  });
+  const readRes = await gwFetch(readUrl);
   if (!readRes.ok) {
     const t = await readRes.text();
     return new Response(JSON.stringify({ error: `Read sheet failed: [${readRes.status}] ${t}` }), {
@@ -128,13 +135,7 @@ Deno.serve(async (req) => {
       return v == null ? "" : String(v);
     });
     const appendUrl = `${GATEWAY_URL}/spreadsheets/${SHEET_ID}/values/Products!A1:append?valueInputOption=USER_ENTERED`;
-    const appendRes = await fetch(appendUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "X-Connection-Api-Key": GOOGLE_SHEETS_API_KEY,
-        "Content-Type": "application/json",
-      },
+    const appendRes = await gwFetch(appendUrl, { method: "POST",
       body: JSON.stringify({ values: [newRow] }),
     });
     if (!appendRes.ok) {
@@ -158,12 +159,7 @@ Deno.serve(async (req) => {
   // ============ DELETE ============
   if (action === "delete") {
     const metaUrl = `${GATEWAY_URL}/spreadsheets/${SHEET_ID}?fields=sheets.properties`;
-    const metaRes = await fetch(metaUrl, {
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "X-Connection-Api-Key": GOOGLE_SHEETS_API_KEY,
-      },
-    });
+    const metaRes = await gwFetch(metaUrl);
     if (!metaRes.ok) {
       const t = await metaRes.text();
       return new Response(JSON.stringify({ error: `Meta read failed: [${metaRes.status}] ${t}` }), {
@@ -179,13 +175,7 @@ Deno.serve(async (req) => {
       });
     }
     const delUrl = `${GATEWAY_URL}/spreadsheets/${SHEET_ID}:batchUpdate`;
-    const delRes = await fetch(delUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "X-Connection-Api-Key": GOOGLE_SHEETS_API_KEY,
-        "Content-Type": "application/json",
-      },
+    const delRes = await gwFetch(delUrl, { method: "POST",
       body: JSON.stringify({
         requests: [{
           deleteDimension: {
@@ -231,13 +221,7 @@ Deno.serve(async (req) => {
 
   // 3. batchUpdate write
   const writeUrl = `${GATEWAY_URL}/spreadsheets/${SHEET_ID}/values:batchUpdate`;
-  const writeRes = await fetch(writeUrl, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": GOOGLE_SHEETS_API_KEY,
-      "Content-Type": "application/json",
-    },
+  const writeRes = await gwFetch(writeUrl, { method: "POST",
     body: JSON.stringify({ valueInputOption: "USER_ENTERED", data: updates }),
   });
   if (!writeRes.ok) {
