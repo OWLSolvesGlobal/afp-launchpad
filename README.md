@@ -23,28 +23,58 @@ npm run dev               # http://localhost:8080
 
 ---
 
-## Deploying
+## Deploying — Cloudflare Workers
 
-This is a static SPA. It builds to `dist/` and can be hosted anywhere.
-Config for three hosts is already committed — pick one, no code changes needed.
+The site is hosted on **Cloudflare Workers static assets**. Config lives in
+`wrangler.jsonc`. There is deliberately no Worker script, which means every
+request is served straight from Cloudflare's edge — the Worker is never
+invoked, so the free plan's 100k requests/day limit does not apply to normal
+storefront traffic.
 
-**Recommended: Vercel** (fastest path from GitHub to live)
+### First-time setup (once, ~5 minutes)
 
-1. Go to vercel.com → **Add New → Project** → import `afp-launchpad`.
-2. Vercel reads `vercel.json`, so build settings auto-fill. Leave them.
-3. Add the three `VITE_` environment variables from your `.env`.
-4. Deploy. You get `afp-launchpad.vercel.app` immediately — no domain required.
-5. Every push to `main` redeploys automatically.
+1. Log in to the Cloudflare dashboard → **Compute (Workers)** → **Create**.
+2. Choose **Import a repository** and connect `OWLSolvesGlobal/afp-launchpad`.
+3. Set the build configuration:
+   - Build command: `npm run build`
+   - Deploy command: `npx wrangler deploy`
+4. Deploy. You will get a URL like
+   `https://afp-storefront.<your-account>.workers.dev`.
 
-**Alternative: Cloudflare Pages** — better if image bandwidth grows. Build
-command `npm run build`, output directory `dist`. Reads `public/_redirects`.
+From then on, **every push to `main` rebuilds and redeploys automatically.**
+No further action is needed to publish changes.
 
-**Alternative: Netlify** — reads `netlify.toml`. Same env vars.
+### Deploying from your laptop instead
 
-### Adding the domain later
+```bash
+npx wrangler login     # once
+npm run deploy         # builds and ships
+```
 
-Add it in the host's dashboard and point the DNS records it gives you. Then
-update the `canonical` URL in `index.html`. Nothing else changes.
+### Right after the first deploy
+
+Open `public/_headers` and uncomment the `X-Robots-Tag: noindex` block at the
+bottom, pasting in your real `workers.dev` hostname. This stops Google indexing
+the temporary URL. If you skip it, the preview domain can end up ranking for
+"Alo Fitness Pro" and competing with your real domain later.
+
+### Adding alofitnesspro.com later
+
+1. Add the domain to Cloudflare (dashboard → **Add a domain**) and point your
+   registrar at the two Cloudflare nameservers it shows you.
+2. In the Worker → **Settings** → **Domains & Routes** → **Add custom domain**.
+3. Update the `canonical` URL in `index.html`.
+4. Re-comment the `noindex` block in `public/_headers`.
+
+TLS, CDN, and DNS are handled by Cloudflare automatically.
+
+### A note on `_redirects`
+
+Do not add a `/* /index.html 200` rule to a `_redirects` file. On Cloudflare
+Workers, redirect rules are applied **even when a real file matches the
+request**, so a splat rule would intercept your JavaScript and CSS and serve
+HTML instead, breaking the site. SPA routing is handled by
+`assets.not_found_handling` in `wrangler.jsonc` instead.
 
 ---
 

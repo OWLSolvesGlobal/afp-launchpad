@@ -1,0 +1,30 @@
+# Hashed build assets never change content — cache them for a year.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Images and icons: cache a day, revalidate after.
+/*.jpg
+  Cache-Control: public, max-age=86400
+/*.png
+  Cache-Control: public, max-age=86400
+/*.svg
+  Cache-Control: public, max-age=86400
+
+# Baseline security headers for every response.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+
+# ---------------------------------------------------------------------------
+# TODO once the site is live: keep the free workers.dev URL out of Google.
+# After your first deploy, Cloudflare gives you a hostname that looks like
+#   afp-storefront.<your-account>.workers.dev
+# Uncomment the block below and paste that exact hostname in. Otherwise Google
+# indexes the temporary URL, and when alofitnesspro.com goes live you end up
+# competing against your own preview domain for your own brand name.
+#
+# https://afp-storefront.YOUR-ACCOUNT.workers.dev/*
+#   X-Robots-Tag: noindex
+# ---------------------------------------------------------------------------

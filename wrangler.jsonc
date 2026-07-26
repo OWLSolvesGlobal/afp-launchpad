@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "afp-storefront",
+  "compatibility_date": "2026-07-26",
+
+  // No "main" key on purpose.
+  //
+  // Without a Worker script this is an assets-only Worker: Cloudflare serves
+  // every request straight from the edge cache and your Worker is never
+  // invoked. Static asset requests are free and unencumbered by the
+  // 100k/day request limit on the free plan. Adding a "main" script later
+  // (for an API route, say) is a one-line change.
+  "assets": {
+    "directory": "./dist",
+
+    // Any URL that isn't a real file returns index.html with a 200.
+    // This is what makes /shop/women and /product/lime-romper work on a
+    // hard refresh or a shared link. Do NOT also add a /* splat rule to a
+    // _redirects file — on Workers, redirects are applied even when a real
+    // asset matches, so a splat there would hijack your JS and CSS.
+    "not_found_handling": "single-page-application"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}
