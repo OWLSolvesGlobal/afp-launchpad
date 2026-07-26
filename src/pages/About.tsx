@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Instagram, MessageCircle } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import ashleePink from "@/assets/ashlee-pink.jpg";
-import ashleeApple from "@/assets/ashlee-apple.jpg.asset.json";
+import ashleeApple from "@/assets/ashlee-apple.jpg";
 import ashleeBlue from "@/assets/ashlee-blue.jpg";
 import ashleePool from "@/assets/ashlee-pool.jpg";
 import { LIME, TURQUOISE, waLink } from "@/lib/afp-catalog";
@@ -170,7 +170,7 @@ export default function About() {
                 />
                 <div className="relative aspect-[4/5] rounded-[1.75rem] overflow-hidden bg-neutral-100">
                   <img
-                    src={ashleeApple.url}
+                    src={ashleeApple}
                     alt="Ashlee in the AFP lime-green romper, holding a green apple"
                     loading="lazy"
                     className="w-full h-full object-cover"

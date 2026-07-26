@@ -2,10 +2,10 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Instagram, MessageCircle, MapPin, Clock, ArrowRight } from "lucide-react";
 import { Header } from "@/components/site/Header";
-import blueFront from "@/assets/product-blue-aura-set-front.jpg.asset.json";
-import loungie from "@/assets/accent-new-loungie-colors.jpg.asset.json";
-import lockers from "@/assets/accent-gym-lockers-lifestyle.jpg.asset.json";
-import mensTile from "@/assets/afp-mens-black.jpg.asset.json";
+import blueFront from "@/assets/product-blue-aura-set-front.jpg";
+import loungie from "@/assets/accent-new-loungie-colors.jpg";
+import lockers from "@/assets/accent-gym-lockers-lifestyle.jpg";
+import mensTile from "@/assets/afp-mens-black.jpg";
 import aloBabesTile from "@/assets/ashlee-blue.jpg";
 import {
   LIME,
@@ -30,9 +30,9 @@ const Index = () => {
 
   const collections: { slug: CollectionSlug; label: string; img: string }[] = [
     { slug: "alobabes", label: "AloBabes", img: aloBabesTile },
-    { slug: "afplounge", label: "AFPLounge", img: loungie.url },
-    { slug: "afp-men", label: "AFP MEN", img: mensTile.url },
-    { slug: "add-ons", label: "Add-Ons", img: productsByCollection("add-ons")[0]?.image ?? loungie.url },
+    { slug: "afplounge", label: "AFPLounge", img: loungie },
+    { slug: "afp-men", label: "AFP MEN", img: mensTile },
+    { slug: "add-ons", label: "Add-Ons", img: productsByCollection("add-ons")[0]?.image ?? loungie },
   ];
 
   const aloBabes = products.filter((p) => p.collections.includes("alobabes"));
@@ -105,7 +105,7 @@ const Index = () => {
               />
               <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden bg-neutral-100">
                 <img
-                  src={blueFront.url}
+                  src={blueFront}
                   alt="AFP Blue Aura Set"
                   fetchPriority="high"
                   className="absolute inset-0 w-full h-full object-cover"
@@ -205,7 +205,7 @@ const Index = () => {
             className="group relative block overflow-hidden rounded-3xl bg-black text-white min-h-[320px] md:min-h-[420px]"
           >
             <img
-              src={mensTile.url}
+              src={mensTile}
               alt="AFP MEN — built for the grind"
               loading="lazy"
               className="absolute inset-0 w-full h-full object-cover opacity-70 transition-transform duration-700 group-hover:scale-105"
@@ -240,7 +240,7 @@ const Index = () => {
         {/* LIFESTYLE BAND */}
         <section className="relative h-[420px] md:h-[520px] overflow-hidden">
           <img
-            src={lockers.url}
+            src={lockers}
             alt="AFP lifestyle"
             className="absolute inset-0 w-full h-full object-cover"
           />

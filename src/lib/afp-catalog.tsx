@@ -1,19 +1,19 @@
 import { useState } from "react";
 import { MessageCircle, Sparkles } from "lucide-react";
-import blueFront from "@/assets/product-blue-aura-set-front.jpg.asset.json";
-import blueBack from "@/assets/product-blue-aura-set-back.jpg.asset.json";
-import twoPieceFront from "@/assets/product-two-piece-set-black-red-front.jpg.asset.json";
-import twoPieceBack from "@/assets/product-two-piece-set-black-red-back.jpg.asset.json";
-import vbackFront from "@/assets/product-vback-sets-3colors-front.jpg.asset.json";
-import vbackBack from "@/assets/product-vback-sets-3colors-back.jpg.asset.json";
-import zipFront from "@/assets/product-zip-jacket-sets-duo-front.jpg.asset.json";
-import zipBack from "@/assets/product-zip-jacket-sets-duo-back.jpg.asset.json";
-import longsleeve from "@/assets/product-longsleeve-shorts-sets-duo.jpg.asset.json";
-import babydoll from "@/assets/product-babydoll-romper-card.jpg.asset.json";
-import shaker from "@/assets/product-afp-shaker-bottles.jpg.asset.json";
-import mensBlackSet from "@/assets/afp-mens-black.jpg.asset.json";
-import mensWhiteSet from "@/assets/afp-mens-white.jpg.asset.json";
-import ashleeApple from "@/assets/ashlee-apple.jpg.asset.json";
+import blueFront from "@/assets/product-blue-aura-set-front.jpg";
+import blueBack from "@/assets/product-blue-aura-set-back.jpg";
+import twoPieceFront from "@/assets/product-two-piece-set-black-red-front.jpg";
+import twoPieceBack from "@/assets/product-two-piece-set-black-red-back.jpg";
+import vbackFront from "@/assets/product-vback-sets-3colors-front.jpg";
+import vbackBack from "@/assets/product-vback-sets-3colors-back.jpg";
+import zipFront from "@/assets/product-zip-jacket-sets-duo-front.jpg";
+import zipBack from "@/assets/product-zip-jacket-sets-duo-back.jpg";
+import longsleeve from "@/assets/product-longsleeve-shorts-sets-duo.jpg";
+import babydoll from "@/assets/product-babydoll-romper-card.jpg";
+import shaker from "@/assets/product-afp-shaker-bottles.jpg";
+import mensBlackSet from "@/assets/afp-mens-black.jpg";
+import mensWhiteSet from "@/assets/afp-mens-white.jpg";
+import ashleeApple from "@/assets/ashlee-apple.jpg";
 
 export const WA = "https://wa.me/12468364327";
 export const waLink = (msg: string) => `${WA}?text=${encodeURIComponent(msg)}`;
@@ -37,8 +37,8 @@ export const products: Product[] = [
   {
     name: "Blue Aura Set",
     price: "DM for price",
-    image: blueFront.url,
-    gallery: [blueBack.url],
+    image: blueFront,
+    gallery: [blueBack],
     colors: [{ name: "Turquoise", hex: TURQUOISE }],
     sizes: ["S", "M", "L", "XL"],
     tag: "NEW",
@@ -47,8 +47,8 @@ export const products: Product[] = [
   {
     name: "Two Piece Set",
     price: "$100",
-    image: twoPieceFront.url,
-    gallery: [twoPieceBack.url],
+    image: twoPieceFront,
+    gallery: [twoPieceBack],
     colors: [
       { name: "Black", hex: "#111" },
       { name: "Red", hex: "#e63946" },
@@ -59,8 +59,8 @@ export const products: Product[] = [
   {
     name: "V-Back Set",
     price: "DM for price",
-    image: vbackFront.url,
-    gallery: [vbackBack.url],
+    image: vbackFront,
+    gallery: [vbackBack],
     colors: [
       { name: "Lime", hex: LIME },
       { name: "Blue", hex: "#1e63e0" },
@@ -73,8 +73,8 @@ export const products: Product[] = [
   {
     name: "Zip Jacket Set",
     price: "DM for price",
-    image: zipFront.url,
-    gallery: [zipBack.url],
+    image: zipFront,
+    gallery: [zipBack],
     colors: [
       { name: "Black", hex: "#111" },
       { name: "Lime", hex: LIME },
@@ -85,7 +85,7 @@ export const products: Product[] = [
   {
     name: "Long-Sleeve + Shorts Set",
     price: "DM for price",
-    image: longsleeve.url,
+    image: longsleeve,
     colors: [
       { name: "Black", hex: "#111" },
       { name: "Lime", hex: LIME },
@@ -96,7 +96,7 @@ export const products: Product[] = [
   {
     name: "Babydoll Romper",
     price: "DM for price",
-    image: babydoll.url,
+    image: babydoll,
     colors: [
       { name: "Black", hex: "#111" },
       { name: "Chocolate", hex: "#5b3a1e" },
@@ -109,7 +109,7 @@ export const products: Product[] = [
   {
     name: "AFP Shaker Bottle",
     price: "$40",
-    image: shaker.url,
+    image: shaker,
     colors: [
       { name: "Green", hex: "#7fb069" },
       { name: "Grey", hex: "#8b8078" },
@@ -123,7 +123,7 @@ export const products: Product[] = [
   {
     name: "AFP Lime Romper",
     price: "DM for price",
-    image: ashleeApple.url,
+    image: ashleeApple,
     colors: [{ name: "Lime", hex: LIME }],
     sizes: ["S", "M", "L"],
     tag: "SIGNATURE",
@@ -132,8 +132,8 @@ export const products: Product[] = [
   {
     name: "AFP MEN Performance Set — Black",
     price: "DM for price",
-    image: mensBlackSet.url,
-    gallery: [mensWhiteSet.url],
+    image: mensBlackSet,
+    gallery: [mensWhiteSet],
     colors: [
       { name: "Black", hex: "#111" },
       { name: "White", hex: "#f5f5f5" },
@@ -145,8 +145,8 @@ export const products: Product[] = [
   {
     name: "AFP MEN Tee + Shorts — White",
     price: "DM for price",
-    image: mensWhiteSet.url,
-    gallery: [mensBlackSet.url],
+    image: mensWhiteSet,
+    gallery: [mensBlackSet],
     colors: [
       { name: "White", hex: "#f5f5f5" },
       { name: "Black", hex: "#111" },
