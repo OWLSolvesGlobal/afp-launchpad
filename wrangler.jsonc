@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "afp-storefront",
+  "name": "afp-launchpad",
   "compatibility_date": "2026-07-26",
 
   // No "main" key on purpose.
