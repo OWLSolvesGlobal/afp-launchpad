@@ -1,23 +1,21 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Instagram, MessageCircle, MapPin, Clock, ArrowRight } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import blueFront from "@/assets/product-blue-aura-set-front.webp";
-import loungie from "@/assets/accent-new-loungie-colors.webp";
 import lockers from "@/assets/accent-gym-lockers-lifestyle.webp";
 import mensTile from "@/assets/afp-mens-black.webp";
-import aloBabesTile from "@/assets/ashlee-blue.webp";
+import { LIME, ProductCard, TURQUOISE, waLink } from "@/lib/afp-catalog";
 import {
-  LIME,
-  ProductCard,
-  TURQUOISE,
-  products,
-  productsByCollection,
-  waLink,
-  type CollectionSlug,
-} from "@/lib/afp-catalog";
+  categorySlug,
+  productImageUrl,
+  useCatalog,
+  visibleProducts,
+} from "@/lib/catalog";
 
 const Index = () => {
+  const { data: catalog } = useCatalog();
+
   useEffect(() => {
     document.title = "Alo Fitness Pro — Fitness Fashion for the Unstoppable YOU";
     document
@@ -28,15 +26,44 @@ const Index = () => {
       );
   }, []);
 
-  const collections: { slug: CollectionSlug; label: string; img: string }[] = [
-    { slug: "alobabes", label: "AloBabes", img: aloBabesTile },
-    { slug: "afplounge", label: "AFPLounge", img: loungie },
-    { slug: "afp-men", label: "AFP MEN", img: mensTile },
-    { slug: "add-ons", label: "Add-Ons", img: productsByCollection("add-ons")[0]?.image ?? loungie },
-  ];
+  const products = useMemo(
+    () => (catalog ? visibleProducts(catalog.products) : []),
+    [catalog],
+  );
 
-  const aloBabes = products.filter((p) => p.collections.includes("alobabes"));
-  const addOns = productsByCollection("add-ons");
+  // Category tiles are derived from the Sheet (women-first), never hardcoded.
+  const collections = useMemo(
+    () =>
+      (catalog?.categories ?? []).slice(0, 4).map((category) => ({
+        slug: categorySlug(category),
+        label: category,
+        img: productImageUrl(
+          products.find((p) => p.category === category)?.image ?? "",
+        ),
+      })),
+    [catalog, products],
+  );
+
+  // Featured grid: the Sheet's featured_skus config row, else newest-first
+  // women's pieces.
+  const featured = useMemo(() => {
+    const bySku = new Map(products.map((p) => [p.sku, p]));
+    const picked = (catalog?.config.featuredSkus ?? [])
+      .map((sku) => bySku.get(sku))
+      .filter((p): p is NonNullable<typeof p> => Boolean(p));
+    if (picked.length) return picked;
+    return products.filter((p) => p.gender !== "men").slice(0, 6);
+  }, [catalog, products]);
+
+  // hero_order lets the owner pick the hero image straight from the Sheet.
+  const heroImage = useMemo(() => {
+    const bySku = new Map(products.map((p) => [p.sku, p]));
+    for (const sku of catalog?.config.heroOrder ?? []) {
+      const p = bySku.get(sku);
+      if (p?.image) return { src: productImageUrl(p.image), alt: p.imageAlt };
+    }
+    return { src: blueFront, alt: "AFP Blue Aura Set" };
+  }, [catalog, products]);
 
   return (
     <div className="bg-white text-neutral-900">
@@ -83,7 +110,7 @@ const Index = () => {
                 </a>
               </div>
               <Link
-                to="/collection/afp-men"
+                to="/shop/men"
                 className="mt-4 inline-flex items-center gap-3 text-sm font-semibold text-black hover:opacity-70 group"
               >
                 <span
@@ -105,8 +132,8 @@ const Index = () => {
               />
               <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden bg-neutral-100">
                 <img
-                  src={blueFront}
-                  alt="AFP Blue Aura Set"
+                  src={heroImage.src}
+                  alt={heroImage.alt}
                   fetchPriority="high"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
@@ -115,45 +142,47 @@ const Index = () => {
           </div>
         </section>
 
-        {/* COLLECTIONS STRIP */}
-        <section className="container py-12 md:py-16">
-          <div className="flex items-end justify-between mb-6">
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight">Collections</h2>
-            <span className="text-xs tracking-[0.2em] uppercase text-neutral-500">
-              Explore
-            </span>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
-            {collections.map((c) => (
-              <Link
-                key={c.slug}
-                to={`/collection/${c.slug}`}
-                className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-neutral-100"
-              >
-                <img
-                  src={c.img}
-                  alt={c.label}
-                  loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
-                  <span className="text-white font-bold text-lg tracking-tight">
-                    {c.label}
-                  </span>
-                  <span
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-black"
-                    style={{ background: LIME }}
-                  >
-                    <ArrowRight className="w-4 h-4" />
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+        {/* COLLECTIONS STRIP — categories straight from the Sheet */}
+        {collections.length > 0 && (
+          <section className="container py-12 md:py-16">
+            <div className="flex items-end justify-between mb-6">
+              <h2 className="text-2xl md:text-3xl font-black tracking-tight">Collections</h2>
+              <span className="text-xs tracking-[0.2em] uppercase text-neutral-500">
+                Explore
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
+              {collections.map((c) => (
+                <Link
+                  key={c.slug}
+                  to={`/collection/${c.slug}`}
+                  className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-neutral-100"
+                >
+                  <img
+                    src={c.img}
+                    alt={c.label}
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                  <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
+                    <span className="text-white font-bold text-lg tracking-tight">
+                      {c.label}
+                    </span>
+                    <span
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-black"
+                      style={{ background: LIME }}
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
-        {/* ALOBABES SHOP */}
+        {/* FEATURED SHOP */}
         <section id="shop" className="bg-neutral-50 py-16 md:py-24">
           <div className="container">
             <div className="flex items-end justify-between mb-8 md:mb-10">
@@ -165,28 +194,52 @@ const Index = () => {
                   Shop
                 </span>
                 <h2 className="mt-2 text-3xl md:text-5xl font-black tracking-tight">
-                  AloBabes
+                  Featured
                 </h2>
               </div>
-              <a
-                href={waLink("Hi! Send me the full AFP catalog.")}
-                target="_blank"
-                rel="noreferrer"
+              <Link
+                to="/shop/women"
                 className="hidden md:inline-flex items-center gap-2 text-sm font-semibold hover:opacity-70"
               >
                 See full catalog <ArrowRight className="w-4 h-4" />
-              </a>
+              </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {aloBabes.map((p) => (
-                <ProductCard key={p.name} p={p} />
-              ))}
-            </div>
+            {featured.length === 0 ? (
+              <div className="rounded-3xl bg-white p-10 md:p-16 text-center">
+                <div
+                  className="text-[11px] font-bold tracking-[0.2em] uppercase mb-3"
+                  style={{ color: TURQUOISE }}
+                >
+                  New drop loading
+                </div>
+                <h3 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
+                  The next collection is landing soon.
+                </h3>
+                <p className="text-neutral-600 mb-6 max-w-md mx-auto">
+                  DM us on WhatsApp and we'll message you the moment it drops.
+                </p>
+                <a
+                  href={waLink("Hi! Notify me when the new AFP collection drops.")}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 h-12 px-6 rounded-full font-bold text-black"
+                  style={{ background: LIME }}
+                >
+                  <MessageCircle className="w-4 h-4" /> Notify me on WhatsApp
+                </a>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                {featured.map((p) => (
+                  <ProductCard key={p.sku} p={p} />
+                ))}
+              </div>
+            )}
             <p className="mt-8 text-center text-sm text-neutral-500">
-              More AloBabes drops on the way —{" "}
+              More drops on the way —{" "}
               <a
-                href={waLink("Hi! Notify me when new AloBabes pieces drop.")}
+                href={waLink("Hi! Notify me when new AFP pieces drop.")}
                 target="_blank"
                 rel="noreferrer"
                 className="underline font-semibold text-black hover:opacity-70"
@@ -201,7 +254,7 @@ const Index = () => {
         {/* AFP MEN BAND */}
         <section className="container py-4 md:py-8">
           <Link
-            to="/collection/afp-men"
+            to="/shop/men"
             className="group relative block overflow-hidden rounded-3xl bg-black text-white min-h-[320px] md:min-h-[420px]"
           >
             <img
@@ -264,26 +317,6 @@ const Index = () => {
             >
               <Instagram className="w-4 h-4" /> Follow the movement
             </a>
-          </div>
-        </section>
-
-        {/* ACCESSORIES */}
-        <section className="container py-16 md:py-24">
-          <div className="mb-8">
-            <span
-              className="text-[11px] font-bold tracking-[0.2em] uppercase"
-              style={{ color: TURQUOISE }}
-            >
-              Add-Ons
-            </span>
-            <h2 className="mt-2 text-3xl md:text-5xl font-black tracking-tight">
-              Fuel the routine.
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {addOns.map((p) => (
-              <ProductCard key={p.name} p={p} />
-            ))}
           </div>
         </section>
       </main>

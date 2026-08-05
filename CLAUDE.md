@@ -5,8 +5,9 @@ Context for anyone (human or agent) making changes to this repo.
 ## What this is
 
 E-commerce storefront for Alo Fitness Pro, a Barbados-based activewear brand.
-React 18 + Vite + TypeScript + Tailwind + shadcn/ui. Supabase for auth,
-catalog, and stock. Hosted on Cloudflare Workers static assets.
+React 18 + Vite + TypeScript + Tailwind + shadcn/ui. Hosted on Cloudflare
+Workers. The product catalog lives in a Google Sheet, mirrored into
+Cloudflare KV by a Worker cron.
 
 ```bash
 npm run dev      # localhost:8080
@@ -25,10 +26,60 @@ There is no staging environment. Treat every push to `main` as a release.
 For anything non-trivial, work on a branch and open a PR rather than pushing
 straight to `main`.
 
-Config lives in `wrangler.jsonc`. It is deliberately an **assets-only Worker**
-— no `main` entry point — so requests are served from edge cache and the
-Worker is never invoked. If you add a Worker script, you change the billing
-and performance characteristics of the whole site. Do that consciously.
+Config lives in `wrangler.jsonc`. The Worker script (`worker/index.ts`) exists
+for exactly two jobs: serving `GET /api/catalog` from KV and running the
+catalog sync cron. `assets.run_worker_first` is scoped to `/api/*` so every
+other request is still served straight from edge cache without invoking the
+Worker. Widening that scope changes the billing and performance
+characteristics of the whole site — don't.
+
+---
+
+## Catalog architecture
+
+**The Google Sheet is the single source of truth for products, stock, and
+site config.** Nothing else is. Full detail in `docs/CATALOG-ARCHITECTURE.md`;
+owner-facing instructions in `docs/RUNBOOK.md`; the Sheet schema in
+`docs/SHEET_TEMPLATE.md`.
+
+```text
+Google Sheet ──(cron every 5 min, Worker scheduled())──► KV AFP_CATALOG "catalog:v1"
+                                                               │
+GET /api/catalog (max-age=60) ◄── Worker fetch() ──────────────┘ (seed JSON if empty)
+        │
+        ▼
+React storefront (useCatalog / useProducts / useProduct)
+```
+
+- Shared parsing/guard logic: `src/lib/catalog-core.ts` — imported by the
+  Worker, the frontend, and the tests. Change sheet semantics there and only
+  there.
+- KV namespace binding `AFP_CATALOG`, key `catalog:v1`. Snapshot shape:
+  `{ generatedAt, products, categories, config }`.
+- Sync cron: every 5 minutes. Site cache: 60s. A Sheet edit is live in ~6
+  minutes, no deploy.
+- If the Sheet is unreachable or secrets are missing, the sync exits and the
+  last good snapshot (or the bundled `src/data/seed-catalog.json`) keeps
+  serving. The site must never white-screen because of catalog problems.
+
+**Render guards — do not weaken them.** A product renders only when
+`active = TRUE` *and* `price_bbd > 0` (`isPurchasable`). **Prices must never
+be invented — the Sheet is authoritative.** Seed rows ship with price 0 and
+inactive precisely so nothing unpriced can go live.
+
+**Do not hardcode product data or category lists into components.** Categories
+are free text in the Sheet; navigation and collection pages derive from the
+distinct values present, women-first (`deriveCategories`).
+
+**Currency is BBD only**, integer cents internally, displayed as
+`BDS $189.00` via `formatBbd`. No USD anywhere.
+
+**Product images** are repo files in `src/assets`, referenced from the Sheet
+by filename and resolved through `productImageUrl()`. Never image URLs in the
+Sheet, never hotlinked images.
+
+Activating the sync (service account → share Sheet → secrets → KV namespace)
+is documented in `README.md` → "Catalog sync setup".
 
 ---
 
@@ -55,49 +106,29 @@ pointer stubs left behind by Loveable, referencing `/__l5e/assets-v1/...` —
 a path only Loveable's hosting served. Every image using them broke on
 migration. If you ever see a `.asset.json` file appear, it is a bug.
 
-**Never route Google Sheets access through a third-party gateway.** Sheets
-calls go direct via a service account in
-`supabase/functions/_shared/google-sheets.ts`. This replaced a dependency on
-Loveable's connector gateway, which would have died with the subscription.
+**Never route Google Sheets access through a third-party gateway.** The sync
+Worker talks to the Sheets API directly with a service-account JWT
+(`worker/index.ts`). This pattern replaced a dependency on Loveable's
+connector gateway, which would have died with the subscription.
 
 **Keep the routes lazy.** Everything except the landing page is code-split in
-`App.tsx`. The 3D-heavy 404 page pulls in ~907 KB of three.js and the admin
-panel is irrelevant to shoppers — neither belongs in the storefront bundle.
-Converting a `lazy()` import back to a static one silently triples the
-initial payload.
+`App.tsx`. The 3D-heavy 404 page pulls in ~907 KB of three.js — it does not
+belong in the storefront bundle. Converting a `lazy()` import back to a
+static one silently triples the initial payload.
 
 **Logo files stay PNG.** They need transparency. Photos should not be PNG —
-three photos were shipping at 720 KB / 301 KB / 231 KB where WebP equivalents
-are roughly 55 KB / 21 KB / 30 KB.
+photographic PNGs ship at 3–10× the size of their WebP equivalents.
 
 ---
 
 ## Secrets
 
 `VITE_`-prefixed variables are compiled into the browser bundle and are public
-by design. Supabase's anon key is *meant* to be public — data is protected by
-Row Level Security, not by hiding the key.
+by design. The storefront currently needs **no** environment variables at all.
 
-Anything actually secret (Google service account key, payment API secrets)
-belongs in Supabase Edge Function secrets. Never in `.env`, never in client
-code.
-
-`.env` is currently still tracked in git from before it was gitignored. It
-contains only publishable keys, so this is untidy rather than dangerous — but
-do not add anything sensitive to it.
-
----
-
-## Catalog architecture
-
-**The Google Sheet is the source of truth for products.** It syncs into
-Supabase via the `sync-products` edge function. Images are uploaded through
-`/admin/upload` into Supabase Storage; the resulting URL goes in the sheet's
-`image_url` column.
-
-Do not hardcode product data into components. If a product needs to change,
-it changes in the sheet. See `docs/CATALOG-ARCHITECTURE.md` and
-`docs/RUNBOOK.md` (the latter is written for non-technical operators).
+Anything actually secret (the Google service-account JSON, future payment API
+secrets) lives in **Cloudflare Worker secrets** (`npx wrangler secret put …`).
+Never in `.env`, never in client code, never `VITE_`-prefixed.
 
 ---
 
@@ -145,8 +176,9 @@ Do not merge changes to these without a person reading them line by line:
   so a customer cannot tamper with them. Webhooks — not browser redirects —
   are the source of truth for whether an order was paid, because customers
   close tabs.
-- **Supabase RLS policies.** These are the only thing protecting customer data.
 - **`wrangler.jsonc` and `public/_headers`.** See gotchas above.
+- **The render guards and sheet parsing in `src/lib/catalog-core.ts`.** They
+  are what keeps unpriced or hidden products off the live site.
 
 Never confirm a payment from a customer-supplied artifact such as a
 screenshot. Screenshots are trivially forged. Reconcile against your own bank
@@ -156,22 +188,29 @@ record or a signed webhook, never against the buyer's evidence.
 
 ## Testing
 
-Coverage is currently one placeholder test. Given `main` deploys straight to
-production, any substantial change should come with at least a smoke test.
-Highest-value things to cover first: cart totals, checkout state transitions,
-and the product sync parser.
+`npm run verify` = build + tests, and must pass with **zero** environment
+variables set. Suites cover cart totals, order pricing (VAT/shipping/credit
+rules), sheet parsing (sizes default, one-size stock, per-size availability),
+the render guards (inactive and price-0 exclusion), the seed fallback (KV
+empty, endpoint unavailable), and the order-reference format. The sheet
+parsing and guard tests have been mutation-checked — if you change semantics
+in `catalog-core.ts`, expect tests to fail, and update them deliberately.
 
 ---
 
 ## Outstanding work
 
-1. **Payments.** No processor is wired in; checkout hands off to WhatsApp.
-   Fygaro is the leading candidate — it's First Atlantic Commerce's SMB
-   platform, endorsed by both CIBC and RBC in Barbados, and supports
-   JWT-signed payment links plus webhooks, which lets this storefront keep
-   its own checkout.
-2. **Google service account.** Until configured, the sheet sync does not run.
-   Setup steps are in the README.
-3. **Row Level Security audit.**
-4. **Image optimisation** — the three oversized PNGs above.
+1. **Payments.** No processor is wired in; checkout hands off to WhatsApp
+   with an `AFP-YYYYMMDD-XXX` order reference. Fygaro is the leading
+   candidate — it's First Atlantic Commerce's SMB platform, endorsed by both
+   CIBC and RBC in Barbados, and supports JWT-signed payment links plus
+   webhooks, which lets this storefront keep its own checkout. When it lands,
+   webhooks should also write rows to the Sheet's `Orders` tab.
+2. **Catalog sync activation.** KV namespace + Google service account +
+   two Worker secrets; steps in `README.md`. Until then the site serves the
+   seed catalog (12 products, all hidden at price 0).
+3. **Real prices and stock in the Sheet.** Every seed row is `active=FALSE`
+   with `price_bbd=0` on purpose.
+4. **A product photo for A-SOC-001 (crew socks)** — no dedicated shot exists;
+   the socks only appear incidentally in other photos.
 5. **Brand voice split** — see above.

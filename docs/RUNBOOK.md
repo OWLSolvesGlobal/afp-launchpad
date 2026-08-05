@@ -1,77 +1,108 @@
 # AFP Store — Everyday Runbook
 
-This is the non-technical guide. Everything here is done in a Google Sheet or
-on one admin page. **You never need to touch code to run the store.**
+This is the non-technical guide. Everything here is done in one Google
+Sheet. **You never need to touch code to run the store.**
 
 ---
 
 ## The one thing to understand
 
-The Google Sheet **is** the store. The website just displays what the Sheet says.
+The Google Sheet **is** the store. The website copies the Sheet every
+5 minutes and displays what it finds.
 
 ```
-You edit the Sheet  →  the site updates within about a minute
+You edit the Sheet  →  the site updates within about 6 minutes
 ```
 
 If the site shows something wrong, the fix is almost always in the Sheet.
+All prices are in **Barbados dollars** and show on the site as `BDS $189.00`.
+
+The Sheet has three tabs: **Catalog** (products), **Orders** (your sales
+log), and **Config** (site settings). The exact columns are described in
+`SHEET_TEMPLATE.md`, next to this file.
 
 ---
 
 ## Adding a new product
 
-1. Open the **Products** tab of the catalog Sheet.
-2. Add one new row at the bottom. Fill in these columns:
+1. Open the **Catalog** tab. Add one row at the bottom.
+2. Fill in, at minimum: `sku` (a code no other product has — never reuse an
+   old one), `name`, `gender` (`women`, `men`, or `unisex`), `category`,
+   `color`, `price_bbd`, the stock columns, `image`, and `image_alt`.
+3. Leave `sizes` blank for normal clothing — that automatically means
+   S, M, L, XL. For one-size items (visor, socks) type `ONE SIZE` in
+   `sizes` and put the quantity in `one_size_stock` instead.
+4. Set `active` to `TRUE` when you're ready for it to appear.
 
-| Column | What to put | Example |
-| --- | --- | --- |
-| `id` | A code no other product has. Never reuse an old one. | `w-014` |
-| `slug` | The web address, lowercase with dashes, no spaces | `lime-zip-romper` |
-| `name` | What customers see | `Lime Zip Romper` |
-| `gender` | `women`, `men`, or `unisex` | `women` |
-| `category` | Type of item. A new word here creates a new category. | `rompers` |
-| `price_usd` | Just the number | `68.00` |
-| `compare_at_usd` | Old price, to show a markdown. Leave blank if none. | `85.00` |
-| `colors` | `Name:hexcode`, separated by `\|` | `Lime:#B5D334 \| Blush:#F7C8D0` |
-| `sizes` | Separated by `\|`, in the order you want them shown | `XS \| S \| M \| L` |
-| `image_url` | Paste from the upload page (see below) | |
-| `image_alt` | Short description of the photo, for accessibility and Google | `Lime zip-front romper, front view` |
-| `badge` | Optional. Leave blank unless you want a label. | `BESTSELLER` |
-| `published` | `TRUE` to show it, `FALSE` to hide it | `TRUE` |
+Two safety rules to know:
 
-3. Open the **Stock** tab. Add one row for **every size and colour combination**:
+- **A product with a price of 0 never shows on the site**, even if
+  `active` is `TRUE`. So you can prepare rows safely and fill in the price
+  last.
+- A row missing its `sku` or `name` is ignored completely.
 
-| `product_id` | `size` | `color` | `quantity` |
-| --- | --- | --- | --- |
-| `w-014` | `S` | `Lime` | `6` |
-| `w-014` | `M` | `Lime` | `4` |
+**Categories are yours to invent.** Whatever you type in `category`
+becomes a collection page and a menu link automatically — women's
+categories are listed before men's. To retire a category, just stop using
+it; to add one, just type it.
 
-A combination with no row, or `0`, shows as sold out automatically.
+## Product photos
 
----
-
-## Adding a product photo
-
-1. Go to **`/admin/upload`** on the site and sign in.
-2. Upload the image. The page gives you back a web address.
-3. Paste that address into the `image_url` column in the Sheet.
-
-Do not paste a Google Drive or Dropbox link — those will not display.
+The `image` column holds a **filename**, not a link — it must match a
+photo that's already in the website's image folder (`src/assets`). Adding
+a brand-new photo is currently a developer job: send them the photo and
+the sku, and they'll commit it and tell you the filename to paste.
 
 ---
+
+## Stock
+
+Stock is per size: `stock_S`, `stock_M`, `stock_L`, `stock_XL` (or
+`one_size_stock` for one-size items).
+
+- A size at `0` shows crossed-out on the site — customers can't pick it.
+- When **every** size is 0, the product shows "Sold out" but stays
+  visible. Don't delete it.
+- **After each sale, subtract what you sold** from the right stock column.
+  The site has no other way to know.
+- Restock by putting the number back up. It reappears on its own.
 
 ## Common jobs
 
-**Change a price** — edit `price_usd`. Done.
+**Change a price** — edit `price_bbd`. Numbers only, no `$` sign.
 
-**Put something on sale** — put the original price in `compare_at_usd` and the
-new lower price in `price_usd`. The site shows the strikethrough automatically.
+**Put something on sale** — original price into `compare_at_bbd`, new
+lower price into `price_bbd`. The strikethrough appears automatically.
 
-**Mark something sold out** — set its `quantity` to `0` in the Stock tab. Do not
-delete the product.
+**Hide a product without deleting it** — set `active` to `FALSE`.
 
-**Hide a product without deleting it** — set `published` to `FALSE`.
+**Change the banner across the top of the site** — Config tab, edit the
+`announcement_bar` value. Blank = no banner.
 
-**Restock** — change the `quantity` number back up. It reappears on its own.
+**Choose what's featured on the front page** — Config tab, list skus in
+`featured_skus` separated by `|`, e.g. `W-ROM-001 | W-DRS-002`.
+
+---
+
+## Logging orders (until card payments arrive)
+
+Checkout on the site ends with the customer sending you a WhatsApp
+message. That message starts with an order reference like
+`AFP-20260805-042`.
+
+For **every sale**, add one row to the **Orders** tab:
+
+| date | order_id | customer_name | whatsapp_number | items | total_bbd | status | payment_method | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-08-05 | AFP-20260805-042 | Jane W. | +1 246 … | Romper / M × 1 | 189.00 | paid | bank transfer | |
+
+- Copy the `order_id` straight from the customer's WhatsApp message.
+- `status` is one of: `pending`, `paid`, `delivered`, `cancelled`.
+- **Never mark an order `paid` from a customer's screenshot.** Check your
+  own bank record first — screenshots are easy to fake.
+- Then update the stock columns in the Catalog tab.
+
+The site never writes to this tab; it's your ledger.
 
 ---
 
@@ -79,39 +110,37 @@ delete the product.
 
 Work down this list in order. Stop when it works.
 
-1. **Wait 60 seconds and refresh.** Most of the time this is it.
-2. **Go to `/admin/sync` and press the sync button.** This forces an update
-   immediately and tells you if anything is wrong.
-3. **Check the sync page for red error text.** It names the exact row and
-   column that has a problem. Usually a typo — a price written as `$68` instead
-   of `68.00`, or a missing `id`.
-4. **Check `published` is `TRUE`** on the product you're looking for.
-
-If the sync page reports an error it can't explain, that's a developer job.
-
----
+1. **Wait 6 minutes and refresh.** The site copies the Sheet every
+   5 minutes, plus up to a minute of caching. Most of the time this is it.
+2. **Check `active` is `TRUE` and `price_bbd` is a real number** (not 0,
+   not blank, no `$` sign) on the product you're looking for.
+3. **Check the tab is named exactly `Catalog`** and the column headers
+   haven't been renamed.
+4. If it's still wrong after 15 minutes, that's a developer job — the
+   sync logs live in the Cloudflare dashboard → the Worker → Logs.
 
 ## Things that will break the store
 
-- **Renaming or reordering the column headers** in the Sheet. The headers are
-  how the site finds the data. Add new columns at the far right if you need to.
-- **Reusing an `id`** from a deleted product.
-- **Deleting the `Products` or `Stock` tab**, or renaming them.
-- **Two products with the same `slug`.**
-- **Putting currency symbols or commas in price columns.** Numbers only.
+- **Renaming or deleting the `Catalog`, `Orders`, or `Config` tabs.**
+- **Renaming column headers.** Add new columns at the far right instead.
+- **Reusing a `sku`** from a deleted product.
+- **Currency symbols or commas in price columns.** Numbers only.
+- **Un-sharing the Sheet** from the sync's service account email.
 
 Everything else is safe to experiment with. If a product looks wrong, set
-`published` to `FALSE` and fix it calmly.
+`active` to `FALSE` and fix it calmly — it disappears from the site on the
+next refresh.
 
 ---
 
 ## Publishing website changes (not products)
 
-Product changes go through the Sheet and need nothing else.
+Product and stock changes go through the Sheet and need nothing else.
 
-Changes to the actual website — wording, layout, new pages — happen in the code
-and publish automatically when pushed to GitHub. Cloudflare rebuilds and the
-change is live in about two minutes. Nobody has to press "deploy."
+Changes to the actual website — wording, layout, photos, new pages —
+happen in the code and publish automatically when pushed to GitHub.
+Cloudflare rebuilds and the change is live in about two minutes. Nobody
+has to press "deploy."
 
 ---
 
@@ -119,8 +148,9 @@ change is live in about two minutes. Nobody has to press "deploy."
 
 | Problem | Where it lives |
 | --- | --- |
-| Wrong price, stock, or product details | The Google Sheet |
-| Photo won't show | `/admin/upload`, then the `image_url` column |
-| Sync errors | `/admin/sync` — read the red text |
+| Wrong price, stock, or product details | The Google Sheet, Catalog tab |
+| Product not appearing | `active` = TRUE? `price_bbd` > 0? |
+| Front page featured items | Config tab, `featured_skus` |
+| New product photo needed | Developer (photo goes into the code repo) |
 | Site completely down | Cloudflare dashboard → the Worker → Logs |
 | Customer can't check out | Checkout hands off to WhatsApp — check that number |

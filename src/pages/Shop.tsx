@@ -4,15 +4,19 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ShopFilters, defaultFilters, type FilterState } from "@/components/site/ShopFilters";
-import { useProducts, type Gender } from "@/lib/catalog";
+import { useProducts } from "@/lib/catalog";
 import { ShopSkeleton } from "@/components/site/skeletons/ShopSkeleton";
 
 export default function Shop() {
-  const { gender } = useParams<{ gender: Gender }>();
-  const isWomen = gender === "women";
-  const { data: all = [], isLoading } = useProducts();
+  const { gender } = useParams<{ gender: string }>();
+  const isWomen = gender !== "men";
+  const { data: all, isLoading } = useProducts();
+  // Unisex pieces (visor, socks) belong on both shop pages.
   const list = useMemo(
-    () => all.filter((p) => p.gender === (isWomen ? "women" : "men")),
+    () =>
+      all.filter((p) =>
+        isWomen ? p.gender !== "men" : p.gender !== "women",
+      ),
     [all, isWomen],
   );
 
@@ -28,16 +32,19 @@ export default function Shop() {
   const facets = useMemo(() => {
     const cats = new Set<string>();
     const sizes = new Set<string>();
-    const colors = new Map<string, string>();
+    const colors = new Set<string>();
+    let priceCeiling = 0;
     list.forEach((p) => {
       cats.add(p.category);
       p.sizes.forEach((s) => sizes.add(s));
-      p.colors.forEach((c) => colors.set(c.name, c.hex));
+      if (p.color) colors.add(p.color);
+      priceCeiling = Math.max(priceCeiling, Math.ceil(p.priceCents / 100));
     });
     return {
       categories: [...cats],
       sizes: [...sizes],
-      colors: [...colors].map(([name, hex]) => ({ name, hex })),
+      colors: [...colors],
+      priceCeiling: Math.max(priceCeiling, 100),
     };
   }, [list]);
 
@@ -45,16 +52,16 @@ export default function Shop() {
     let out = list.filter((p) => {
       if (filters.categories.length && !filters.categories.includes(p.category)) return false;
       if (filters.sizes.length && !p.sizes.some((s) => filters.sizes.includes(s))) return false;
-      if (filters.colors.length && !p.colors.some((c) => filters.colors.includes(c.name))) return false;
-      if (p.price / 100 > filters.priceMax) return false;
+      if (filters.colors.length && !filters.colors.includes(p.color)) return false;
+      if (filters.priceMax !== null && p.priceCents / 100 > filters.priceMax) return false;
       return true;
     });
     switch (filters.sort) {
       case "price-asc":
-        out = [...out].sort((a, b) => a.price - b.price);
+        out = [...out].sort((a, b) => a.priceCents - b.priceCents);
         break;
       case "price-desc":
-        out = [...out].sort((a, b) => b.price - a.price);
+        out = [...out].sort((a, b) => b.priceCents - a.priceCents);
         break;
       case "new":
         out = [...out].sort((a, b) => (a.badge === "NEW" ? -1 : 1));
@@ -105,12 +112,16 @@ export default function Shop() {
           {filtered.length === 0 ? (
             <div className="py-24 text-center">
               <div className="eyebrow text-graphite mb-2">No matches</div>
-              <p className="text-sm">Try loosening the filters.</p>
+              <p className="text-sm">
+                {list.length === 0
+                  ? "New pieces are landing soon."
+                  : "Try loosening the filters."}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5">
               {filtered.map((p, i) => (
-                <ProductCard key={p.id} product={p} index={i} />
+                <ProductCard key={p.sku} product={p} index={i} />
               ))}
             </div>
           )}

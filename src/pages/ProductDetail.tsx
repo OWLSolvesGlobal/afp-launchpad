@@ -1,20 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronRight, ChevronLeft, Minus, Plus, Truck, RotateCcw, ShieldCheck, Expand } from "lucide-react";
+import { ChevronRight, Minus, Plus, Truck, RotateCcw, ShieldCheck } from "lucide-react";
 import { Header } from "@/components/site/Header";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Footer } from "@/components/site/Footer";
 import { ProductCard } from "@/components/site/ProductCard";
 import {
   formatPrice,
+  isSoldOut,
+  productImageUrl,
+  sizeStock,
   useProduct,
   useProducts,
-  useStock,
-  stockFor,
-  sizeAvailable,
-  colorAvailable,
 } from "@/lib/catalog";
 import { useCart } from "@/context/CartContext";
 import { cn } from "@/lib/utils";
@@ -24,52 +21,55 @@ import { ProductDetailSkeleton } from "@/components/site/skeletons/ProductDetail
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { data: product, isLoading } = useProduct(slug);
-  const { data: stock = [] } = useStock(product?.id);
-  const { data: all = [] } = useProducts();
+  const { data: all } = useProducts();
   const { addItem } = useCart();
 
-  const [selectedColor, setSelectedColor] = useState(product?.colors[0]?.name ?? "");
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [qty, setQty] = useState(1);
-  const [activeImage, setActiveImage] = useState(0);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     if (!product) return;
     document.title = `${product.name} — AFP Performance Apparel`;
-    setSelectedColor(product.colors[0]?.name ?? "");
-    setSelectedSize("");
+    // One-size items don't need a size decision; pre-select it.
+    setSelectedSize(product.sizes.length === 1 ? product.sizes[0] : "");
     setQty(1);
-    setActiveImage(0);
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-  }, [product?.id]);
+  }, [product?.sku]);
 
   const related = useMemo(() => {
     if (!product) return [];
-    return all
-      .filter((p) => p.id !== product.id && p.gender === product.gender)
+    return [...all]
+      .filter((p) => p.sku !== product.sku)
+      .sort((a, b) => {
+        const aScore = (a.category === product.category ? 0 : 2) + (a.gender === product.gender ? 0 : 1);
+        const bScore = (b.category === product.category ? 0 : 2) + (b.gender === product.gender ? 0 : 1);
+        return aScore - bScore;
+      })
       .slice(0, 4);
-  }, [product?.id, all]);
+  }, [product?.sku, all]);
 
   if (isLoading) return <ProductDetailSkeleton />;
   if (!product) return <Navigate to="/" replace />;
 
-  const variantQty = selectedSize ? stockFor(stock, selectedSize, selectedColor) : 0;
+  const soldOut = isSoldOut(product);
+  const variantQty = selectedSize ? sizeStock(product, selectedSize) : 0;
   const lowStock = variantQty > 0 && variantQty < 5;
-  const soldOut = !!selectedSize && variantQty <= 0;
+  const sizeSoldOut = !!selectedSize && variantQty <= 0;
+  const shopGender = product.gender === "men" ? "men" : "women";
 
   const handleAdd = () => {
+    if (soldOut) return;
     if (!selectedSize) {
       toast.error("Please select a size");
       return;
     }
     if (variantQty < qty) {
-      toast.error(soldOut ? "Sold out" : `Only ${variantQty} left`);
+      toast.error(sizeSoldOut ? "Sold out in this size" : `Only ${variantQty} left`);
       return;
     }
-    addItem(product, { size: selectedSize, color: selectedColor, quantity: qty });
+    addItem(product, { size: selectedSize, quantity: qty });
     toast.success(`${product.name} added to bag`, {
-      description: `${selectedColor} · Size ${selectedSize} · Qty ${qty}`,
+      description: `${product.color ? `${product.color} · ` : ""}Size ${selectedSize} · Qty ${qty}`,
     });
   };
 
@@ -82,8 +82,8 @@ export default function ProductDetail() {
         <nav className="container py-4 text-xs text-graphite flex items-center gap-1.5">
           <Link to="/" className="hover:text-ink transition-colors">Home</Link>
           <ChevronRight className="w-3 h-3" />
-          <Link to={`/shop/${product.gender}`} className="hover:text-ink transition-colors capitalize">
-            {product.gender}
+          <Link to={`/shop/${shopGender}`} className="hover:text-ink transition-colors capitalize">
+            {shopGender}
           </Link>
           <ChevronRight className="w-3 h-3" />
           <span className="text-ink truncate">{product.name}</span>
@@ -91,75 +91,26 @@ export default function ProductDetail() {
 
         {/* Product */}
         <section className="container grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 pb-20">
-          {/* Gallery */}
+          {/* Image */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="aspect-[4/5] overflow-hidden bg-muted relative group">
-              <button
-                type="button"
-                onClick={() => setLightboxOpen(true)}
-                aria-label="Expand image"
-                className="block w-full h-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
-              >
-                <img
-                  src={(product.images[activeImage] ?? product.image)}
-                  alt={product.imageAlt}
-                  width={1200}
-                  height={1500}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-              <span
-                className="absolute top-3 right-3 w-9 h-9 grid place-items-center bg-bone/90 text-ink opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
-                aria-hidden="true"
-              >
-                <Expand className="w-4 h-4" />
-              </span>
-              {product.images.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setActiveImage((i) => (i - 1 + product.images.length) % product.images.length)}
-                    aria-label="Previous image"
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center bg-bone/90 text-ink hover:bg-ink hover:text-bone transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveImage((i) => (i + 1) % product.images.length)}
-                    aria-label="Next image"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center bg-bone/90 text-ink hover:bg-ink hover:text-bone transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                  <span className="absolute bottom-3 right-3 bg-ink/80 text-bone text-[10px] eyebrow px-2 py-1">
-                    {activeImage + 1} / {product.images.length}
-                  </span>
-                </>
+            <div className="aspect-[4/5] overflow-hidden bg-muted relative">
+              <img
+                src={productImageUrl(product.image)}
+                alt={product.imageAlt}
+                width={1200}
+                height={1500}
+                className="w-full h-full object-cover"
+              />
+              {soldOut && (
+                <span className="absolute top-3 left-3 font-stencil uppercase text-[10px] tracking-wider px-2 py-1 bg-ink text-bone">
+                  Sold out
+                </span>
               )}
             </div>
-            {product.images.length > 1 && (
-              <div className="mt-3 grid grid-cols-5 gap-2">
-                {product.images.map((src, i) => (
-                  <button
-                    key={src + i}
-                    type="button"
-                    onClick={() => setActiveImage(i)}
-                    aria-label={`View image ${i + 1}`}
-                    className={cn(
-                      "aspect-square overflow-hidden bg-muted border-2 transition-colors",
-                      i === activeImage ? "border-ink" : "border-transparent hover:border-border"
-                    )}
-                  >
-                    <img src={src} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
           </motion.div>
 
           {/* Details */}
@@ -169,13 +120,11 @@ export default function ProductDetail() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="md:py-4"
           >
-            {product.badge && (
+            {product.badge && !soldOut && (
               <span
                 className={cn(
                   "inline-block font-stencil uppercase text-[10px] tracking-wider px-2 py-1 mb-4",
-                  product.badge === "NEW" && "bg-ink text-bone",
-                  product.badge === "BESTSELLER" && "bg-ink text-bone",
-                  product.badge === "LOW STOCK" && "bg-safety text-bone"
+                  product.badge === "LOW STOCK" ? "bg-safety text-bone" : "bg-ink text-bone"
                 )}
               >
                 {product.badge}
@@ -190,77 +139,58 @@ export default function ProductDetail() {
             </h1>
 
             <div className="flex items-baseline gap-3 mb-8">
-              <span className="text-2xl font-medium">{formatPrice(product.price)}</span>
-              {product.compareAt && (
+              <span className="text-2xl font-medium">{formatPrice(product.priceCents)}</span>
+              {product.compareAtCents && (
                 <span className="text-base text-graphite line-through">
-                  {formatPrice(product.compareAt)}
+                  {formatPrice(product.compareAtCents)}
                 </span>
               )}
             </div>
 
-            <p className="text-sm text-graphite leading-relaxed mb-8 max-w-md">
-              Engineered for high-output training. A second-skin fit with four-way stretch,
-              moisture-wicking fabric, and reinforced seams built to move with you — rep after rep.
-            </p>
-
             {/* Color */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-3">
+            {product.color && (
+              <div className="mb-6 flex items-center justify-between max-w-md">
                 <span className="eyebrow">Color</span>
-                <span className="text-xs text-graphite">{selectedColor}</span>
+                <span className="text-xs text-graphite">{product.color}</span>
               </div>
-              <div className="flex items-center gap-2">
-                {product.colors.map((c) => (
-                  <button
-                    key={c.name}
-                    type="button"
-                    onClick={() => setSelectedColor(c.name)}
-                    disabled={!colorAvailable(stock, c.name)}
-                    title={c.name}
-                    aria-label={`Color: ${c.name}`}
-                    className={cn(
-                      "w-9 h-9 rounded-full border-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed",
-                      selectedColor === c.name
-                        ? "border-ink ring-2 ring-ink ring-offset-2 ring-offset-background"
-                        : "border-border hover:border-ink"
-                    )}
-                    style={{ backgroundColor: c.hex }}
-                  />
-                ))}
-              </div>
-            </div>
+            )}
 
-            {/* Size */}
+            {/* Size — sold-out sizes stay visible but disabled */}
             <div className="mb-6">
-              <div className="flex items-center justify-between mb-3">
-                <span className="eyebrow">Size</span>
-                <button type="button" className="text-xs text-graphite underline underline-offset-2 hover:text-ink">
-                  Size guide
-                </button>
-              </div>
-              <div className="grid grid-cols-5 gap-2">
-                {product.sizes.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setSelectedSize(s)}
-                    disabled={!sizeAvailable(stock, s)}
-                    className={cn(
-                      "h-11 border text-sm font-medium transition-colors disabled:opacity-30 disabled:line-through disabled:cursor-not-allowed",
-                      selectedSize === s
-                        ? "bg-ink text-bone border-ink"
-                        : "bg-background border-border hover:border-ink"
-                    )}
-                  >
-                    {s}
-                  </button>
-                ))}
+              <div className="eyebrow mb-3">Size</div>
+              <div
+                className={cn(
+                  "grid gap-2",
+                  product.sizes.length === 1 ? "grid-cols-2" : "grid-cols-5"
+                )}
+              >
+                {product.sizes.map((s) => {
+                  const out = sizeStock(product, s) === 0;
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setSelectedSize(s)}
+                      disabled={out}
+                      className={cn(
+                        "h-11 border text-sm font-medium transition-colors disabled:opacity-30 disabled:line-through disabled:cursor-not-allowed",
+                        selectedSize === s
+                          ? "bg-ink text-bone border-ink"
+                          : "bg-background border-border hover:border-ink"
+                      )}
+                    >
+                      {s}
+                    </button>
+                  );
+                })}
               </div>
               {selectedSize && lowStock && (
                 <p className="mt-2 text-xs text-safety">Only {variantQty} left</p>
               )}
               {soldOut && (
-                <p className="mt-2 text-xs text-graphite">Sold out in this combo — try another color</p>
+                <p className="mt-2 text-xs text-graphite">
+                  Sold out — message us on WhatsApp to hear when it's back.
+                </p>
               )}
             </div>
 
@@ -292,24 +222,28 @@ export default function ProductDetail() {
             <button
               type="button"
               onClick={handleAdd}
-              disabled={soldOut}
+              disabled={soldOut || sizeSoldOut}
               className="w-full bg-ink text-bone py-4 eyebrow hover:bg-safety transition-colors mb-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-ink"
             >
-              {soldOut ? "Sold Out" : `Add to Bag — ${formatPrice(product.price * qty)}`}
+              {soldOut
+                ? "Sold Out"
+                : `Add to Bag — ${formatPrice(product.priceCents * qty)}`}
             </button>
-            <Link
-              to="/checkout"
-              onClick={handleAdd}
-              className="block w-full text-center border border-ink text-ink py-4 eyebrow hover:bg-ink hover:text-bone transition-colors"
-            >
-              Buy Now
-            </Link>
+            {!soldOut && (
+              <Link
+                to="/checkout"
+                onClick={handleAdd}
+                className="block w-full text-center border border-ink text-ink py-4 eyebrow hover:bg-ink hover:text-bone transition-colors"
+              >
+                Buy Now
+              </Link>
+            )}
 
             {/* Perks */}
             <div className="mt-8 pt-8 border-t border-border grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-graphite">
               <div className="flex items-start gap-2">
                 <Truck className="w-4 h-4 mt-0.5 shrink-0 text-ink" />
-                <div><div className="text-ink font-medium mb-0.5">Free shipping</div>On orders over $150</div>
+                <div><div className="text-ink font-medium mb-0.5">Free shipping</div>On orders over BDS $300</div>
               </div>
               <div className="flex items-start gap-2">
                 <RotateCcw className="w-4 h-4 mt-0.5 shrink-0 text-ink" />
@@ -333,7 +267,7 @@ export default function ProductDetail() {
               <div>
                 <h2 className="eyebrow mb-2">Fit</h2>
                 <p className="text-sm text-graphite leading-relaxed">
-                  True to size. Model is 6'1" wearing size M. For a relaxed fit, size up.
+                  True to size. For a relaxed fit, size up.
                 </p>
               </div>
             </div>
@@ -346,7 +280,7 @@ export default function ProductDetail() {
             <div className="flex items-end justify-between mb-10">
               <h2 className="font-display text-2xl md:text-3xl">You may also like</h2>
               <Link
-                to={`/shop/${product.gender}`}
+                to={`/shop/${shopGender}`}
                 className="text-xs uppercase tracking-wider underline underline-offset-4 hover:text-safety"
               >
                 Shop all
@@ -354,7 +288,7 @@ export default function ProductDetail() {
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {related.map((p, i) => (
-                <ProductCard key={p.id} product={p} index={i} />
+                <ProductCard key={p.sku} product={p} index={i} />
               ))}
             </div>
           </section>
@@ -362,45 +296,6 @@ export default function ProductDetail() {
       </main>
 
       <Footer />
-
-      {/* Image lightbox */}
-      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-        <DialogContent className="max-w-5xl w-[95vw] p-0 bg-background border-0 shadow-2xl">
-          <VisuallyHidden>
-            <DialogTitle>{product.name} — enlarged image</DialogTitle>
-          </VisuallyHidden>
-          <div className="relative bg-muted">
-            <img
-              src={product.images[activeImage] ?? product.image}
-              alt={product.imageAlt}
-              className="w-full h-auto max-h-[85vh] object-contain"
-            />
-            {product.images.length > 1 && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setActiveImage((i) => (i - 1 + product.images.length) % product.images.length)}
-                  aria-label="Previous image"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 grid place-items-center bg-bone/90 text-ink hover:bg-ink hover:text-bone transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveImage((i) => (i + 1) % product.images.length)}
-                  aria-label="Next image"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 grid place-items-center bg-bone/90 text-ink hover:bg-ink hover:text-bone transition-colors"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-                <span className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-ink/80 text-bone text-[10px] eyebrow px-2 py-1">
-                  {activeImage + 1} / {product.images.length}
-                </span>
-              </>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

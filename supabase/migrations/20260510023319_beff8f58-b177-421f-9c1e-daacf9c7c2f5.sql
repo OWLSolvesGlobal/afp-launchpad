@@ -1,1 +1,0 @@
-revoke execute on function public.available_credit_cents(uuid) from public, anon, authenticated;

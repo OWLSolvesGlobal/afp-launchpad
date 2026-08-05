@@ -5,21 +5,20 @@ import { CartProvider, useCart, formatMoney } from "@/context/CartContext";
 import type { Product } from "@/lib/catalog";
 
 const product = (overrides: Partial<Product> = {}): Product => ({
-  id: "w-001",
-  slug: "lime-zip-romper",
-  name: "Lime Zip Romper",
+  sku: "W-ROM-001",
+  slug: "zip-front-romper-magenta",
+  name: "Zip-Front Romper — Magenta",
   gender: "women",
-  category: "rompers",
-  price: 6_800,
-  colors: [
-    { name: "Lime", hex: "#B5D334" },
-    { name: "Blush", hex: "#F7C8D0" },
-  ],
-  sizes: ["XS", "S", "M", "L"],
-  image: "/img/lime.jpg",
-  images: ["/img/lime.jpg"],
-  imageAlt: "Lime zip romper",
+  category: "Bodysuits & Rompers",
+  color: "Magenta",
+  priceCents: 6_800,
+  compareAtCents: null,
+  sizes: ["S", "M", "L", "XL"],
+  stock: { S: 3, M: 5, L: 2, XL: 1 },
+  image: "ashlee-pink.webp",
+  imageAlt: "Magenta romper",
   badge: null,
+  active: true,
   ...overrides,
 });
 
@@ -64,13 +63,19 @@ describe("cart basics", () => {
     expect(result.current.count).toBe(3);
     expect(result.current.subtotal).toBe(20_400);
   });
+
+  it("carries the product's colour onto the line item", () => {
+    const { result } = setup();
+    act(() => result.current.addItem(product()));
+    expect(result.current.items[0].color).toBe("Magenta");
+  });
 });
 
 describe("variant handling", () => {
-  it("merges quantity when the same size and colour is added twice", () => {
+  it("merges quantity when the same size is added twice", () => {
     const { result } = setup();
-    act(() => result.current.addItem(product(), { size: "M", color: "Lime" }));
-    act(() => result.current.addItem(product(), { size: "M", color: "Lime" }));
+    act(() => result.current.addItem(product(), { size: "M" }));
+    act(() => result.current.addItem(product(), { size: "M" }));
 
     expect(result.current.items).toHaveLength(1);
     expect(result.current.items[0].quantity).toBe(2);
@@ -79,39 +84,37 @@ describe("variant handling", () => {
 
   it("keeps different sizes as separate lines", () => {
     const { result } = setup();
-    act(() => result.current.addItem(product(), { size: "S", color: "Lime" }));
-    act(() => result.current.addItem(product(), { size: "M", color: "Lime" }));
+    act(() => result.current.addItem(product(), { size: "S" }));
+    act(() => result.current.addItem(product(), { size: "M" }));
 
     expect(result.current.items).toHaveLength(2);
     expect(result.current.count).toBe(2);
   });
 
-  it("keeps different colours as separate lines", () => {
+  it("keeps different products as separate lines", () => {
     const { result } = setup();
-    act(() => result.current.addItem(product(), { size: "M", color: "Lime" }));
-    act(() => result.current.addItem(product(), { size: "M", color: "Blush" }));
+    act(() => result.current.addItem(product(), { size: "M" }));
+    act(() => result.current.addItem(product({ sku: "W-ROM-002", slug: "sleeveless-romper-lime" }), { size: "M" }));
 
     expect(result.current.items).toHaveLength(2);
   });
 
-  // Deliberate: the default skips the first size so shoppers don't land on XS.
-  // Locking it in so a future "tidy-up" doesn't silently change what's added.
-  it("defaults to the second size when several are available", () => {
+  // Deliberate: quick-add must never queue a sold-out size, so the default
+  // is the first size that actually has stock.
+  it("defaults to the first size with stock", () => {
     const { result } = setup();
-    act(() => result.current.addItem(product()));
-    expect(result.current.items[0].size).toBe("S");
+    act(() => result.current.addItem(product({ stock: { S: 0, M: 4, L: 1, XL: 0 } })));
+    expect(result.current.items[0].size).toBe("M");
   });
 
-  it("falls back to the only size for single-size products", () => {
+  it("falls back to the only size for one-size products", () => {
     const { result } = setup();
-    act(() => result.current.addItem(product({ sizes: ["OS"] })));
-    expect(result.current.items[0].size).toBe("OS");
-  });
-
-  it("defaults to the first colour", () => {
-    const { result } = setup();
-    act(() => result.current.addItem(product()));
-    expect(result.current.items[0].color).toBe("Lime");
+    act(() =>
+      result.current.addItem(
+        product({ sizes: ["ONE SIZE"], stock: { "ONE SIZE": 6 } }),
+      ),
+    );
+    expect(result.current.items[0].size).toBe("ONE SIZE");
   });
 });
 
@@ -180,15 +183,15 @@ describe("persistence", () => {
   });
 
   it("recovers from corrupted stored data rather than crashing", () => {
-    localStorage.setItem("afp-cart-v1", "{not valid json");
+    localStorage.setItem("afp-cart-v2", "{not valid json");
     const { result } = setup();
     expect(result.current.items).toHaveLength(0);
   });
 });
 
 describe("formatMoney", () => {
-  it("renders cents as a decimal amount", () => {
-    expect(formatMoney(6_800)).toContain("68.00");
-    expect(formatMoney(0)).toContain("0.00");
+  it("renders the BBD display format", () => {
+    expect(formatMoney(6_800)).toBe("BDS $68.00");
+    expect(formatMoney(0)).toBe("BDS $0.00");
   });
 });

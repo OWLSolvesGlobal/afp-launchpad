@@ -23,13 +23,7 @@ const Checkout = lazy(() => import("./pages/Checkout.tsx"));
 const About = lazy(() => import("./pages/About.tsx"));
 const Contact = lazy(() => import("./pages/Contact.tsx"));
 const FAQ = lazy(() => import("./pages/FAQ.tsx"));
-const Auth = lazy(() => import("./pages/Auth.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
-
-const AdminUpload = lazy(() => import("./pages/admin/AdminUpload.tsx"));
-const AdminSync = lazy(() => import("./pages/admin/AdminSync.tsx"));
-const AdminImages = lazy(() => import("./pages/admin/AdminImages.tsx"));
-const AdminPartners = lazy(() => import("./pages/admin/AdminPartners.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -67,12 +61,6 @@ const App = () => (
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/faq" element={<FAQ />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/admin/upload" element={<AdminUpload />} />
-              <Route path="/admin/sync" element={<AdminSync />} />
-              <Route path="/admin/images" element={<AdminImages />} />
-              <Route path="/admin/partners" element={<AdminPartners />} />
-              <Route path="/admin/partnerships" element={<AdminPartners />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
