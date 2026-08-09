@@ -84,32 +84,33 @@
     },
     {
       "sku": "W-SET-001",
-      "slug": "halter-set-navy",
-      "name": "Halter Set — Navy",
+      "slug": "vestra-set",
+      "name": "Vestra Set",
       "description": "",
       "gender": "women",
       "category": "Two-Piece Sets",
       "colors": [
-        "Navy"
+        "Peach",
+        "Royal Blue",
+        "Aqua Blue",
+        "Purple"
       ],
-      "priceCents": 0,
+      "priceCents": 13000,
       "compareAtCents": null,
       "sizes": [
         "S",
         "M",
-        "L",
-        "XL"
+        "L"
       ],
       "stock": {
-        "S": 0,
-        "M": 0,
-        "L": 0,
-        "XL": 0
+        "S": 5,
+        "M": 5,
+        "L": 5
       },
       "image": "afp-black-jumpsuit.webp",
-      "imageAlt": "Navy halter top and leggings set",
+      "imageAlt": "Vestra halter top and leggings set",
       "badge": null,
-      "active": false
+      "active": true
     },
     {
       "sku": "W-SET-002",
@@ -609,16 +610,16 @@
         "XL"
       ],
       "stock": {
-        "XS": 0,
-        "S": 0,
-        "M": 0,
-        "L": 0,
-        "XL": 0
+        "XS": 5,
+        "S": 5,
+        "M": 5,
+        "L": 5,
+        "XL": 5
       },
       "image": "afp-solara-set-coral.webp",
       "imageAlt": "Coral striped halter top and knee-length shorts set",
       "badge": null,
-      "active": false
+      "active": true
     },
     {
       "sku": "W-SET-008",
@@ -640,16 +641,16 @@
         "XL"
       ],
       "stock": {
-        "XS": 0,
-        "S": 0,
-        "M": 0,
-        "L": 0,
-        "XL": 0
+        "XS": 5,
+        "S": 5,
+        "M": 5,
+        "L": 5,
+        "XL": 5
       },
       "image": "afp-solara-set-citron.webp",
       "imageAlt": "Pale citron striped halter top and knee-length shorts set",
       "badge": null,
-      "active": false
+      "active": true
     }
   ],
   "categories": [
