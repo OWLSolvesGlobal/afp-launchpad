@@ -19,15 +19,16 @@ import {
 } from "@/lib/catalog-core";
 
 const HEADERS = [
-  "sku", "name", "gender", "category", "color", "price_bbd", "compare_at_bbd",
-  "sizes", "stock_S", "stock_M", "stock_L", "stock_XL", "one_size_stock",
-  "image", "image_alt", "badge", "active",
+  "sku", "name", "description", "gender", "category", "color", "price_bbd",
+  "compare_at_bbd", "sizes", "stock_S", "stock_M", "stock_L", "stock_XL",
+  "one_size_stock", "image", "image_alt", "badge", "active",
 ];
 
 const row = (overrides: Partial<Record<string, string>> = {}): string[] => {
   const base: Record<string, string> = {
     sku: "W-ROM-001",
     name: "Zip-Front Romper — Magenta",
+    description: "",
     gender: "women",
     category: "Bodysuits & Rompers",
     color: "Magenta",
@@ -96,6 +97,15 @@ describe("parseCatalogRows", () => {
     expect(p.compareAtCents).toBeNull();
     expect(p.active).toBe(true);
     expect(p.slug).toBe("zip-front-romper-magenta");
+  });
+
+  // Blank description stays blank — the product page renders nothing, never
+  // placeholder copy.
+  it("passes description through and defaults it to empty", () => {
+    expect(parseOne({ description: "Second-skin fit. Front zip." }).description).toBe(
+      "Second-skin fit. Front zip.",
+    );
+    expect(parseOne().description).toBe("");
   });
 
   // Blank `sizes` must mean the default S|M|L|XL run, not "no sizes".

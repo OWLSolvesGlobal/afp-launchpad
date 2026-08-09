@@ -147,6 +147,14 @@ export default function ProductDetail() {
               )}
             </div>
 
+            {/* Owner-written copy from the Sheet's description column.
+                Blank renders nothing — no placeholder text. */}
+            {product.description && (
+              <p className="text-sm text-graphite leading-relaxed mb-8 max-w-md whitespace-pre-line">
+                {product.description}
+              </p>
+            )}
+
             {/* Color */}
             {product.color && (
               <div className="mb-6 flex items-center justify-between max-w-md">

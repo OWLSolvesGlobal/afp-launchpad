@@ -8,6 +8,7 @@ const product = (overrides: Partial<Product> = {}): Product => ({
   sku: "W-ROM-001",
   slug: "zip-front-romper-magenta",
   name: "Zip-Front Romper — Magenta",
+  description: "",
   gender: "women",
   category: "Bodysuits & Rompers",
   color: "Magenta",

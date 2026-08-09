@@ -14,6 +14,8 @@ export interface CatalogProduct {
   sku: string;
   slug: string;
   name: string;
+  /** Short owner-written copy (1–3 sentences). Blank renders nothing. */
+  description: string;
   gender: Gender;
   category: string;
   color: string;
@@ -178,6 +180,7 @@ export function parseCatalogRows(rows: (string | number)[][]): CatalogProduct[] 
       sku,
       slug,
       name,
+      description: row["description"] ?? "",
       gender: parseGender(row["gender"] ?? ""),
       category: row["category"] || "Uncategorised",
       color: row["color"] ?? "",

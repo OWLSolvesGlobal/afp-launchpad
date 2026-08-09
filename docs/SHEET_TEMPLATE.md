@@ -31,6 +31,7 @@ rename each imported sheet to its tab name above.
 | --- | --- | --- |
 | `sku` | Unique product code. Never reuse one. | `W-ROM-001` |
 | `name` | Customer-facing name | `Zip-Front Romper — Magenta` |
+| `description` | Short copy (1–3 sentences) shown on the product page. Blank shows nothing. | `Second-skin fit with a front zip. Made for movement.` |
 | `gender` | `women`, `men`, or `unisex` | `women` |
 | `category` | Free text. Every distinct value becomes a collection page and a nav link — women's categories are shown before men's automatically. | `Bodysuits & Rompers` |
 | `color` | Colour name, free text | `Magenta` |
