@@ -424,6 +424,93 @@
       "imageAlt": "Navy scrunch-back leggings, back view",
       "badge": null,
       "active": false
+    },
+    {
+      "sku": "W-SET-005",
+      "slug": "piped-cami-and-shorts-set-cornflower-blue",
+      "name": "Piped Cami & Shorts Set — Cornflower Blue",
+      "description": "",
+      "gender": "women",
+      "category": "Two-Piece Sets",
+      "colors": [
+        "Cornflower Blue"
+      ],
+      "priceCents": 0,
+      "compareAtCents": null,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "stock": {
+        "S": 0,
+        "M": 0,
+        "L": 0,
+        "XL": 0
+      },
+      "image": "afp-piped-cami-set-blue-front.webp",
+      "imageAlt": "Cornflower blue cami and shorts set with white piping, front view",
+      "badge": null,
+      "active": false
+    },
+    {
+      "sku": "W-SET-006",
+      "slug": "halter-bra-and-leggings-set-black",
+      "name": "Halter Bra & Leggings Set — Black",
+      "description": "",
+      "gender": "women",
+      "category": "Two-Piece Sets",
+      "colors": [
+        "Black"
+      ],
+      "priceCents": 0,
+      "compareAtCents": null,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "stock": {
+        "S": 0,
+        "M": 0,
+        "L": 0,
+        "XL": 0
+      },
+      "image": "afp-bra-leggings-set-black-front.webp",
+      "imageAlt": "Black halter sports bra and leggings set with white trim, front view",
+      "badge": null,
+      "active": false
+    },
+    {
+      "sku": "W-LEG-002",
+      "slug": "scrunch-back-leggings-sage",
+      "name": "Scrunch-Back Leggings — Sage",
+      "description": "",
+      "gender": "women",
+      "category": "Leggings",
+      "colors": [
+        "Sage"
+      ],
+      "priceCents": 0,
+      "compareAtCents": null,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "stock": {
+        "S": 0,
+        "M": 0,
+        "L": 0,
+        "XL": 0
+      },
+      "image": "afp-leggings-sage.webp",
+      "imageAlt": "Sage green scrunch-back leggings, back view",
+      "badge": null,
+      "active": false
     }
   ],
   "categories": [],
