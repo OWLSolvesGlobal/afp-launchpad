@@ -318,6 +318,9 @@
   "config": {
     "announcementBar": "",
     "featuredSkus": [],
-    "heroOrder": []
+    "heroOrder": [],
+    "paymentsCardEnabled": false,
+    "paymentsTransferEnabled": false,
+    "transferInstructions": ""
   }
 }

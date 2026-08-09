@@ -2,3 +2,6 @@ key,value
 announcement_bar,
 featured_skus,
 hero_order,
+payments_card_enabled,FALSE
+payments_transfer_enabled,FALSE
+transfer_instructions,

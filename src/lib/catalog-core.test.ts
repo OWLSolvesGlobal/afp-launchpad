@@ -266,6 +266,35 @@ describe("config parsing", () => {
     expect(cfg.featuredSkus).toEqual([]);
     expect(cfg.heroOrder).toEqual([]);
   });
+
+  // Payment paths default OFF and only a literal TRUE turns one on — an
+  // absent, blank, or misspelled flag must never expose a payment path.
+  it("defaults both payment paths to disabled", () => {
+    const cfg = parseConfigRows([["key", "value"]]);
+    expect(cfg.paymentsCardEnabled).toBe(false);
+    expect(cfg.paymentsTransferEnabled).toBe(false);
+    expect(cfg.transferInstructions).toBe("");
+  });
+
+  it("parses payment flags strictly", () => {
+    const cfg = parseConfigRows([
+      ["key", "value"],
+      ["payments_card_enabled", "true"],
+      ["payments_transfer_enabled", "yes"],
+    ]);
+    expect(cfg.paymentsCardEnabled).toBe(true); // case-insensitive TRUE
+    expect(cfg.paymentsTransferEnabled).toBe(false); // anything else stays off
+  });
+
+  it("passes transfer instructions through verbatim, newlines intact", () => {
+    const text = "Bank: CIBC\nAccount: 123456\nName: Alo Fitness Pro";
+    const cfg = parseConfigRows([
+      ["key", "value"],
+      ["payments_transfer_enabled", "TRUE"],
+      ["transfer_instructions", text],
+    ]);
+    expect(cfg.transferInstructions).toBe(text);
+  });
 });
 
 describe("buildSnapshot", () => {

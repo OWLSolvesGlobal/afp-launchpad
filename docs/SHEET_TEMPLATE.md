@@ -83,8 +83,13 @@ processor's webhooks). Every WhatsApp checkout message includes an
 | `announcement_bar` | `Free delivery over BDS $300` | Slim banner above the header. Blank = no banner. |
 | `featured_skus` | `W-ROM-001 \| W-DRS-002 \| W-SET-001` | Which products fill the landing page's Featured grid, in order. |
 | `hero_order` | `W-ROM-002 \| W-SET-001` | The first listed sku that has a photo becomes the landing page hero image. |
+| `payments_card_enabled` | `FALSE` | Shows the card payment section at checkout. Keep FALSE until card processing is actually live. |
+| `payments_transfer_enabled` | `FALSE` | Shows the bank transfer section at checkout. |
+| `transfer_instructions` | *(bank details, multiline)* | Text shown in the transfer section — bank name, account number, BimPay/1stPay details. Customers are told to quote their order reference. |
 
-Lists can be separated with `|` or commas.
+Lists can be separated with `|` or commas. WhatsApp checkout is always
+available; card and transfer appear **only** when their flag is exactly
+`TRUE`. Enabling a payment path is a Sheet edit — no deploy needed.
 
 ---
 

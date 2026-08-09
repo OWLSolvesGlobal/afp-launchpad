@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ArrowLeft, MapPin, Store, Check, MessageCircle } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useCart, formatMoney } from "@/context/CartContext";
-import { newOrderId } from "@/lib/catalog";
-import { toast } from "sonner";
+import { newOrderId, useCatalog } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { CheckoutSkeleton } from "@/components/site/skeletons/CheckoutSkeleton";
 import { LIME, waLink } from "@/lib/afp-catalog";
+import { CardPaymentSection } from "@/components/checkout/CardPaymentSection";
+import { BankTransferSection } from "@/components/checkout/BankTransferSection";
 import { calculateOrderTotal, FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/pricing";
 
 import type { Fulfillment } from "@/lib/pricing";
@@ -30,17 +29,28 @@ const PICKUP_LOCATIONS = [
   },
 ];
 
+/**
+ * Checkout: cart review → order reference → payment paths.
+ *
+ * WhatsApp is always available. Card and Bank Transfer appear only when the
+ * Sheet's Config tab enables them (payments_card_enabled /
+ * payments_transfer_enabled) — turning a payment path on is a Sheet edit,
+ * never a deploy. The card section is a stub until Fygaro lands.
+ */
 export default function Checkout() {
-  const { items, subtotal, count, clear } = useCart();
-  const navigate = useNavigate();
+  const { items, subtotal, count } = useCart();
+  const { data: catalog } = useCatalog();
   const [fulfillment, setFulfillment] = useState<Fulfillment>("delivery");
   const [pickupLocation, setPickupLocation] = useState(PICKUP_LOCATIONS[0].id);
   const [hydrating, setHydrating] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
 
-  // One reference per checkout visit. It rides in the WhatsApp message so
-  // the owner can copy it into the Orders tab of the catalog Sheet.
+  // One reference per checkout visit — quoted in the WhatsApp message and on
+  // transfer payments so the owner can copy it into the Orders tab.
   const orderRef = useMemo(() => newOrderId(), []);
+
+  const cardEnabled = catalog?.config.paymentsCardEnabled ?? false;
+  const transferEnabled = catalog?.config.paymentsTransferEnabled ?? false;
+  const transferInstructions = catalog?.config.transferInstructions ?? "";
 
   useEffect(() => {
     document.title = "Checkout — Alo Fitness Pro";
@@ -48,19 +58,6 @@ export default function Checkout() {
     return () => window.clearTimeout(t);
   }, []);
 
-  const waCheckoutMessage = useMemo(() => {
-    if (items.length === 0) return "Hi AFP!";
-    const lines = items.map(
-      (i) =>
-        `• ${i.name} — ${i.color ? `${i.color} / ` : ""}${i.size} × ${i.quantity} (${formatMoney(i.priceCents * i.quantity)})`,
-    );
-    return `Hi AFP! I'd like to place this order:\nOrder ref: ${orderRef}\n\n${lines.join("\n")}\n\nSubtotal: ${formatMoney(subtotal)}\n${
-      fulfillment === "pickup" ? "Pickup preferred." : "Please arrange delivery."
-    }`;
-  }, [items, subtotal, fulfillment, orderRef]);
-
-  // Pricing rules live in src/lib/pricing.ts so they can be unit tested and
-  // reused server-side when a payment processor is wired in.
   const {
     shippingCents: shipping,
     taxCents: tax,
@@ -70,19 +67,23 @@ export default function Checkout() {
     fulfillment,
   });
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (items.length === 0) return;
-    setSubmitting(true);
-    toast.success(
-      fulfillment === "pickup"
-        ? "Order placed — we'll text you when it's ready for pickup."
-        : "Order placed — confirmation email on the way."
+  const waCheckoutMessage = useMemo(() => {
+    if (items.length === 0) return "Hi AFP!";
+    const lines = items.map(
+      (i) =>
+        `• ${i.name} — ${i.color ? `${i.color} / ` : ""}${i.size} × ${i.quantity} (${formatMoney(i.priceCents * i.quantity)})`,
     );
-    setSubmitting(false);
-    clear();
-    navigate("/");
-  };
+    return (
+      `Hi AFP! I'd like to place this order:\n` +
+      `Order ref: ${orderRef}\n\n` +
+      `${lines.join("\n")}\n\n` +
+      `Subtotal: ${formatMoney(subtotal)}\n` +
+      `${fulfillment === "pickup" ? "Pickup" : "Delivery"}: ${shipping === 0 ? "Free" : formatMoney(shipping)}\n` +
+      `VAT (17.5%): ${formatMoney(tax)}\n` +
+      `Total: ${formatMoney(total)}\n\n` +
+      (fulfillment === "pickup" ? "Pickup preferred." : "Please arrange delivery.")
+    );
+  }, [items, subtotal, shipping, tax, total, fulfillment, orderRef]);
 
   if (hydrating) return <CheckoutSkeleton />;
 
@@ -121,38 +122,12 @@ export default function Checkout() {
 
         <h1 className="display-lg mb-10 md:mb-14">Checkout.</h1>
 
-        <form
-          onSubmit={handlePlaceOrder}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16"
-        >
-          {/* LEFT — form */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+          {/* LEFT — fulfillment + payment paths */}
           <div className="lg:col-span-7 space-y-12">
-            {/* Contact */}
-            <section>
-              <h2 className="eyebrow text-graphite mb-4">01 — Contact</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" required placeholder="you@example.com" />
-                </div>
-                <div>
-                  <Label htmlFor="firstName">First name</Label>
-                  <Input id="firstName" required />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last name</Label>
-                  <Input id="lastName" required />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" type="tel" required />
-                </div>
-              </div>
-            </section>
-
             {/* Fulfillment toggle */}
             <section>
-              <h2 className="eyebrow text-graphite mb-4">02 — Delivery Method</h2>
+              <h2 className="eyebrow text-graphite mb-4">01 — Delivery Method</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <FulfillmentCard
                   active={fulfillment === "delivery"}
@@ -175,39 +150,9 @@ export default function Checkout() {
                   meta="Free · Confirmed via WhatsApp"
                 />
               </div>
-            </section>
 
-            {/* Conditional address or pickup location */}
-            {fulfillment === "delivery" ? (
-              <section>
-                <h2 className="eyebrow text-graphite mb-4">03 — Shipping Address</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-6 gap-4">
-                  <div className="sm:col-span-6">
-                    <Label htmlFor="address">Street address</Label>
-                    <Input id="address" required />
-                  </div>
-                  <div className="sm:col-span-6">
-                    <Label htmlFor="address2">Apt, suite, etc. (optional)</Label>
-                    <Input id="address2" />
-                  </div>
-                  <div className="sm:col-span-3">
-                    <Label htmlFor="city">City</Label>
-                    <Input id="city" required />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Label htmlFor="state">Parish</Label>
-                    <Input id="state" required />
-                  </div>
-                  <div className="sm:col-span-1">
-                    <Label htmlFor="zip">Postal</Label>
-                    <Input id="zip" />
-                  </div>
-                </div>
-              </section>
-            ) : (
-              <section>
-                <h2 className="eyebrow text-graphite mb-4">03 — Pickup Location</h2>
-                <div className="space-y-3">
+              {fulfillment === "pickup" && (
+                <div className="space-y-3 mt-4">
                   {PICKUP_LOCATIONS.map((loc) => {
                     const active = pickupLocation === loc.id;
                     return (
@@ -241,33 +186,56 @@ export default function Checkout() {
                     );
                   })}
                 </div>
-                <p className="text-[11px] text-graphite mt-4 uppercase tracking-wider">
-                  We'll text the person below when your order is ready.
-                </p>
-              </section>
-            )}
+              )}
+            </section>
 
-            {/* Payment */}
+            {/* Payment paths */}
             <section>
-              <h2 className="eyebrow text-graphite mb-4">04 — Payment</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-6 gap-4">
-                <div className="sm:col-span-6">
-                  <Label htmlFor="card">Card number</Label>
-                  <Input id="card" required placeholder="1234 1234 1234 1234" inputMode="numeric" />
+              <h2 className="eyebrow text-graphite mb-4">02 — Payment</h2>
+              <div className="space-y-4">
+                {/* WhatsApp — always available */}
+                <div className="border border-border rounded-2xl p-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="w-10 h-10 grid place-items-center bg-muted text-foreground">
+                      <MessageCircle className="w-5 h-5" strokeWidth={1.5} />
+                    </span>
+                    <div>
+                      <div className="font-medium">Order on WhatsApp</div>
+                      <div className="text-sm text-graphite">
+                        We confirm your order and arrange payment in chat
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-graphite mb-4">
+                    Your order details and reference{" "}
+                    <span className="font-medium text-foreground">{orderRef}</span> are
+                    pre-filled — just press send.
+                  </p>
+                  <a
+                    href={waLink(waCheckoutMessage)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Send this order to AFP on WhatsApp (opens in a new tab)"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-full px-6 h-12 text-sm font-bold uppercase tracking-wider text-black hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground/20"
+                    style={{ background: LIME }}
+                  >
+                    <MessageCircle aria-hidden="true" className="w-4 h-4" /> Send Order on WhatsApp
+                  </a>
                 </div>
-                <div className="sm:col-span-3">
-                  <Label htmlFor="exp">Expiry (MM/YY)</Label>
-                  <Input id="exp" required placeholder="MM/YY" />
-                </div>
-                <div className="sm:col-span-3">
-                  <Label htmlFor="cvc">CVC</Label>
-                  <Input id="cvc" required placeholder="123" inputMode="numeric" />
-                </div>
+
+                {/* Card + transfer render only when enabled from the Sheet */}
+                {cardEnabled && <CardPaymentSection orderRef={orderRef} />}
+                {transferEnabled && (
+                  <BankTransferSection
+                    orderRef={orderRef}
+                    instructions={transferInstructions}
+                  />
+                )}
               </div>
             </section>
           </div>
 
-          {/* RIGHT — order summary */}
+          {/* RIGHT — cart review */}
           <aside className="lg:col-span-5">
             <div className="lg:sticky lg:top-24 rounded-[2rem] border border-border p-6 md:p-8 space-y-6 bg-card">
               <div className="flex items-baseline justify-between">
@@ -320,37 +288,12 @@ export default function Checkout() {
                 <span className="font-serif text-3xl">{formatMoney(total)}</span>
               </div>
 
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full inline-flex items-center justify-center rounded-full px-6 h-12 text-sm font-bold uppercase tracking-wider text-black hover:opacity-90 transition-opacity disabled:opacity-60 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground/20"
-                style={{ background: LIME }}
-              >
-                {submitting ? "Placing…" : fulfillment === "pickup" ? "Place Pickup Order" : "Place Order"}
-              </button>
-
-              <div className="relative py-1 flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-graphite">
-                <span className="flex-1 h-px bg-border" />
-                <span>or</span>
-                <span className="flex-1 h-px bg-border" />
-              </div>
-
-              <a
-                href={waLink(waCheckoutMessage)}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Send this order to AFP on WhatsApp (opens in a new tab)"
-                className="w-full inline-flex items-center justify-center gap-2 rounded-full px-6 h-12 text-sm font-semibold uppercase tracking-wider border border-foreground/20 hover:border-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
-              >
-                <MessageCircle aria-hidden="true" className="w-4 h-4" /> Order on WhatsApp
-              </a>
-
               <p className="text-[11px] text-graphite text-center uppercase tracking-wider">
-                Secure checkout · Prices in BBD
+                Prices in BBD · Orders confirmed on WhatsApp
               </p>
             </div>
           </aside>
-        </form>
+        </div>
       </main>
 
       <Footer />

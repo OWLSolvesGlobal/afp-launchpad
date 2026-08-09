@@ -74,6 +74,14 @@ distinct values present, women-first (`deriveCategories`).
 **Currency is BBD only**, integer cents internally, displayed as
 `BDS $189.00` via `formatBbd`. No USD anywhere.
 
+**Payment paths are Config-gated.** Checkout always offers WhatsApp; the
+card section (a stub until Fygaro) and bank-transfer section render only
+when `payments_card_enabled` / `payments_transfer_enabled` are TRUE in the
+Sheet's Config tab. Enabling a path is a Sheet edit, never a deploy. The
+Fygaro integration must touch only `src/components/checkout/CardPaymentSection.tsx`.
+Order lifecycle vocabulary is `pending → paid → delivered → cancelled`
+(`OrderStatus` in catalog-core).
+
 **Product images** are repo files in `src/assets`, referenced from the Sheet
 by filename and resolved through `productImageUrl()`. Never image URLs in the
 Sheet, never hotlinked images.

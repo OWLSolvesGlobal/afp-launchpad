@@ -36,7 +36,19 @@ export interface CatalogConfig {
   announcementBar: string;
   featuredSkus: string[];
   heroOrder: string[];
+  /**
+   * Payment paths are enabled by Sheet edit, never by deploy. Both default
+   * to FALSE; only a literal TRUE turns one on.
+   */
+  paymentsCardEnabled: boolean;
+  paymentsTransferEnabled: boolean;
+  /** Multiline text shown on the transfer path (BimPay/1stPay details later). */
+  transferInstructions: string;
 }
+
+/** Order lifecycle vocabulary — used in the Sheet's Orders tab and docs. */
+export const ORDER_STATUSES = ["pending", "paid", "delivered", "cancelled"] as const;
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export interface CatalogSnapshot {
   generatedAt: string;
@@ -211,10 +223,14 @@ export function parseConfigRows(rows: (string | number)[][]): CatalogConfig {
     const key = (row["key"] ?? "").toLowerCase();
     if (key) map[key] = row["value"] ?? "";
   }
+  const flag = (key: string) => (map[key] ?? "").toUpperCase() === "TRUE";
   return {
     announcementBar: map["announcement_bar"] ?? "",
     featuredSkus: parseList(map["featured_skus"] ?? ""),
     heroOrder: parseList(map["hero_order"] ?? ""),
+    paymentsCardEnabled: flag("payments_card_enabled"),
+    paymentsTransferEnabled: flag("payments_transfer_enabled"),
+    transferInstructions: map["transfer_instructions"] ?? "",
   };
 }
 

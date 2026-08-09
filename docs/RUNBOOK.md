@@ -82,6 +82,23 @@ lower price into `price_bbd`. The strikethrough appears automatically.
 **Choose what's featured on the front page** — Config tab, list skus in
 `featured_skus` separated by `|`, e.g. `W-ROM-001 | W-DRS-002`.
 
+## Turning payment options on and off
+
+Checkout always offers WhatsApp. Two more options live in the **Config**
+tab and are OFF until you switch them on — no developer needed:
+
+- **Bank transfer**: put your bank/BimPay details into
+  `transfer_instructions` (one detail per line), then set
+  `payments_transfer_enabled` to `TRUE`. Customers see your instructions
+  plus their order reference, and a note that the order is confirmed once
+  payment is verified. **Check your own bank record before marking an
+  order `paid` — never trust a screenshot.**
+- **Card**: `payments_card_enabled` stays `FALSE` until card processing
+  (Fygaro) is actually connected. Turning it on early shows customers a
+  "coming soon" card section, nothing more.
+
+The value must be exactly `TRUE` to switch on; anything else counts as off.
+
 ---
 
 ## Logging orders (until card payments arrive)
