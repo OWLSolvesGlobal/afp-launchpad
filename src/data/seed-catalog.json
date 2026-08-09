@@ -337,6 +337,93 @@
       "imageAlt": "AFP crew socks",
       "badge": null,
       "active": false
+    },
+    {
+      "sku": "W-SET-003",
+      "slug": "seamless-tee-and-shorts-set-butter-yellow",
+      "name": "Seamless Tee & Shorts Set — Butter Yellow",
+      "description": "",
+      "gender": "women",
+      "category": "Two-Piece Sets",
+      "colors": [
+        "Butter Yellow"
+      ],
+      "priceCents": 0,
+      "compareAtCents": null,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "stock": {
+        "S": 0,
+        "M": 0,
+        "L": 0,
+        "XL": 0
+      },
+      "image": "afp-seamless-set-butter-front.webp",
+      "imageAlt": "Butter yellow seamless tee and shorts set, front view",
+      "badge": null,
+      "active": false
+    },
+    {
+      "sku": "W-SET-004",
+      "slug": "seamless-tee-and-shorts-set-mint",
+      "name": "Seamless Tee & Shorts Set — Mint",
+      "description": "",
+      "gender": "women",
+      "category": "Two-Piece Sets",
+      "colors": [
+        "Mint"
+      ],
+      "priceCents": 0,
+      "compareAtCents": null,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "stock": {
+        "S": 0,
+        "M": 0,
+        "L": 0,
+        "XL": 0
+      },
+      "image": "afp-seamless-set-mint-front.webp",
+      "imageAlt": "Mint green seamless tee and shorts set, front view",
+      "badge": null,
+      "active": false
+    },
+    {
+      "sku": "W-LEG-001",
+      "slug": "scrunch-back-leggings-navy",
+      "name": "Scrunch-Back Leggings — Navy",
+      "description": "",
+      "gender": "women",
+      "category": "Leggings",
+      "colors": [
+        "Navy"
+      ],
+      "priceCents": 0,
+      "compareAtCents": null,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "stock": {
+        "S": 0,
+        "M": 0,
+        "L": 0,
+        "XL": 0
+      },
+      "image": "afp-leggings-navy.webp",
+      "imageAlt": "Navy scrunch-back leggings, back view",
+      "badge": null,
+      "active": false
     }
   ],
   "categories": [],
