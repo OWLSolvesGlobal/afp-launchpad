@@ -511,6 +511,35 @@
       "imageAlt": "Sage green scrunch-back leggings, back view",
       "badge": null,
       "active": false
+    },
+    {
+      "sku": "W-LEG-003",
+      "slug": "scrunch-back-leggings-black",
+      "name": "Scrunch-Back Leggings — Black",
+      "description": "",
+      "gender": "women",
+      "category": "Leggings",
+      "colors": [
+        "Black"
+      ],
+      "priceCents": 0,
+      "compareAtCents": null,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "stock": {
+        "S": 0,
+        "M": 0,
+        "L": 0,
+        "XL": 0
+      },
+      "image": "afp-leggings-black.webp",
+      "imageAlt": "Black scrunch-back leggings, back view",
+      "badge": null,
+      "active": false
     }
   ],
   "categories": [],
