@@ -26,7 +26,7 @@ describe("fetchCatalog — seed fallback", () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("boom", { status: 500 })));
     const out = await fetchCatalog();
     expect(out.generatedAt).toBe(seed.generatedAt);
-    expect(out.products).toHaveLength(12);
+    expect(out.products).toHaveLength(15);
   });
 
   it("falls back when the dev server answers with index.html", async () => {
@@ -43,13 +43,13 @@ describe("fetchCatalog — seed fallback", () => {
   it("falls back when fetch itself throws (offline)", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("network down"); }));
     const out = await fetchCatalog();
-    expect(out.products).toHaveLength(12);
+    expect(out.products).toHaveLength(15);
   });
 });
 
 describe("seed catalog contract", () => {
-  it("ships all 12 seed SKUs inactive with price 0 — prices are never invented", () => {
-    expect(seed.products).toHaveLength(12);
+  it("ships every seed SKU inactive with price 0 — prices are never invented", () => {
+    expect(seed.products).toHaveLength(15);
     for (const p of seed.products) {
       expect(p.priceCents).toBe(0);
       expect(p.active).toBe(false);
@@ -86,7 +86,7 @@ describe("worker /api/catalog — KV-empty seed fallback", () => {
     expect(res.headers.get("x-afp-catalog-source")).toBe("seed");
     expect(res.headers.get("cache-control")).toBe("public, max-age=60");
     const body = await res.json();
-    expect(body.products).toHaveLength(12);
+    expect(body.products).toHaveLength(15);
   });
 
   it("serves the bundled seed when the KV binding is missing entirely", async () => {
