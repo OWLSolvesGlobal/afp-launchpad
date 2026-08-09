@@ -37,7 +37,8 @@ rename each imported sheet to its tab name above.
 | `color` | Colour name(s), pipe-separated for multi-colour items. Shoppers pick one at checkout. | `Magenta` or `White \| Black` |
 | `price_bbd` | Price in BBD. Just the number. **A price of 0 keeps the product hidden.** | `189.00` |
 | `compare_at_bbd` | Old price to show a markdown strikethrough. Blank if none. | `229.00` |
-| `sizes` | Blank means `S \| M \| L \| XL`. Override per item with pipe-separated values, e.g. `ONE SIZE` for the visor and socks. | *(blank)* |
+| `sizes` | Blank means `S \| M \| L \| XL`. Override per item with pipe-separated values, e.g. `XS \| S \| M \| L \| XL` or `ONE SIZE` for the visor and socks. | *(blank)* |
+| `stock_XS` | Units on hand in size XS (only read when XS is in `sizes`) | `2` |
 | `stock_S` | Units on hand in size S | `4` |
 | `stock_M` | Units in M | `6` |
 | `stock_L` | Units in L | `2` |

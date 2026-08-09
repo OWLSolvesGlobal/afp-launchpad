@@ -26,7 +26,7 @@ describe("fetchCatalog — seed fallback", () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("boom", { status: 500 })));
     const out = await fetchCatalog();
     expect(out.generatedAt).toBe(seed.generatedAt);
-    expect(out.products).toHaveLength(19);
+    expect(out.products).toHaveLength(23);
   });
 
   it("falls back when the dev server answers with index.html", async () => {
@@ -43,21 +43,29 @@ describe("fetchCatalog — seed fallback", () => {
   it("falls back when fetch itself throws (offline)", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("network down"); }));
     const out = await fetchCatalog();
-    expect(out.products).toHaveLength(19);
+    expect(out.products).toHaveLength(23);
   });
 });
 
 describe("seed catalog contract", () => {
-  it("ships every seed SKU inactive with price 0 — prices are never invented", () => {
-    expect(seed.products).toHaveLength(19);
+  it("never actives a product without a real client-supplied price", () => {
+    expect(seed.products).toHaveLength(23);
     for (const p of seed.products) {
-      expect(p.priceCents).toBe(0);
-      expect(p.active).toBe(false);
+      if (p.active) expect(p.priceCents).toBeGreaterThan(0);
     }
   });
 
-  it("derives no categories while nothing is purchasable", () => {
-    expect(seed.categories).toEqual([]);
+  it("every live product's photo file actually resolves", () => {
+    for (const p of seed.products) {
+      if (p.active) {
+        expect(p.image).not.toBe("");
+        expect(productImageUrl(p.image)).not.toBe("/placeholder.svg");
+      }
+    }
+  });
+
+  it("derives categories only from purchasable products, women-first", () => {
+    expect(seed.categories).toEqual(["Bodysuits & Rompers", "Two-Piece Sets"]);
   });
 });
 
@@ -86,7 +94,7 @@ describe("worker /api/catalog — KV-empty seed fallback", () => {
     expect(res.headers.get("x-afp-catalog-source")).toBe("seed");
     expect(res.headers.get("cache-control")).toBe("public, max-age=60");
     const body = await res.json();
-    expect(body.products).toHaveLength(19);
+    expect(body.products).toHaveLength(23);
   });
 
   it("serves the bundled seed when the KV binding is missing entirely", async () => {

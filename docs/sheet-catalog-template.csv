@@ -1,20 +1,24 @@
-sku,name,description,gender,category,color,price_bbd,compare_at_bbd,sizes,stock_S,stock_M,stock_L,stock_XL,one_size_stock,image,image_alt,badge,active
-W-ROM-001,Zip-Front Romper — Magenta,,women,Bodysuits & Rompers,Magenta,0,,,0,0,0,0,,ashlee-pink.webp,"Zip-front romper in magenta, front view",,FALSE
-W-ROM-002,Sleeveless Romper — Lime,,women,Bodysuits & Rompers,Lime,0,,,0,0,0,0,,ashlee-apple.webp,"Sleeveless romper in lime green, side view",,FALSE
-W-ROM-003,Contrast-Piping Romper — Sky Blue,,women,Bodysuits & Rompers,Sky Blue,0,,,0,0,0,0,,ashlee-blue.webp,Sky blue romper with white contrast piping,,FALSE
-W-SET-001,Halter Set — Navy,,women,Two-Piece Sets,Navy,0,,,0,0,0,0,,afp-black-jumpsuit.webp,Navy halter top and leggings set,,FALSE
-W-SET-002,Bubble Skirt Set — Pink,,women,Two-Piece Sets,Pink,0,,,0,0,0,0,,ashlee-pool.jpg,"Pink bra top and bubble skirt set, poolside",,FALSE
-W-DRS-001,Tennis/Golf Dress — White,,women,Tennis & Golf,White,0,,,0,0,0,0,,ashlee-golf.webp,White tennis dress and visor beside a golf cart,,FALSE
-W-DRS-002,Tennis/Golf Dress — Navy,,women,Tennis & Golf,Navy,0,,,0,0,0,0,,afp-golf-dress.jpg,Navy halter golf dress and visor on the course,,FALSE
-A-VIS-001,AFP Visor — White,,unisex,Accessories,White,0,,ONE SIZE,,,,,0,ig-golf-duo.webp,Two golfers wearing white AFP visors,,FALSE
-M-TEE-001,Men's Performance Tee — White,,men,Men: T-Shirts,White,0,,,0,0,0,0,,afp-mens-white.webp,"Men's white performance tee, seated",,FALSE
-M-TEE-002,Men's Performance Tee — Black,,men,Men: T-Shirts,Black,0,,,0,0,0,0,,afp-mens-black.webp,"Men's black performance tee, standing",,FALSE
-M-SHO-001,Men's Training Shorts — Black,,men,Men: Shorts,Black,0,,,0,0,0,0,,afp-mens-black.webp,Men's black training shorts,,FALSE
-A-SOC-001,AFP Crew Socks,,unisex,Accessories,White | Black,0,,ONE SIZE,,,,,0,,AFP crew socks,,FALSE
-W-SET-003,Seamless Tee & Shorts Set — Butter Yellow,,women,Two-Piece Sets,Butter Yellow,0,,,0,0,0,0,,afp-seamless-set-butter-front.webp,"Butter yellow seamless tee and shorts set, front view",,FALSE
-W-SET-004,Seamless Tee & Shorts Set — Mint,,women,Two-Piece Sets,Mint,0,,,0,0,0,0,,afp-seamless-set-mint-front.webp,"Mint green seamless tee and shorts set, front view",,FALSE
-W-LEG-001,Scrunch-Back Leggings — Navy,,women,Leggings,Navy,0,,,0,0,0,0,,afp-leggings-navy.webp,"Navy scrunch-back leggings, back view",,FALSE
-W-SET-005,Piped Cami & Shorts Set — Cornflower Blue,,women,Two-Piece Sets,Cornflower Blue,0,,,0,0,0,0,,afp-piped-cami-set-blue-front.webp,"Cornflower blue cami and shorts set with white piping, front view",,FALSE
-W-SET-006,Halter Bra & Leggings Set — Black,,women,Two-Piece Sets,Black,0,,,0,0,0,0,,afp-bra-leggings-set-black-front.webp,"Black halter sports bra and leggings set with white trim, front view",,FALSE
-W-LEG-002,Scrunch-Back Leggings — Sage,,women,Leggings,Sage,0,,,0,0,0,0,,afp-leggings-sage.webp,"Sage green scrunch-back leggings, back view",,FALSE
-W-LEG-003,Scrunch-Back Leggings — Black,,women,Leggings,Black,0,,,0,0,0,0,,afp-leggings-black.webp,"Black scrunch-back leggings, back view",,FALSE
+sku,name,description,gender,category,color,price_bbd,compare_at_bbd,sizes,stock_XS,stock_S,stock_M,stock_L,stock_XL,one_size_stock,image,image_alt,badge,active
+W-ROM-001,Luxe Lift Romper — Magenta,Flexible rompers made for comfort and movement.,women,Bodysuits & Rompers,Magenta,100,,S | M | L,,5,5,5,,,ashlee-pink.webp,"Zip-front romper in magenta, front view",,TRUE
+W-ROM-002,Luxe Lift Romper — Lime,Flexible rompers made for comfort and movement.,women,Bodysuits & Rompers,Lime,100,,S | M | L,,5,5,5,,,ashlee-apple.webp,"Sleeveless romper in lime green, side view",,TRUE
+W-ROM-003,Luxe Lift Romper — Sky Blue,Flexible rompers made for comfort and movement.,women,Bodysuits & Rompers,Sky Blue,100,,S | M | L,,5,5,5,,,ashlee-blue.webp,Sky blue romper with white contrast piping,,TRUE
+W-SET-001,Halter Set — Navy,,women,Two-Piece Sets,Navy,0,,,,0,0,0,0,,afp-black-jumpsuit.webp,Navy halter top and leggings set,,FALSE
+W-SET-002,Bubble Skirt Set — Pink,,women,Two-Piece Sets,Pink,0,,,,0,0,0,0,,ashlee-pool.jpg,"Pink bra top and bubble skirt set, poolside",,FALSE
+W-DRS-001,Tennis/Golf Dress — White,,women,Tennis & Golf,White,0,,,,0,0,0,0,,ashlee-golf.webp,White tennis dress and visor beside a golf cart,,FALSE
+W-DRS-002,Tennis/Golf Dress — Navy,,women,Tennis & Golf,Navy,0,,,,0,0,0,0,,afp-golf-dress.jpg,Navy halter golf dress and visor on the course,,FALSE
+A-VIS-001,AFP Visor — White,,unisex,Accessories,White,0,,ONE SIZE,,,,,,0,ig-golf-duo.webp,Two golfers wearing white AFP visors,,FALSE
+M-TEE-001,Men's Performance Tee — White,,men,Men: T-Shirts,White,0,,,,0,0,0,0,,afp-mens-white.webp,"Men's white performance tee, seated",,FALSE
+M-TEE-002,Men's Performance Tee — Black,,men,Men: T-Shirts,Black,0,,,,0,0,0,0,,afp-mens-black.webp,"Men's black performance tee, standing",,FALSE
+M-SHO-001,Men's Training Shorts — Black,,men,Men: Shorts,Black,0,,,,0,0,0,0,,afp-mens-black.webp,Men's black training shorts,,FALSE
+A-SOC-001,AFP Crew Socks,,unisex,Accessories,White | Black,0,,ONE SIZE,,,,,,0,,AFP crew socks,,FALSE
+W-SET-003,Seamless Tee & Shorts Set — Buttercup,,women,Two-Piece Sets,Buttercup,120,,,,5,5,5,5,,afp-seamless-set-butter-front.webp,"Butter yellow seamless tee and shorts set, front view",,TRUE
+W-SET-004,Seamless Tee & Shorts Set — Pistachio,,women,Two-Piece Sets,Pistachio,120,,,,5,5,5,5,,afp-seamless-set-mint-front.webp,"Mint green seamless tee and shorts set, front view",,TRUE
+W-LEG-001,Scrunch-Back Leggings — Navy,,women,Leggings,Navy,0,,,,0,0,0,0,,afp-leggings-navy.webp,"Navy scrunch-back leggings, back view",,FALSE
+W-SET-005,Piped Cami & Shorts Set — Cornflower Blue,,women,Two-Piece Sets,Cornflower Blue,0,,,,0,0,0,0,,afp-piped-cami-set-blue-front.webp,"Cornflower blue cami and shorts set with white piping, front view",,FALSE
+W-SET-006,Halter Bra & Leggings Set — Black,,women,Two-Piece Sets,Black,0,,,,0,0,0,0,,afp-bra-leggings-set-black-front.webp,"Black halter sports bra and leggings set with white trim, front view",,FALSE
+W-LEG-002,Scrunch-Back Leggings — Sage,,women,Leggings,Sage,0,,,,0,0,0,0,,afp-leggings-sage.webp,"Sage green scrunch-back leggings, back view",,FALSE
+W-LEG-003,Scrunch-Back Leggings — Black,,women,Leggings,Black,0,,,,0,0,0,0,,afp-leggings-black.webp,"Black scrunch-back leggings, back view",,FALSE
+W-ROM-004,Luxe Lift Romper — Purple,Flexible rompers made for comfort and movement.,women,Bodysuits & Rompers,Purple,100,,S | M | L,,0,0,0,,,,Purple Luxe Lift romper,,FALSE
+W-ROM-005,Luxe Lift Romper — Black,Flexible rompers made for comfort and movement.,women,Bodysuits & Rompers,Black,100,,S | M | L,,0,0,0,,,,Black Luxe Lift romper,,FALSE
+W-SET-007,Solara Set — Coral Stripe,,women,Two-Piece Sets,Coral Stripe,140,,XS | S | M | L | XL,0,0,0,0,0,,afp-solara-set-coral.webp,Coral striped halter top and knee-length shorts set,,FALSE
+W-SET-008,Solara Set — Citron Stripe,,women,Two-Piece Sets,Citron Stripe,140,,XS | S | M | L | XL,0,0,0,0,0,,afp-solara-set-citron.webp,Pale citron striped halter top and knee-length shorts set,,FALSE

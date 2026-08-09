@@ -3,90 +3,84 @@
   "products": [
     {
       "sku": "W-ROM-001",
-      "slug": "zip-front-romper-magenta",
-      "name": "Zip-Front Romper — Magenta",
-      "description": "",
+      "slug": "luxe-lift-romper-magenta",
+      "name": "Luxe Lift Romper — Magenta",
+      "description": "Flexible rompers made for comfort and movement.",
       "gender": "women",
       "category": "Bodysuits & Rompers",
       "colors": [
         "Magenta"
       ],
-      "priceCents": 0,
+      "priceCents": 10000,
       "compareAtCents": null,
       "sizes": [
         "S",
         "M",
-        "L",
-        "XL"
+        "L"
       ],
       "stock": {
-        "S": 0,
-        "M": 0,
-        "L": 0,
-        "XL": 0
+        "S": 5,
+        "M": 5,
+        "L": 5
       },
       "image": "ashlee-pink.webp",
       "imageAlt": "Zip-front romper in magenta, front view",
       "badge": null,
-      "active": false
+      "active": true
     },
     {
       "sku": "W-ROM-002",
-      "slug": "sleeveless-romper-lime",
-      "name": "Sleeveless Romper — Lime",
-      "description": "",
+      "slug": "luxe-lift-romper-lime",
+      "name": "Luxe Lift Romper — Lime",
+      "description": "Flexible rompers made for comfort and movement.",
       "gender": "women",
       "category": "Bodysuits & Rompers",
       "colors": [
         "Lime"
       ],
-      "priceCents": 0,
+      "priceCents": 10000,
       "compareAtCents": null,
       "sizes": [
         "S",
         "M",
-        "L",
-        "XL"
+        "L"
       ],
       "stock": {
-        "S": 0,
-        "M": 0,
-        "L": 0,
-        "XL": 0
+        "S": 5,
+        "M": 5,
+        "L": 5
       },
       "image": "ashlee-apple.webp",
       "imageAlt": "Sleeveless romper in lime green, side view",
       "badge": null,
-      "active": false
+      "active": true
     },
     {
       "sku": "W-ROM-003",
-      "slug": "contrast-piping-romper-sky-blue",
-      "name": "Contrast-Piping Romper — Sky Blue",
-      "description": "",
+      "slug": "luxe-lift-romper-sky-blue",
+      "name": "Luxe Lift Romper — Sky Blue",
+      "description": "Flexible rompers made for comfort and movement.",
       "gender": "women",
       "category": "Bodysuits & Rompers",
       "colors": [
         "Sky Blue"
       ],
-      "priceCents": 0,
+      "priceCents": 10000,
       "compareAtCents": null,
       "sizes": [
         "S",
         "M",
-        "L",
-        "XL"
+        "L"
       ],
       "stock": {
-        "S": 0,
-        "M": 0,
-        "L": 0,
-        "XL": 0
+        "S": 5,
+        "M": 5,
+        "L": 5
       },
       "image": "ashlee-blue.webp",
       "imageAlt": "Sky blue romper with white contrast piping",
       "badge": null,
-      "active": false
+      "active": true
     },
     {
       "sku": "W-SET-001",
@@ -340,15 +334,15 @@
     },
     {
       "sku": "W-SET-003",
-      "slug": "seamless-tee-and-shorts-set-butter-yellow",
-      "name": "Seamless Tee & Shorts Set — Butter Yellow",
+      "slug": "seamless-tee-and-shorts-set-buttercup",
+      "name": "Seamless Tee & Shorts Set — Buttercup",
       "description": "",
       "gender": "women",
       "category": "Two-Piece Sets",
       "colors": [
-        "Butter Yellow"
+        "Buttercup"
       ],
-      "priceCents": 0,
+      "priceCents": 12000,
       "compareAtCents": null,
       "sizes": [
         "S",
@@ -357,27 +351,27 @@
         "XL"
       ],
       "stock": {
-        "S": 0,
-        "M": 0,
-        "L": 0,
-        "XL": 0
+        "S": 5,
+        "M": 5,
+        "L": 5,
+        "XL": 5
       },
       "image": "afp-seamless-set-butter-front.webp",
       "imageAlt": "Butter yellow seamless tee and shorts set, front view",
       "badge": null,
-      "active": false
+      "active": true
     },
     {
       "sku": "W-SET-004",
-      "slug": "seamless-tee-and-shorts-set-mint",
-      "name": "Seamless Tee & Shorts Set — Mint",
+      "slug": "seamless-tee-and-shorts-set-pistachio",
+      "name": "Seamless Tee & Shorts Set — Pistachio",
       "description": "",
       "gender": "women",
       "category": "Two-Piece Sets",
       "colors": [
-        "Mint"
+        "Pistachio"
       ],
-      "priceCents": 0,
+      "priceCents": 12000,
       "compareAtCents": null,
       "sizes": [
         "S",
@@ -386,15 +380,15 @@
         "XL"
       ],
       "stock": {
-        "S": 0,
-        "M": 0,
-        "L": 0,
-        "XL": 0
+        "S": 5,
+        "M": 5,
+        "L": 5,
+        "XL": 5
       },
       "image": "afp-seamless-set-mint-front.webp",
       "imageAlt": "Mint green seamless tee and shorts set, front view",
       "badge": null,
-      "active": false
+      "active": true
     },
     {
       "sku": "W-LEG-001",
@@ -540,9 +534,128 @@
       "imageAlt": "Black scrunch-back leggings, back view",
       "badge": null,
       "active": false
+    },
+    {
+      "sku": "W-ROM-004",
+      "slug": "luxe-lift-romper-purple",
+      "name": "Luxe Lift Romper — Purple",
+      "description": "Flexible rompers made for comfort and movement.",
+      "gender": "women",
+      "category": "Bodysuits & Rompers",
+      "colors": [
+        "Purple"
+      ],
+      "priceCents": 10000,
+      "compareAtCents": null,
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "stock": {
+        "S": 0,
+        "M": 0,
+        "L": 0
+      },
+      "image": "",
+      "imageAlt": "Purple Luxe Lift romper",
+      "badge": null,
+      "active": false
+    },
+    {
+      "sku": "W-ROM-005",
+      "slug": "luxe-lift-romper-black",
+      "name": "Luxe Lift Romper — Black",
+      "description": "Flexible rompers made for comfort and movement.",
+      "gender": "women",
+      "category": "Bodysuits & Rompers",
+      "colors": [
+        "Black"
+      ],
+      "priceCents": 10000,
+      "compareAtCents": null,
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "stock": {
+        "S": 0,
+        "M": 0,
+        "L": 0
+      },
+      "image": "",
+      "imageAlt": "Black Luxe Lift romper",
+      "badge": null,
+      "active": false
+    },
+    {
+      "sku": "W-SET-007",
+      "slug": "solara-set-coral-stripe",
+      "name": "Solara Set — Coral Stripe",
+      "description": "",
+      "gender": "women",
+      "category": "Two-Piece Sets",
+      "colors": [
+        "Coral Stripe"
+      ],
+      "priceCents": 14000,
+      "compareAtCents": null,
+      "sizes": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "stock": {
+        "XS": 0,
+        "S": 0,
+        "M": 0,
+        "L": 0,
+        "XL": 0
+      },
+      "image": "afp-solara-set-coral.webp",
+      "imageAlt": "Coral striped halter top and knee-length shorts set",
+      "badge": null,
+      "active": false
+    },
+    {
+      "sku": "W-SET-008",
+      "slug": "solara-set-citron-stripe",
+      "name": "Solara Set — Citron Stripe",
+      "description": "",
+      "gender": "women",
+      "category": "Two-Piece Sets",
+      "colors": [
+        "Citron Stripe"
+      ],
+      "priceCents": 14000,
+      "compareAtCents": null,
+      "sizes": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "stock": {
+        "XS": 0,
+        "S": 0,
+        "M": 0,
+        "L": 0,
+        "XL": 0
+      },
+      "image": "afp-solara-set-citron.webp",
+      "imageAlt": "Pale citron striped halter top and knee-length shorts set",
+      "badge": null,
+      "active": false
     }
   ],
-  "categories": [],
+  "categories": [
+    "Bodysuits & Rompers",
+    "Two-Piece Sets"
+  ],
   "config": {
     "announcementBar": "",
     "featuredSkus": [],

@@ -65,8 +65,9 @@ export interface CatalogSnapshot {
 
 export const DEFAULT_SIZES = ["S", "M", "L", "XL"];
 
-/** Sheet columns that carry per-size stock for the default size run. */
+/** Sheet columns that carry per-size stock for the standard size range. */
 const SIZE_STOCK_COLUMNS: Record<string, string> = {
+  XS: "stock_xs",
   S: "stock_s",
   M: "stock_m",
   L: "stock_l",

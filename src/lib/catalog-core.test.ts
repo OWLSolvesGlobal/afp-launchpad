@@ -20,7 +20,7 @@ import {
 
 const HEADERS = [
   "sku", "name", "description", "gender", "category", "color", "price_bbd",
-  "compare_at_bbd", "sizes", "stock_S", "stock_M", "stock_L", "stock_XL",
+  "compare_at_bbd", "sizes", "stock_XS", "stock_S", "stock_M", "stock_L", "stock_XL",
   "one_size_stock", "image", "image_alt", "badge", "active",
 ];
 
@@ -35,6 +35,7 @@ const row = (overrides: Partial<Record<string, string>> = {}): string[] => {
     price_bbd: "189.00",
     compare_at_bbd: "",
     sizes: "",
+    stock_XS: "",
     stock_S: "3",
     stock_M: "5",
     stock_L: "0",
@@ -137,6 +138,13 @@ describe("parseCatalogRows", () => {
   it("maps per-size stock columns onto the size run", () => {
     const p = parseOne();
     expect(p.stock).toEqual({ S: 3, M: 5, L: 0, XL: 2 });
+  });
+
+  it("reads stock_XS when the size run includes XS", () => {
+    const p = parseOne({ sizes: "XS | S | M | L | XL", stock_XS: "2" });
+    expect(p.sizes).toEqual(["XS", "S", "M", "L", "XL"]);
+    expect(p.stock.XS).toBe(2);
+    expect(p.stock.M).toBe(5);
   });
 
   it("reads ONE SIZE items from one_size_stock", () => {
