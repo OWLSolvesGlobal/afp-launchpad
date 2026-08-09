@@ -1,7 +1,7 @@
 key,value
-announcement_bar,
-featured_skus,
-hero_order,
+announcement_bar,Free island-wide delivery on orders over BDS $300
+featured_skus,W-SET-007 | W-SET-008 | W-ROM-001 | W-SET-003 | W-SET-001 | W-SET-004
+hero_order,W-SET-007
 payments_card_enabled,FALSE
 payments_transfer_enabled,FALSE
 transfer_instructions,

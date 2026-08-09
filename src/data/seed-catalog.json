@@ -618,7 +618,7 @@
       },
       "image": "afp-solara-set-coral.webp",
       "imageAlt": "Coral striped halter top and knee-length shorts set",
-      "badge": null,
+      "badge": "NEW",
       "active": true
     },
     {
@@ -649,7 +649,7 @@
       },
       "image": "afp-solara-set-citron.webp",
       "imageAlt": "Pale citron striped halter top and knee-length shorts set",
-      "badge": null,
+      "badge": "NEW",
       "active": true
     }
   ],
@@ -661,9 +661,18 @@
     "Men: Shorts"
   ],
   "config": {
-    "announcementBar": "",
-    "featuredSkus": [],
-    "heroOrder": [],
+    "announcementBar": "Free island-wide delivery on orders over BDS $300",
+    "featuredSkus": [
+      "W-SET-007",
+      "W-SET-008",
+      "W-ROM-001",
+      "W-SET-003",
+      "W-SET-001",
+      "W-SET-004"
+    ],
+    "heroOrder": [
+      "W-SET-007"
+    ],
     "paymentsCardEnabled": false,
     "paymentsTransferEnabled": false,
     "transferInstructions": ""
