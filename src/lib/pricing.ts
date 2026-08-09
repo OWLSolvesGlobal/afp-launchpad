@@ -4,7 +4,7 @@
  * This lives outside the Checkout component for two reasons:
  *
  *  1. It can be unit tested. Money math embedded in a component can only be
- *     verified by rendering the whole page with a mocked Supabase client.
+ *     verified by rendering the whole checkout page.
  *
  *  2. When a payment processor is wired in, the server must recompute the
  *     amount rather than trusting whatever the browser posts. Both sides need

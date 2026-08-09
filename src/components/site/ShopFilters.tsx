@@ -6,7 +6,8 @@ export interface FilterState {
   categories: string[];
   sizes: string[];
   colors: string[];
-  priceMax: number;
+  /** BBD dollars; null means no cap. */
+  priceMax: number | null;
   sort: "featured" | "new" | "price-asc" | "price-desc";
 }
 
@@ -14,7 +15,7 @@ export const defaultFilters: FilterState = {
   categories: [],
   sizes: [],
   colors: [],
-  priceMax: 200,
+  priceMax: null,
   sort: "featured",
 };
 
@@ -26,7 +27,9 @@ interface Props {
   facets: {
     categories: string[];
     sizes: string[];
-    colors: { name: string; hex: string }[];
+    colors: string[];
+    /** Highest product price in BBD dollars — the slider's top end. */
+    priceCeiling: number;
   };
 }
 
@@ -106,34 +109,31 @@ const FilterBody = ({ value, onChange, facets }: Omit<Props, "totalCount" | "res
 
       <Section title="Color">
         <div className="flex flex-wrap gap-2">
-          {facets.colors.map((c) => {
-            const active = value.colors.includes(c.name);
-            return (
-              <button
-                key={c.name}
-                type="button"
-                onClick={() => toggle("colors", c.name)}
-                title={c.name}
-                className={cn(
-                  "w-7 h-7 rounded-full border-2 transition-all",
-                  active ? "border-ink scale-110" : "border-border hover:border-ink/50"
-                )}
-                style={{ backgroundColor: c.hex }}
-                aria-label={c.name}
-              />
-            );
-          })}
+          {facets.colors.map((c) => (
+            <Toggle key={c} active={value.colors.includes(c)} onClick={() => toggle("colors", c)}>
+              {c}
+            </Toggle>
+          ))}
         </div>
       </Section>
 
-      <Section title={`Max Price · $${value.priceMax}`}>
+      <Section
+        title={
+          value.priceMax === null
+            ? "Max Price · Any"
+            : `Max Price · BDS $${value.priceMax}`
+        }
+      >
         <input
           type="range"
-          min={20}
-          max={200}
+          min={0}
+          max={facets.priceCeiling}
           step={10}
-          value={value.priceMax}
-          onChange={(e) => onChange({ ...value, priceMax: Number(e.target.value) })}
+          value={value.priceMax ?? facets.priceCeiling}
+          onChange={(e) => {
+            const v = Number(e.target.value);
+            onChange({ ...value, priceMax: v >= facets.priceCeiling ? null : v });
+          }}
           className="w-full accent-ink"
         />
       </Section>

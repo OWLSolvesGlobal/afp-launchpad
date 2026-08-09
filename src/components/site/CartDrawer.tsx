@@ -20,8 +20,8 @@ export const CartDrawer = () => {
       : `Hi AFP! I'd like to order:\n${items
           .map(
             (i) =>
-              `• ${i.name} — ${i.color} / ${i.size} × ${i.quantity} (${formatMoney(
-                i.price * i.quantity,
+              `• ${i.name} — ${i.color ? `${i.color} / ` : ""}${i.size} × ${i.quantity} (${formatMoney(
+                i.priceCents * i.quantity,
               )})`,
           )
           .join("\n")}\n\nSubtotal: ${formatMoney(subtotal)}`;
@@ -74,7 +74,7 @@ export const CartDrawer = () => {
                       <div className="min-w-0">
                         <h4 className="text-sm font-semibold truncate">{item.name}</h4>
                         <div className="text-[11px] text-graphite mt-1 uppercase tracking-wider">
-                          {item.color} · {item.size}
+                          {item.color ? `${item.color} · ` : ""}{item.size}
                         </div>
                       </div>
                       <button
@@ -104,7 +104,7 @@ export const CartDrawer = () => {
                         </button>
                       </div>
                       <div className="text-sm font-semibold tabular-nums">
-                        {formatMoney(item.price * item.quantity)}
+                        {formatMoney(item.priceCents * item.quantity)}
                       </div>
                     </div>
                   </div>

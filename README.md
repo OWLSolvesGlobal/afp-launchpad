@@ -1,7 +1,9 @@
 # Alo Fitness Pro — Storefront
 
-Editorial activewear storefront for AFP. React + Vite + TypeScript + Tailwind,
-with Supabase for auth, catalog, and stock.
+Editorial activewear storefront for AFP. React + Vite + TypeScript +
+Tailwind, hosted on Cloudflare Workers. The catalog, stock, and site config
+live in a Google Sheet, mirrored into Cloudflare KV every 5 minutes by the
+site Worker.
 
 ---
 
@@ -9,15 +11,19 @@ with Supabase for auth, catalog, and stock.
 
 ```bash
 npm install
-cp .env.example .env      # fill in your Supabase values
 npm run dev               # http://localhost:8080
 ```
+
+No environment variables are needed. Without the Worker running, the site
+uses the bundled seed catalog (`src/data/seed-catalog.json`). To exercise the
+real `/api/catalog` route locally, use `npm run cf:preview`.
 
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Local dev server |
 | `npm run build` | Production build into `dist/` |
 | `npm run preview` | Serve the production build locally |
+| `npm run cf:preview` | Build + run the real Worker locally via wrangler |
 | `npm test` | Run the test suite |
 | `npm run verify` | Build **and** test — run this before every commit |
 | `npm run lint` | Lint |
@@ -41,11 +47,10 @@ iteration, drop the build step from `.githooks/pre-commit` and rely on
 
 ## Deploying — Cloudflare Workers
 
-The site is hosted on **Cloudflare Workers static assets**. Config lives in
-`wrangler.jsonc`. There is deliberately no Worker script, which means every
-request is served straight from Cloudflare's edge — the Worker is never
-invoked, so the free plan's 100k requests/day limit does not apply to normal
-storefront traffic.
+The site is hosted on **Cloudflare Workers**. Config lives in
+`wrangler.jsonc`. The Worker script (`worker/index.ts`) only runs for
+`/api/*` requests and the sync cron; every other request is served straight
+from Cloudflare's edge as a static asset.
 
 ### First-time setup (once, ~5 minutes)
 
@@ -55,7 +60,7 @@ storefront traffic.
    - Build command: `npm run build`
    - Deploy command: `npx wrangler deploy`
 4. Deploy. You will get a URL like
-   `https://afp-storefront.<your-account>.workers.dev`.
+   `https://afp-launchpad.<your-account>.workers.dev`.
 
 From then on, **every push to `main` rebuilds and redeploys automatically.**
 No further action is needed to publish changes.
@@ -69,10 +74,10 @@ npm run deploy         # builds and ships
 
 ### Right after the first deploy
 
-Open `public/_headers` and uncomment the `X-Robots-Tag: noindex` block at the
-bottom, pasting in your real `workers.dev` hostname. This stops Google indexing
-the temporary URL. If you skip it, the preview domain can end up ranking for
-"Alo Fitness Pro" and competing with your real domain later.
+Check that the hostname in the `X-Robots-Tag: noindex` block at the bottom of
+`public/_headers` matches your real `workers.dev` hostname. This stops Google
+indexing the temporary URL. If you skip it, the preview domain can end up
+ranking for "Alo Fitness Pro" and competing with your real domain later.
 
 ### Adding alofitnesspro.com later
 
@@ -80,7 +85,8 @@ the temporary URL. If you skip it, the preview domain can end up ranking for
    registrar at the two Cloudflare nameservers it shows you.
 2. In the Worker → **Settings** → **Domains & Routes** → **Add custom domain**.
 3. Update the `canonical` URL in `index.html`.
-4. Re-comment the `noindex` block in `public/_headers`.
+4. Keep the `noindex` block in `public/_headers` scoped to the workers.dev
+   hostname only.
 
 TLS, CDN, and DNS are handled by Cloudflare automatically.
 
@@ -96,35 +102,55 @@ HTML instead, breaking the site. SPA routing is handled by
 
 ## Architecture notes
 
-- **Catalog source of truth** is a Google Sheet, synced into Supabase by the
-  `sync-products` edge function. See `docs/CATALOG-ARCHITECTURE.md`.
-- **Images** are uploaded through `/admin/upload` into Supabase Storage.
-- **Checkout** currently collects the order and hands off to WhatsApp. There is
-  no card payment processor wired in yet.
+- **Catalog source of truth** is a Google Sheet, mirrored into Cloudflare KV
+  by the Worker's 5-minute cron and served as one JSON snapshot at
+  `GET /api/catalog`. See `docs/CATALOG-ARCHITECTURE.md` (developer detail),
+  `docs/SHEET_TEMPLATE.md` (sheet schema + importable CSVs), and
+  `docs/RUNBOOK.md` (owner guide).
+- **Images** are files in `src/assets`, referenced from the Sheet by
+  filename.
+- **Checkout** collects the order and hands off to WhatsApp with an
+  `AFP-YYYYMMDD-XXX` order reference. There is no card payment processor
+  wired in yet.
+- The site degrades gracefully: with no KV namespace, no secrets, and no
+  Sheet, it serves the bundled seed catalog.
 
-### Google Sheets access
+## Catalog sync setup (one-time)
 
-The sheet functions talk to the Google Sheets API **directly** via a service
-account (`supabase/functions/_shared/google-sheets.ts`). One-time setup:
+Until these steps are done, the site works but serves the seed catalog and
+the cron sync no-ops.
 
-1. In Google Cloud Console, create a service account and download its JSON key.
-2. Enable the **Google Sheets API** for that project.
-3. Share the products Google Sheet with the service account's email as **Editor**.
-4. Set these Supabase Edge Function secrets:
+1. **Create the KV namespace** and wire it up:
 
-```bash
-supabase secrets set GOOGLE_SERVICE_ACCOUNT_EMAIL="afp-sheets@your-project.iam.gserviceaccount.com"
-supabase secrets set GOOGLE_SERVICE_ACCOUNT_KEY="$(cat service-account.json | jq -r .private_key)"
-```
+   ```bash
+   npx wrangler kv namespace create AFP_CATALOG
+   ```
 
-The older `LOVABLE_API_KEY` and `GOOGLE_SHEETS_API_KEY` secrets are no longer
-used and can be deleted.
+   Paste the returned id into the commented `kv_namespaces` block in
+   `wrangler.jsonc` and uncomment it.
+
+2. **Create a Google service account**: in Google Cloud Console, create a
+   service account, enable the **Google Sheets API** for the project, and
+   download the service account's JSON key.
+
+3. **Share the catalog Sheet** with the service account's email address
+   (Viewer is enough — the sync only reads).
+
+4. **Set the two Worker secrets**:
+
+   ```bash
+   npx wrangler secret put GOOGLE_SERVICE_ACCOUNT_JSON   # paste the whole JSON key file
+   npx wrangler secret put CATALOG_SHEET_ID              # the id from the Sheet's URL
+   ```
+
+Deploy (or wait for the next push to `main`), and the next cron tick starts
+syncing. Verify with `curl -sI https://<site>/api/catalog | grep x-afp` —
+`x-afp-catalog-source: kv` means live Sheet data; `seed` means the fallback.
 
 ---
 
 ## Environment variables
 
-`VITE_`-prefixed variables are compiled into the browser bundle and are
-**public by design**. Supabase's anon key is meant to be public — your data is
-protected by Row Level Security policies, not by hiding the key. Anything truly
-secret belongs in Supabase Edge Function secrets, never in `.env`.
+There are none. `VITE_`-prefixed variables would be compiled into the public
+browser bundle, so real secrets (the service-account JSON, future payment
+keys) live exclusively in Cloudflare Worker secrets.

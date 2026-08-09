@@ -1,13 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { Product } from "@/lib/catalog";
+import { firstAvailableSize, formatBbd, productImageUrl, type Product } from "@/lib/catalog";
 
 export interface CartItem {
-  id: string; // composite: product.id + size + color
-  productId: string;
+  id: string; // composite: sku + size + color
+  sku: string;
   slug: string;
   name: string;
-  price: number; // cents
-  image: string;
+  priceCents: number;
+  image: string; // resolved URL
   size: string;
   color: string;
   quantity: number;
@@ -20,14 +20,18 @@ interface CartContextValue {
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addItem: (product: Product, opts?: { size?: string; color?: string; quantity?: number }) => void;
+  addItem: (
+    product: Product,
+    opts?: { size?: string; color?: string; quantity?: number },
+  ) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, qty: number) => void;
   clear: () => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
-const STORAGE_KEY = "afp-cart-v1";
+// v2: sku-keyed lines with BBD cents; ignore any v1 carts left in storage.
+const STORAGE_KEY = "afp-cart-v2";
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>(() => {
@@ -51,13 +55,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const value = useMemo<CartContextValue>(() => {
     const count = items.reduce((sum, i) => sum + i.quantity, 0);
-    const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const subtotal = items.reduce((sum, i) => sum + i.priceCents * i.quantity, 0);
 
     const addItem: CartContextValue["addItem"] = (product, opts) => {
-      const size = opts?.size ?? product.sizes[Math.min(1, product.sizes.length - 1)] ?? "OS";
-      const color = opts?.color ?? product.colors[0]?.name ?? "Default";
+      // Default to the first size that actually has stock, so quick-add never
+      // silently queues a sold-out variant.
+      const size = opts?.size ?? firstAvailableSize(product) ?? product.sizes[0] ?? "ONE SIZE";
+      const color = opts?.color ?? product.colors[0] ?? "";
       const quantity = opts?.quantity ?? 1;
-      const id = `${product.id}::${size}::${color}`;
+      const id = `${product.sku}::${size}::${color}`;
       setItems((prev) => {
         const idx = prev.findIndex((i) => i.id === id);
         if (idx >= 0) {
@@ -69,11 +75,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           ...prev,
           {
             id,
-            productId: product.id,
+            sku: product.sku,
             slug: product.slug,
             name: product.name,
-            price: product.price,
-            image: product.image,
+            priceCents: product.priceCents,
+            image: productImageUrl(product.image),
             size,
             color,
             quantity,
@@ -129,5 +135,5 @@ export const useCart = () => {
   return ctx;
 };
 
-export const formatMoney = (cents: number) =>
-  new Intl.NumberFormat("en-BB", { style: "currency", currency: "BBD" }).format(cents / 100);
+/** BBD display, e.g. `BDS $189.00`. */
+export const formatMoney = formatBbd;

@@ -1,0 +1,2 @@
+date,order_id,customer_name,whatsapp_number,items,total_bbd,status,payment_method,notes
+2026-08-05,AFP-20260805-001,Example Customer,+1 246 555 0123,Zip-Front Romper — Magenta / M × 1,189.00,delivered,bank transfer,Example row — delete me

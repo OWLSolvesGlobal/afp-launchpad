@@ -1,116 +1,99 @@
+/**
+ * Catalog data layer for the storefront.
+ *
+ * The site reads one thing: the JSON snapshot at /api/catalog (served by the
+ * site Worker from KV, refreshed from the Google Sheet every 5 minutes). It
+ * never talks to Google directly. If the endpoint is unavailable — local dev
+ * without the Worker, or a brand-new deployment with an empty KV — the
+ * bundled seed snapshot keeps the site rendering instead of white-screening.
+ */
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import placeholder from "@/assets/product-mens-tee.webp";
+import {
+  type CatalogProduct,
+  type CatalogSnapshot,
+  visibleProducts,
+} from "@/lib/catalog-core";
+import seedCatalog from "@/data/seed-catalog.json";
 
-export type Gender = "men" | "women" | "unisex";
+// Lives in public/, copied to the site root verbatim — not a bundled asset.
+const placeholder = "/placeholder.svg";
 
-export interface Product {
-  id: string;
-  slug: string;
-  name: string;
-  gender: Gender;
-  category: string;
-  price: number; // cents
-  compareAt?: number;
-  colors: { name: string; hex: string }[];
-  sizes: string[];
-  image: string;
-  images: string[];
-  imageAlt: string;
-  badge?: string | null;
+export type { CatalogProduct as Product, CatalogSnapshot, Gender } from "@/lib/catalog-core";
+export {
+  categorySlug,
+  deriveCategories,
+  firstAvailableSize,
+  formatBbd,
+  formatBbd as formatPrice,
+  isPurchasable,
+  isSoldOut,
+  makeOrderId,
+  newOrderId,
+  sizeStock,
+  totalStock,
+  visibleProducts,
+} from "@/lib/catalog-core";
+
+const seed = seedCatalog as unknown as CatalogSnapshot;
+
+// The Sheet's `image` column holds a filename from src/assets (never a URL).
+// Vite fingerprints those files at build time; this registry maps the plain
+// filename back to the hashed URL that actually exists in the bundle.
+const assetUrls = import.meta.glob("../assets/*", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+
+const assetsByName: Record<string, string> = {};
+for (const [path, url] of Object.entries(assetUrls)) {
+  const base = path.split("/").pop();
+  if (base) assetsByName[base] = url;
 }
 
-export interface StockEntry {
-  size: string;
-  color: string;
-  quantity: number;
+/** Resolve a Sheet image filename to a servable URL, or the placeholder. */
+export function productImageUrl(filename: string): string {
+  return (filename && assetsByName[filename]) || placeholder;
 }
 
-export const formatPrice = (cents: number) =>
-  new Intl.NumberFormat("en-BB", { style: "currency", currency: "BBD" }).format(cents / 100);
+export async function fetchCatalog(): Promise<CatalogSnapshot> {
+  try {
+    const res = await fetch("/api/catalog", { headers: { accept: "application/json" } });
+    const contentType = res.headers.get("content-type") ?? "";
+    // The Vite dev server has no /api route and answers with index.html; treat
+    // that (and any error status) as "endpoint unavailable" and use the seed.
+    if (!res.ok || !contentType.includes("json")) throw new Error(`unavailable: ${res.status}`);
+    const snapshot = (await res.json()) as CatalogSnapshot;
+    if (!Array.isArray(snapshot.products)) throw new Error("malformed snapshot");
+    return snapshot;
+  } catch {
+    return seed;
+  }
+}
 
-const mapProduct = (row: any): Product => {
-  const images: string[] = Array.isArray(row.images) && row.images.length
-    ? row.images
-    : row.image_url ? [row.image_url] : [];
-  return {
-  id: row.id,
-  slug: row.slug,
-  name: row.name,
-  gender: row.gender,
-  category: row.category,
-  price: row.price_cents,
-  compareAt: row.compare_at_cents ?? undefined,
-  colors: Array.isArray(row.colors) ? row.colors : [],
-  sizes: Array.isArray(row.sizes) ? row.sizes : [],
-  image: images[0] || placeholder,
-  images,
-  imageAlt: row.image_alt || row.name,
-  badge: row.badge ?? null,
-};
-};
-
-export const useProducts = () =>
+export const useCatalog = () =>
   useQuery({
-    queryKey: ["products"],
-    queryFn: async (): Promise<Product[]> => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("published", true)
-        .order("sort_order", { ascending: true })
-        .order("id", { ascending: true });
-      if (error) throw error;
-      return (data ?? []).map(mapProduct);
-    },
+    queryKey: ["catalog"],
+    queryFn: fetchCatalog,
     staleTime: 60_000,
   });
 
-export const useProduct = (slug: string | undefined) =>
-  useQuery({
-    queryKey: ["product", slug],
-    enabled: !!slug,
-    queryFn: async (): Promise<Product | null> => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("slug", slug!)
-        .eq("published", true)
-        .maybeSingle();
-      if (error) throw error;
-      return data ? mapProduct(data) : null;
-    },
-    staleTime: 60_000,
-  });
+/** Purchasable products only — active with a real price. */
+export const useProducts = () => {
+  const query = useCatalog();
+  return { ...query, data: query.data ? visibleProducts(query.data.products) : [] };
+};
 
-export const useStock = (productId: string | undefined) =>
-  useQuery({
-    queryKey: ["stock", productId],
-    enabled: !!productId,
-    queryFn: async (): Promise<StockEntry[]> => {
-      const { data, error } = await supabase.rpc("get_product_availability", {
-        _product_id: productId!,
-      });
-      if (error) throw error;
-      // Map availability booleans back to quantity-shaped entries so the
-      // existing helpers (sizeAvailable/colorAvailable) keep working.
-      return (data ?? []).map((row: { size: string; color: string; in_stock: boolean }) => ({
-        size: row.size,
-        color: row.color,
-        quantity: row.in_stock ? 1 : 0,
-      }));
-    },
-    staleTime: 30_000,
-  });
-
-/** Helpers for variant availability */
-export const stockFor = (stock: StockEntry[], size: string, color: string) =>
-  stock.find((s) => s.size === size && s.color === color)?.quantity ?? 0;
-
-export const sizeAvailable = (stock: StockEntry[], size: string) =>
-  stock.some((s) => s.size === size && s.quantity > 0);
-
-export const colorAvailable = (stock: StockEntry[], color: string, size?: string) =>
-  stock.some(
-    (s) => s.color === color && s.quantity > 0 && (!size || s.size === size),
-  );
+/** Look up one purchasable product by slug (or sku, case-insensitive). */
+export const useProduct = (slug: string | undefined) => {
+  const query = useCatalog();
+  let product: CatalogProduct | null = null;
+  if (slug && query.data) {
+    const needle = slug.toLowerCase();
+    product =
+      visibleProducts(query.data.products).find(
+        (p) => p.slug === needle || p.sku.toLowerCase() === needle,
+      ) ?? null;
+  }
+  return { ...query, data: product };
+};
