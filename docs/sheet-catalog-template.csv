@@ -2,7 +2,7 @@ sku,name,description,gender,category,color,price_bbd,compare_at_bbd,sizes,stock_
 W-ROM-001,Luxe Lift Romper — Magenta,Flexible rompers made for comfort and movement.,women,Bodysuits & Rompers,Magenta,100,,S | M | L,,5,5,5,,,ashlee-pink.webp,"Zip-front romper in magenta, front view",,TRUE
 W-ROM-002,Luxe Lift Romper — Lime,Flexible rompers made for comfort and movement.,women,Bodysuits & Rompers,Lime,100,,S | M | L,,5,5,5,,,ashlee-apple.webp,"Sleeveless romper in lime green, side view",,TRUE
 W-ROM-003,Luxe Lift Romper — Sky Blue,Flexible rompers made for comfort and movement.,women,Bodysuits & Rompers,Sky Blue,100,,S | M | L,,5,5,5,,,ashlee-blue.webp,Sky blue romper with white contrast piping,,TRUE
-W-SET-001,Halter Set — Navy,,women,Two-Piece Sets,Navy,0,,,,0,0,0,0,,afp-black-jumpsuit.webp,Navy halter top and leggings set,,FALSE
+W-SET-001,Vestra Set,,women,Two-Piece Sets,Peach | Royal Blue | Aqua Blue | Purple,130,,S | M | L,,5,5,5,,,afp-black-jumpsuit.webp,Vestra halter top and leggings set,,TRUE
 W-SET-002,Bubble Skirt Set — Pink,,women,Two-Piece Sets,Pink,0,,,,0,0,0,0,,ashlee-pool.jpg,"Pink bra top and bubble skirt set, poolside",,FALSE
 W-DRS-001,Tennis/Golf Dress — White,,women,Tennis & Golf,White,0,,,,0,0,0,0,,ashlee-golf.webp,White tennis dress and visor beside a golf cart,,FALSE
 W-DRS-002,Tennis/Golf Dress — Navy,,women,Tennis & Golf,Navy,0,,,,0,0,0,0,,afp-golf-dress.jpg,Navy halter golf dress and visor on the course,,FALSE
@@ -20,5 +20,5 @@ W-LEG-002,Scrunch-Back Leggings — Sage,,women,Leggings,Sage,0,,,,0,0,0,0,,afp-
 W-LEG-003,Scrunch-Back Leggings — Black,,women,Leggings,Black,0,,,,0,0,0,0,,afp-leggings-black.webp,"Black scrunch-back leggings, back view",,FALSE
 W-ROM-004,Luxe Lift Romper — Purple,Flexible rompers made for comfort and movement.,women,Bodysuits & Rompers,Purple,100,,S | M | L,,0,0,0,,,,Purple Luxe Lift romper,,FALSE
 W-ROM-005,Luxe Lift Romper — Black,Flexible rompers made for comfort and movement.,women,Bodysuits & Rompers,Black,100,,S | M | L,,0,0,0,,,,Black Luxe Lift romper,,FALSE
-W-SET-007,Solara Set — Coral Stripe,,women,Two-Piece Sets,Coral Stripe,140,,XS | S | M | L | XL,0,0,0,0,0,,afp-solara-set-coral.webp,Coral striped halter top and knee-length shorts set,,FALSE
-W-SET-008,Solara Set — Citron Stripe,,women,Two-Piece Sets,Citron Stripe,140,,XS | S | M | L | XL,0,0,0,0,0,,afp-solara-set-citron.webp,Pale citron striped halter top and knee-length shorts set,,FALSE
+W-SET-007,Solara Set — Coral Stripe,,women,Two-Piece Sets,Coral Stripe,140,,XS | S | M | L | XL,5,5,5,5,5,,afp-solara-set-coral.webp,Coral striped halter top and knee-length shorts set,,TRUE
+W-SET-008,Solara Set — Citron Stripe,,women,Two-Piece Sets,Citron Stripe,140,,XS | S | M | L | XL,5,5,5,5,5,,afp-solara-set-citron.webp,Pale citron striped halter top and knee-length shorts set,,TRUE
