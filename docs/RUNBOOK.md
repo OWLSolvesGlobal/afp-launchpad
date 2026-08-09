@@ -57,7 +57,7 @@ the sku, and they'll commit it and tell you the filename to paste.
 
 ## Stock
 
-Stock is per size: `stock_S`, `stock_M`, `stock_L`, `stock_XL` (or
+Stock is per size: `stock_XS`, `stock_S`, `stock_M`, `stock_L`, `stock_XL` (or
 `one_size_stock` for one-size items).
 
 - A size at `0` shows crossed-out on the site — customers can't pick it.
