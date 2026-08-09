@@ -151,7 +151,7 @@
       "colors": [
         "White"
       ],
-      "priceCents": 0,
+      "priceCents": 11000,
       "compareAtCents": null,
       "sizes": [
         "S",
@@ -160,15 +160,15 @@
         "XL"
       ],
       "stock": {
-        "S": 0,
-        "M": 0,
-        "L": 0,
-        "XL": 0
+        "S": 5,
+        "M": 5,
+        "L": 5,
+        "XL": 5
       },
       "image": "ashlee-golf.webp",
       "imageAlt": "White tennis dress and visor beside a golf cart",
       "badge": null,
-      "active": false
+      "active": true
     },
     {
       "sku": "W-DRS-002",
@@ -180,7 +180,7 @@
       "colors": [
         "Navy"
       ],
-      "priceCents": 0,
+      "priceCents": 11000,
       "compareAtCents": null,
       "sizes": [
         "S",
@@ -189,15 +189,15 @@
         "XL"
       ],
       "stock": {
-        "S": 0,
-        "M": 0,
-        "L": 0,
-        "XL": 0
+        "S": 5,
+        "M": 5,
+        "L": 5,
+        "XL": 5
       },
       "image": "afp-golf-dress.jpg",
       "imageAlt": "Navy halter golf dress and visor on the course",
       "badge": null,
-      "active": false
+      "active": true
     },
     {
       "sku": "A-VIS-001",
@@ -232,7 +232,7 @@
       "colors": [
         "White"
       ],
-      "priceCents": 0,
+      "priceCents": 10000,
       "compareAtCents": null,
       "sizes": [
         "S",
@@ -241,15 +241,15 @@
         "XL"
       ],
       "stock": {
-        "S": 0,
-        "M": 0,
-        "L": 0,
-        "XL": 0
+        "S": 5,
+        "M": 5,
+        "L": 5,
+        "XL": 5
       },
       "image": "afp-mens-white.webp",
       "imageAlt": "Men's white performance tee, seated",
       "badge": null,
-      "active": false
+      "active": true
     },
     {
       "sku": "M-TEE-002",
@@ -261,7 +261,7 @@
       "colors": [
         "Black"
       ],
-      "priceCents": 0,
+      "priceCents": 10000,
       "compareAtCents": null,
       "sizes": [
         "S",
@@ -270,15 +270,15 @@
         "XL"
       ],
       "stock": {
-        "S": 0,
-        "M": 0,
-        "L": 0,
-        "XL": 0
+        "S": 5,
+        "M": 5,
+        "L": 5,
+        "XL": 5
       },
       "image": "afp-mens-black.webp",
       "imageAlt": "Men's black performance tee, standing",
       "badge": null,
-      "active": false
+      "active": true
     },
     {
       "sku": "M-SHO-001",
@@ -290,7 +290,7 @@
       "colors": [
         "Black"
       ],
-      "priceCents": 0,
+      "priceCents": 7000,
       "compareAtCents": null,
       "sizes": [
         "S",
@@ -299,15 +299,15 @@
         "XL"
       ],
       "stock": {
-        "S": 0,
-        "M": 0,
-        "L": 0,
-        "XL": 0
+        "S": 5,
+        "M": 5,
+        "L": 5,
+        "XL": 5
       },
       "image": "afp-mens-black.webp",
       "imageAlt": "Men's black training shorts",
       "badge": null,
-      "active": false
+      "active": true
     },
     {
       "sku": "A-SOC-001",
@@ -655,7 +655,10 @@
   ],
   "categories": [
     "Bodysuits & Rompers",
-    "Two-Piece Sets"
+    "Two-Piece Sets",
+    "Tennis & Golf",
+    "Men: T-Shirts",
+    "Men: Shorts"
   ],
   "config": {
     "announcementBar": "",

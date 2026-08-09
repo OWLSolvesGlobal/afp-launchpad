@@ -65,7 +65,13 @@ describe("seed catalog contract", () => {
   });
 
   it("derives categories only from purchasable products, women-first", () => {
-    expect(seed.categories).toEqual(["Bodysuits & Rompers", "Two-Piece Sets"]);
+    expect(seed.categories).toEqual([
+      "Bodysuits & Rompers",
+      "Two-Piece Sets",
+      "Tennis & Golf",
+      "Men: T-Shirts",
+      "Men: Shorts",
+    ]);
   });
 });
 
