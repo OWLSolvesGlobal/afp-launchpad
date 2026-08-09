@@ -11,7 +11,7 @@ const product = (overrides: Partial<Product> = {}): Product => ({
   description: "",
   gender: "women",
   category: "Bodysuits & Rompers",
-  color: "Magenta",
+  colors: ["Magenta"],
   priceCents: 6_800,
   compareAtCents: null,
   sizes: ["S", "M", "L", "XL"],
@@ -98,6 +98,23 @@ describe("variant handling", () => {
     act(() => result.current.addItem(product({ sku: "W-ROM-002", slug: "sleeveless-romper-lime" }), { size: "M" }));
 
     expect(result.current.items).toHaveLength(2);
+  });
+
+  // Multi-colour rows: same product and size in two colours = two lines.
+  it("keeps different colours of the same product as separate lines", () => {
+    const socks = product({ sku: "A-SOC-001", colors: ["White", "Black"] });
+    const { result } = setup();
+    act(() => result.current.addItem(socks, { size: "ONE SIZE", color: "White" }));
+    act(() => result.current.addItem(socks, { size: "ONE SIZE", color: "Black" }));
+
+    expect(result.current.items).toHaveLength(2);
+    expect(result.current.items.map((i) => i.color)).toEqual(["White", "Black"]);
+  });
+
+  it("defaults to the first listed colour", () => {
+    const { result } = setup();
+    act(() => result.current.addItem(product({ colors: ["Lime", "Black"] })));
+    expect(result.current.items[0].color).toBe("Lime");
   });
 
   // Deliberate: quick-add must never queue a sold-out size, so the default

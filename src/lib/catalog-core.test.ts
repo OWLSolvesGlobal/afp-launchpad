@@ -99,6 +99,23 @@ describe("parseCatalogRows", () => {
     expect(p.slug).toBe("zip-front-romper-magenta");
   });
 
+  // The color cell is pipe-separated so one row can carry several colours.
+  it("parses a single colour into a one-entry list", () => {
+    expect(parseOne({ color: "Magenta" }).colors).toEqual(["Magenta"]);
+  });
+
+  it("splits multi-colour cells on pipes", () => {
+    expect(parseOne({ color: "White | Black | Sky Blue" }).colors).toEqual([
+      "White",
+      "Black",
+      "Sky Blue",
+    ]);
+  });
+
+  it("parses a blank colour cell as no colours", () => {
+    expect(parseOne({ color: "" }).colors).toEqual([]);
+  });
+
   // Blank description stays blank — the product page renders nothing, never
   // placeholder copy.
   it("passes description through and defaults it to empty", () => {

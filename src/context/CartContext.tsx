@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { firstAvailableSize, formatBbd, productImageUrl, type Product } from "@/lib/catalog";
 
 export interface CartItem {
-  id: string; // composite: sku + size
+  id: string; // composite: sku + size + color
   sku: string;
   slug: string;
   name: string;
@@ -20,7 +20,10 @@ interface CartContextValue {
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addItem: (product: Product, opts?: { size?: string; quantity?: number }) => void;
+  addItem: (
+    product: Product,
+    opts?: { size?: string; color?: string; quantity?: number },
+  ) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, qty: number) => void;
   clear: () => void;
@@ -58,8 +61,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       // Default to the first size that actually has stock, so quick-add never
       // silently queues a sold-out variant.
       const size = opts?.size ?? firstAvailableSize(product) ?? product.sizes[0] ?? "ONE SIZE";
+      const color = opts?.color ?? product.colors[0] ?? "";
       const quantity = opts?.quantity ?? 1;
-      const id = `${product.sku}::${size}`;
+      const id = `${product.sku}::${size}::${color}`;
       setItems((prev) => {
         const idx = prev.findIndex((i) => i.id === id);
         if (idx >= 0) {
@@ -77,7 +81,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             priceCents: product.priceCents,
             image: productImageUrl(product.image),
             size,
-            color: product.color,
+            color,
             quantity,
           },
         ];

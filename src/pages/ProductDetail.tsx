@@ -25,13 +25,16 @@ export default function ProductDetail() {
   const { addItem } = useCart();
 
   const [selectedSize, setSelectedSize] = useState<string>("");
+  const [selectedColor, setSelectedColor] = useState<string>("");
   const [qty, setQty] = useState(1);
 
   useEffect(() => {
     if (!product) return;
     document.title = `${product.name} — AFP Performance Apparel`;
-    // One-size items don't need a size decision; pre-select it.
+    // One-size items don't need a size decision; pre-select it. Same for a
+    // single colour — only multi-colour items ask the shopper to choose.
     setSelectedSize(product.sizes.length === 1 ? product.sizes[0] : "");
+    setSelectedColor(product.colors[0] ?? "");
     setQty(1);
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }, [product?.sku]);
@@ -67,9 +70,9 @@ export default function ProductDetail() {
       toast.error(sizeSoldOut ? "Sold out in this size" : `Only ${variantQty} left`);
       return;
     }
-    addItem(product, { size: selectedSize, quantity: qty });
+    addItem(product, { size: selectedSize, color: selectedColor, quantity: qty });
     toast.success(`${product.name} added to bag`, {
-      description: `${product.color ? `${product.color} · ` : ""}Size ${selectedSize} · Qty ${qty}`,
+      description: `${selectedColor ? `${selectedColor} · ` : ""}Size ${selectedSize} · Qty ${qty}`,
     });
   };
 
@@ -155,12 +158,38 @@ export default function ProductDetail() {
               </p>
             )}
 
-            {/* Color */}
-            {product.color && (
-              <div className="mb-6 flex items-center justify-between max-w-md">
-                <span className="eyebrow">Color</span>
-                <span className="text-xs text-graphite">{product.color}</span>
+            {/* Color — a selector when the row lists several, a label for one */}
+            {product.colors.length > 1 ? (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="eyebrow">Color</span>
+                  <span className="text-xs text-graphite">{selectedColor}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {product.colors.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setSelectedColor(c)}
+                      className={cn(
+                        "h-10 px-4 border text-sm font-medium transition-colors",
+                        selectedColor === c
+                          ? "bg-ink text-bone border-ink"
+                          : "bg-background border-border hover:border-ink"
+                      )}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
               </div>
+            ) : (
+              product.colors[0] && (
+                <div className="mb-6 flex items-center justify-between max-w-md">
+                  <span className="eyebrow">Color</span>
+                  <span className="text-xs text-graphite">{product.colors[0]}</span>
+                </div>
+              )
             )}
 
             {/* Size — sold-out sizes stay visible but disabled */}

@@ -29,9 +29,10 @@ export const ProductCard = ({ product, index = 0 }: Props) => {
       toast.error("Sold out");
       return;
     }
-    addItem(product, { size });
+    const color = product.colors[0] ?? "";
+    addItem(product, { size, color });
     toast.success(`${product.name} added to bag`, {
-      description: `${product.color ? `${product.color} · ` : ""}${size}`,
+      description: `${color ? `${color} · ` : ""}${size}`,
     });
   };
 
@@ -94,9 +95,9 @@ export const ProductCard = ({ product, index = 0 }: Props) => {
         <div className="pt-3 pb-1 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="text-sm font-medium truncate">{product.name}</h3>
-            {product.color && (
+            {product.colors.length > 0 && (
               <div className="mt-1 text-[11px] text-graphite uppercase tracking-wider truncate">
-                {product.color}
+                {product.colors.join(" · ")}
               </div>
             )}
           </div>

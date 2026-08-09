@@ -76,6 +76,12 @@ lower price into `price_bbd`. The strikethrough appears automatically.
 
 **Hide a product without deleting it** — set `active` to `FALSE`.
 
+**Sell one item in several colours** — put all the colours in the `color`
+box separated by `|`, like `White | Black`. Customers pick their colour on
+the site. One thing to know: the stock numbers on that row count **all
+colours together**. If you want to track white and black separately, give
+each colour its own row with its own `sku` instead.
+
 **Change the banner across the top of the site** — Config tab, edit the
 `announcement_bar` value. Blank = no banner.
 

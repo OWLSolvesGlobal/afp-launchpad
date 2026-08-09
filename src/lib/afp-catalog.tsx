@@ -26,7 +26,8 @@ export const LIME = "#c5e86c";
 export function ProductCard({ p }: { p: Product }) {
   const soldOut = isSoldOut(p);
   const [size, setSize] = useState(firstAvailableSize(p) ?? p.sizes[0]);
-  const msg = `Hi! I'd like to order the ${p.name} (Size: ${size})`;
+  const [color, setColor] = useState(p.colors[0] ?? "");
+  const msg = `Hi! I'd like to order the ${p.name} (${color ? `Color: ${color}, ` : ""}Size: ${size})`;
   return (
     <article className="group rounded-3xl bg-white overflow-hidden shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_10px_40px_rgba(0,181,226,0.15)] transition-shadow flex flex-col">
       <Link
@@ -63,8 +64,24 @@ export function ProductCard({ p }: { p: Product }) {
           </span>
         </div>
 
-        {p.color && (
-          <div className="text-xs text-neutral-500">{p.color}</div>
+        {p.colors.length > 1 ? (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {p.colors.map((c) => (
+              <button
+                key={c}
+                onClick={() => setColor(c)}
+                className={`h-8 px-3 rounded-full text-xs font-semibold border transition-all ${
+                  color === c
+                    ? "border-black bg-black text-white"
+                    : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400"
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        ) : (
+          p.colors[0] && <div className="text-xs text-neutral-500">{p.colors[0]}</div>
         )}
 
         <div className="flex flex-wrap gap-1.5">

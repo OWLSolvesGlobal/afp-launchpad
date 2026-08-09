@@ -37,7 +37,7 @@ export default function Shop() {
     list.forEach((p) => {
       cats.add(p.category);
       p.sizes.forEach((s) => sizes.add(s));
-      if (p.color) colors.add(p.color);
+      p.colors.forEach((c) => colors.add(c));
       priceCeiling = Math.max(priceCeiling, Math.ceil(p.priceCents / 100));
     });
     return {
@@ -52,7 +52,7 @@ export default function Shop() {
     let out = list.filter((p) => {
       if (filters.categories.length && !filters.categories.includes(p.category)) return false;
       if (filters.sizes.length && !p.sizes.some((s) => filters.sizes.includes(s))) return false;
-      if (filters.colors.length && !filters.colors.includes(p.color)) return false;
+      if (filters.colors.length && !p.colors.some((c) => filters.colors.includes(c))) return false;
       if (filters.priceMax !== null && p.priceCents / 100 > filters.priceMax) return false;
       return true;
     });

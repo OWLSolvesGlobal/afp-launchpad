@@ -18,7 +18,12 @@ export interface CatalogProduct {
   description: string;
   gender: Gender;
   category: string;
-  color: string;
+  /**
+   * Colour names from the Sheet's `color` column, pipe-separated for
+   * multi-colour items (`Black | Lime`). Per-size stock is shared across
+   * colours; items needing per-colour stock use one row per colourway.
+   */
+  colors: string[];
   /** BBD, integer cents. Never floats for money. */
   priceCents: number;
   compareAtCents: number | null;
@@ -195,7 +200,10 @@ export function parseCatalogRows(rows: (string | number)[][]): CatalogProduct[] 
       description: row["description"] ?? "",
       gender: parseGender(row["gender"] ?? ""),
       category: row["category"] || "Uncategorised",
-      color: row["color"] ?? "",
+      colors: (row["color"] ?? "")
+        .split("|")
+        .map((c) => c.trim())
+        .filter(Boolean),
       priceCents: bbdToCents(row["price_bbd"]),
       compareAtCents: row["compare_at_bbd"] ? bbdToCents(row["compare_at_bbd"]) : null,
       sizes,

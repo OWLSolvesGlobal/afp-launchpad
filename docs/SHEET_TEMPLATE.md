@@ -34,7 +34,7 @@ rename each imported sheet to its tab name above.
 | `description` | Short copy (1–3 sentences) shown on the product page. Blank shows nothing. | `Second-skin fit with a front zip. Made for movement.` |
 | `gender` | `women`, `men`, or `unisex` | `women` |
 | `category` | Free text. Every distinct value becomes a collection page and a nav link — women's categories are shown before men's automatically. | `Bodysuits & Rompers` |
-| `color` | Colour name, free text | `Magenta` |
+| `color` | Colour name(s), pipe-separated for multi-colour items. Shoppers pick one at checkout. | `Magenta` or `White \| Black` |
 | `price_bbd` | Price in BBD. Just the number. **A price of 0 keeps the product hidden.** | `189.00` |
 | `compare_at_bbd` | Old price to show a markdown strikethrough. Blank if none. | `229.00` |
 | `sizes` | Blank means `S \| M \| L \| XL`. Override per item with pipe-separated values, e.g. `ONE SIZE` for the visor and socks. | *(blank)* |
@@ -54,6 +54,11 @@ Rules the site enforces:
   greater than 0. Both guards exist so a half-filled row can never go live.
 - A size with 0 stock shows as disabled (crossed out), not hidden. A product
   with every size at 0 shows as "Sold out" but stays visible.
+- **Multi-colour items**: list colours in one row separated by `|`
+  (e.g. `White | Black`). The stock columns then cover all colours of that
+  row combined. If you need to track stock separately per colour, give each
+  colour its own row with its own sku instead (e.g. `M-TEE-001` white,
+  `M-TEE-002` black).
 - A blank or unparseable stock cell counts as 0 — never as unlimited.
 - Rows missing a `sku` or `name` are skipped entirely.
 

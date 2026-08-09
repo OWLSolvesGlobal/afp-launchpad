@@ -8,7 +8,9 @@
       "description": "",
       "gender": "women",
       "category": "Bodysuits & Rompers",
-      "color": "Magenta",
+      "colors": [
+        "Magenta"
+      ],
       "priceCents": 0,
       "compareAtCents": null,
       "sizes": [
@@ -35,7 +37,9 @@
       "description": "",
       "gender": "women",
       "category": "Bodysuits & Rompers",
-      "color": "Lime",
+      "colors": [
+        "Lime"
+      ],
       "priceCents": 0,
       "compareAtCents": null,
       "sizes": [
@@ -62,7 +66,9 @@
       "description": "",
       "gender": "women",
       "category": "Bodysuits & Rompers",
-      "color": "Sky Blue",
+      "colors": [
+        "Sky Blue"
+      ],
       "priceCents": 0,
       "compareAtCents": null,
       "sizes": [
@@ -89,7 +95,9 @@
       "description": "",
       "gender": "women",
       "category": "Two-Piece Sets",
-      "color": "Navy",
+      "colors": [
+        "Navy"
+      ],
       "priceCents": 0,
       "compareAtCents": null,
       "sizes": [
@@ -116,7 +124,9 @@
       "description": "",
       "gender": "women",
       "category": "Two-Piece Sets",
-      "color": "Pink",
+      "colors": [
+        "Pink"
+      ],
       "priceCents": 0,
       "compareAtCents": null,
       "sizes": [
@@ -143,7 +153,9 @@
       "description": "",
       "gender": "women",
       "category": "Tennis & Golf",
-      "color": "White",
+      "colors": [
+        "White"
+      ],
       "priceCents": 0,
       "compareAtCents": null,
       "sizes": [
@@ -170,7 +182,9 @@
       "description": "",
       "gender": "women",
       "category": "Tennis & Golf",
-      "color": "Navy",
+      "colors": [
+        "Navy"
+      ],
       "priceCents": 0,
       "compareAtCents": null,
       "sizes": [
@@ -197,7 +211,9 @@
       "description": "",
       "gender": "unisex",
       "category": "Accessories",
-      "color": "White",
+      "colors": [
+        "White"
+      ],
       "priceCents": 0,
       "compareAtCents": null,
       "sizes": [
@@ -218,7 +234,9 @@
       "description": "",
       "gender": "men",
       "category": "Men: T-Shirts",
-      "color": "White",
+      "colors": [
+        "White"
+      ],
       "priceCents": 0,
       "compareAtCents": null,
       "sizes": [
@@ -245,7 +263,9 @@
       "description": "",
       "gender": "men",
       "category": "Men: T-Shirts",
-      "color": "Black",
+      "colors": [
+        "Black"
+      ],
       "priceCents": 0,
       "compareAtCents": null,
       "sizes": [
@@ -272,7 +292,9 @@
       "description": "",
       "gender": "men",
       "category": "Men: Shorts",
-      "color": "Black",
+      "colors": [
+        "Black"
+      ],
       "priceCents": 0,
       "compareAtCents": null,
       "sizes": [
@@ -299,7 +321,10 @@
       "description": "",
       "gender": "unisex",
       "category": "Accessories",
-      "color": "White / Black",
+      "colors": [
+        "White",
+        "Black"
+      ],
       "priceCents": 0,
       "compareAtCents": null,
       "sizes": [
