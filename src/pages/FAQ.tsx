@@ -92,9 +92,9 @@ function Item({ q, a, defaultOpen = false }: { q: string; a: string; defaultOpen
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="w-full flex items-start justify-between gap-6 py-5 text-left hover:text-safety transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="w-full flex items-start justify-between gap-6 py-5 text-left hover:text-accent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
-        <span className="font-display text-base md:text-lg leading-snug">{q}</span>
+        <span className="text-base md:text-lg font-medium leading-snug">{q}</span>
         <span className="shrink-0 mt-1 text-ink">
           {open ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
         </span>
@@ -121,13 +121,13 @@ export default function FAQ() {
       <main id="main" className="pt-24 md:pt-28">
         <section className="container py-12 md:py-20">
           <div className="eyebrow text-graphite mb-4">— Help Center</div>
-          <h1 className="font-display text-5xl md:text-7xl leading-[0.95] tracking-tight max-w-3xl">
+          <h1 className="display-lg max-w-3xl">
             Answers,<br />
             <span className="italic font-light">on the record.</span>
           </h1>
           <p className="mt-6 max-w-xl text-base md:text-lg text-graphite leading-relaxed">
             Everything you need to know about ordering, sizing, and caring for your AFP gear.
-            Still stuck? <Link to="/contact" className="text-ink underline underline-offset-4 hover:text-safety">Talk to a human</Link>.
+            Still stuck? <Link to="/contact" className="text-ink underline underline-offset-4 hover:text-accent">Talk to a human</Link>.
           </p>
         </section>
 
@@ -144,7 +144,7 @@ export default function FAQ() {
               <div className="col-span-12 md:col-span-4">
                 <div className="md:sticky md:top-28 flex md:block items-center gap-4">
                   <s.icon className="w-6 h-6 md:w-8 md:h-8 text-ink mb-0 md:mb-4" />
-                  <h2 className="font-display text-2xl md:text-4xl">{s.title}</h2>
+                  <h2 className="display-md">{s.title}</h2>
                 </div>
               </div>
               <div className="col-span-12 md:col-span-8">
@@ -159,8 +159,8 @@ export default function FAQ() {
         {/* CTA */}
         <section className="bg-ink text-bone py-16 md:py-24">
           <div className="container text-center max-w-2xl mx-auto">
-            <Mail className="w-8 h-8 mx-auto text-safety mb-4" />
-            <h2 className="font-display text-3xl md:text-5xl leading-[1.05] mb-4">
+            <Mail className="w-8 h-8 mx-auto text-accent mb-4" />
+            <h2 className="display-md mb-4">
               Still have questions?
             </h2>
             <p className="text-bone/85 mb-8">
@@ -168,7 +168,7 @@ export default function FAQ() {
             </p>
             <Link
               to="/contact"
-              className="inline-flex items-center gap-2 bg-bone text-ink px-8 py-4 eyebrow hover:bg-safety hover:text-bone transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bone"
+              className="inline-flex items-center gap-2 bg-bone text-ink px-8 py-4 eyebrow hover:bg-accent hover:text-bone transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bone"
             >
               Contact Us →
             </Link>

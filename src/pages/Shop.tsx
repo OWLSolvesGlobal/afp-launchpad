@@ -83,7 +83,7 @@ export default function Shop() {
             Shop / {isWomen ? "Women" : "Men"}
           </div>
           <h1 className="display-lg">
-            {isWomen ? "Women" : "Men"}<span className="text-safety">.</span>
+            {isWomen ? "Women" : "Men"}<span className="text-accent">.</span>
           </h1>
           <p className="mt-3 text-sm md:text-base text-graphite max-w-xl">
             {isWomen

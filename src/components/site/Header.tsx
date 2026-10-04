@@ -75,7 +75,7 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
               to={n.to}
               className={({ isActive }) =>
                 cn(
-                  "text-[11px] uppercase tracking-[0.32em] font-medium link-safety transition-opacity whitespace-nowrap",
+                  "text-[11px] uppercase tracking-[0.32em] font-medium link-accent transition-opacity whitespace-nowrap",
                   isActive ? "opacity-100" : "opacity-80 hover:opacity-100"
                 )
               }
@@ -96,7 +96,7 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
           >
             <ShoppingBag className="w-5 h-5" />
             {count > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-foreground text-background text-[10px] font-stencil min-w-4 h-4 px-1 grid place-items-center rounded-full">
+              <span className="absolute -top-0.5 -right-0.5 bg-foreground text-background text-[10px] font-medium min-w-4 h-4 px-1 grid place-items-center rounded-full">
                 {count}
               </span>
             )}

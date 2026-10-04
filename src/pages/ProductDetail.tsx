@@ -109,7 +109,7 @@ export default function ProductDetail() {
                 className="w-full h-full object-cover"
               />
               {soldOut && (
-                <span className="absolute top-3 left-3 font-stencil uppercase text-[10px] tracking-wider px-2 py-1 bg-ink text-bone">
+                <span className="absolute top-3 left-3 font-medium uppercase text-[10px] tracking-wider px-2 py-1 bg-ink text-bone">
                   Sold out
                 </span>
               )}
@@ -126,8 +126,8 @@ export default function ProductDetail() {
             {product.badge && !soldOut && (
               <span
                 className={cn(
-                  "inline-block font-stencil uppercase text-[10px] tracking-wider px-2 py-1 mb-4",
-                  product.badge === "LOW STOCK" ? "bg-safety text-bone" : "bg-ink text-bone"
+                  "inline-block font-medium uppercase text-[10px] tracking-wider px-2 py-1 mb-4",
+                  product.badge === "LOW STOCK" ? "bg-accent text-bone" : "bg-ink text-bone"
                 )}
               >
                 {product.badge}
@@ -137,7 +137,7 @@ export default function ProductDetail() {
             <div className="eyebrow text-graphite mb-2 capitalize">
               {product.gender} · {product.category}
             </div>
-            <h1 className="font-display text-3xl md:text-4xl lg:text-5xl leading-tight mb-4">
+            <h1 className="display-md mb-4">
               {product.name}
             </h1>
 
@@ -222,7 +222,7 @@ export default function ProductDetail() {
                 })}
               </div>
               {selectedSize && lowStock && (
-                <p className="mt-2 text-xs text-safety">Only {variantQty} left</p>
+                <p className="mt-2 text-xs text-accent">Only {variantQty} left</p>
               )}
               {soldOut && (
                 <p className="mt-2 text-xs text-graphite">
@@ -260,7 +260,7 @@ export default function ProductDetail() {
               type="button"
               onClick={handleAdd}
               disabled={soldOut || sizeSoldOut}
-              className="w-full bg-ink text-bone py-4 eyebrow hover:bg-safety transition-colors mb-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-ink"
+              className="w-full bg-ink text-bone py-4 eyebrow hover:bg-accent transition-colors mb-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-ink"
             >
               {soldOut
                 ? "Sold Out"
@@ -315,10 +315,10 @@ export default function ProductDetail() {
         {related.length > 0 && (
           <section className="container pb-24 border-t border-border pt-16">
             <div className="flex items-end justify-between mb-10">
-              <h2 className="font-display text-2xl md:text-3xl">You may also like</h2>
+              <h2 className="display-md">You may also like</h2>
               <Link
                 to={`/shop/${shopGender}`}
-                className="text-xs uppercase tracking-wider underline underline-offset-4 hover:text-safety"
+                className="text-xs uppercase tracking-wider underline underline-offset-4 hover:text-accent"
               >
                 Shop all
               </Link>

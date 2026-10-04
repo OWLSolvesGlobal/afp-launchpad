@@ -250,7 +250,7 @@ const NotFound = () => {
 
             {/* Floating chip */}
             <div className="absolute top-6 left-6 md:top-10 md:left-10 flex items-center gap-2 bg-ink text-bone px-3 py-1.5 font-stencil uppercase text-[10px] tracking-widest">
-              <span className="w-1.5 h-1.5 rounded-full bg-safety animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
               Live build · drag to spin
             </div>
 
@@ -267,7 +267,7 @@ const NotFound = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className="eyebrow text-safety mb-4">— Under Construction</div>
+              <div className="eyebrow text-accent mb-4">— Under Construction</div>
               <h1 className="font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight mb-6">
                 Stitching this one<br />
                 <span className="italic font-light">together.</span>
@@ -281,7 +281,7 @@ const NotFound = () => {
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link
                   to="/"
-                  className="bg-ink text-bone px-8 py-4 eyebrow hover:bg-safety hover:text-bone transition-colors"
+                  className="bg-ink text-bone px-8 py-4 eyebrow hover:bg-accent hover:text-bone transition-colors"
                 >
                   Back to Home
                 </Link>

@@ -45,7 +45,7 @@ export default function Contact() {
           <motion.h1
             {...fadeUp}
             transition={{ ...fadeUp.transition, delay: 0.05 }}
-            className="font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight max-w-4xl"
+            className="display-lg max-w-4xl"
           >
             Let's talk.<br />
             <span className="italic font-light">We're listening.</span>
@@ -101,7 +101,7 @@ export default function Contact() {
                   <c.icon className="w-5 h-5 text-ink" />
                   <span className="eyebrow text-graphite">{c.eyebrow}</span>
                 </div>
-                <div className="font-display text-xl mb-1 group-hover:text-safety transition-colors">
+                <div className="text-xl font-medium tracking-tight mb-1 group-hover:text-accent transition-colors">
                   {c.title}
                 </div>
                 <div className="text-sm text-graphite">{c.body}</div>
@@ -114,9 +114,9 @@ export default function Contact() {
         <section className="container pb-20 md:pb-32 grid grid-cols-12 gap-6 md:gap-12">
           <motion.div {...fadeUp} className="col-span-12 lg:col-span-7">
             <div className="border border-border bg-card p-6 md:p-10">
-              <h2 className="font-display text-2xl md:text-3xl mb-2">Send us a message</h2>
+              <h2 className="display-md mb-2">Send us a message</h2>
               <p className="text-sm text-graphite mb-8">
-                Fields marked <span className="text-safety">*</span> are required.
+                Fields marked <span className="text-accent">*</span> are required.
               </p>
 
               {sent ? (
@@ -125,9 +125,9 @@ export default function Contact() {
                   aria-live="polite"
                   className="flex items-start gap-3 border border-ink bg-bone p-6"
                 >
-                  <CheckCircle2 className="w-5 h-5 text-safety mt-0.5 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-accent mt-0.5 shrink-0" />
                   <div>
-                    <div className="font-display text-lg mb-1">Message sent</div>
+                    <div className="text-lg font-medium tracking-tight mb-1">Message sent</div>
                     <p className="text-sm text-graphite">
                       Thanks for reaching out. We typically reply within 24 hours, Monday–Friday.
                     </p>
@@ -157,7 +157,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <label htmlFor="message" className="eyebrow block mb-2">
-                      Message <span className="text-safety">*</span>
+                      Message <span className="text-accent">*</span>
                     </label>
                     <textarea
                       id="message"
@@ -172,7 +172,7 @@ export default function Contact() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="inline-flex items-center justify-center gap-2 bg-ink text-bone py-4 px-8 eyebrow hover:bg-safety transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                    className="inline-flex items-center justify-center gap-2 bg-ink text-bone py-4 px-8 eyebrow hover:bg-accent transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
                   >
                     <Send className="w-4 h-4" />
                     {submitting ? "Sending…" : "Send Message"}
@@ -188,17 +188,17 @@ export default function Contact() {
             className="col-span-12 lg:col-span-5 space-y-6"
           >
             <div className="bg-ink text-bone p-6 md:p-8">
-              <div className="eyebrow text-safety mb-4">— Studio HQ</div>
+              <div className="eyebrow text-accent mb-4">— Studio HQ</div>
               <div className="space-y-4 text-sm">
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-safety" />
+                  <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-accent" />
                   <div>
                     <div className="font-medium text-bone mb-0.5">By appointment only</div>
                     <div className="text-bone/80">Pop-up showroom locations rotate. Email to book.</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Clock className="w-4 h-4 mt-0.5 shrink-0 text-safety" />
+                  <Clock className="w-4 h-4 mt-0.5 shrink-0 text-accent" />
                   <div>
                     <div className="font-medium text-bone mb-0.5">Support hours</div>
                     <div className="text-bone/80">Mon–Fri · 9am – 6pm EST</div>
@@ -207,14 +207,14 @@ export default function Contact() {
               </div>
             </div>
 
-            <div className="border border-border bg-[hsl(var(--sand))] p-6 md:p-8">
+            <div className="border border-border bg-bone p-6 md:p-8">
               <div className="eyebrow text-graphite mb-3">— Quick Answers</div>
               <p className="text-sm text-graphite leading-relaxed mb-4">
                 Most questions about shipping, returns, and sizing are answered on our FAQ.
               </p>
               <a
                 href="/faq"
-                className="inline-flex items-center gap-2 text-sm font-medium text-ink underline underline-offset-4 hover:text-safety transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-medium text-ink underline underline-offset-4 hover:text-accent transition-colors"
               >
                 Visit the FAQ →
               </a>
@@ -234,7 +234,7 @@ function Field({
   return (
     <div>
       <label htmlFor={id} className="eyebrow block mb-2">
-        {label} {required && <span className="text-safety">*</span>}
+        {label} {required && <span className="text-accent">*</span>}
       </label>
       <input
         id={id}
