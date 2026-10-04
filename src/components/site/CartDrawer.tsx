@@ -3,7 +3,7 @@ import { Minus, Plus, X, ShoppingBag, MessageCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCart, formatMoney } from "@/context/CartContext";
-import { LIME, waLink } from "@/lib/afp-catalog";
+import { waLink } from "@/lib/brand";
 
 export const CartDrawer = () => {
   const { items, isOpen, closeCart, updateQuantity, removeItem, subtotal, count } = useCart();
@@ -45,8 +45,7 @@ export const CartDrawer = () => {
             <Link
               to="/shop/women"
               onClick={closeCart}
-              className="inline-flex items-center justify-center rounded-full px-8 h-12 text-sm font-bold uppercase tracking-wider text-black hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground/20"
-              style={{ background: LIME }}
+              className="inline-flex items-center justify-center px-8 h-12 eyebrow bg-ink text-bone hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
             >
               Shop Women
             </Link>
@@ -122,8 +121,7 @@ export const CartDrawer = () => {
               </p>
               <button
                 onClick={goToCheckout}
-                className="w-full inline-flex items-center justify-center rounded-full px-6 h-12 text-sm font-bold uppercase tracking-wider text-black hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground/20"
-                style={{ background: LIME }}
+                className="w-full inline-flex items-center justify-center px-6 h-12 eyebrow bg-ink text-bone hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
               >
                 Checkout — {formatMoney(subtotal)}
               </button>

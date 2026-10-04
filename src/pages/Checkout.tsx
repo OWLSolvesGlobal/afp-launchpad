@@ -6,8 +6,7 @@ import { Footer } from "@/components/site/Footer";
 import { useCart, formatMoney } from "@/context/CartContext";
 import { newOrderId, useCatalog } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
-import { CheckoutSkeleton } from "@/components/site/skeletons/CheckoutSkeleton";
-import { LIME, waLink } from "@/lib/afp-catalog";
+import { waLink } from "@/lib/brand";
 import { CardPaymentSection } from "@/components/checkout/CardPaymentSection";
 import { BankTransferSection } from "@/components/checkout/BankTransferSection";
 import { calculateOrderTotal, FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/pricing";
@@ -42,7 +41,6 @@ export default function Checkout() {
   const { data: catalog } = useCatalog();
   const [fulfillment, setFulfillment] = useState<Fulfillment>("delivery");
   const [pickupLocation, setPickupLocation] = useState(PICKUP_LOCATIONS[0].id);
-  const [hydrating, setHydrating] = useState(true);
 
   // One reference per checkout visit — quoted in the WhatsApp message and on
   // transfer payments so the owner can copy it into the Orders tab.
@@ -54,8 +52,6 @@ export default function Checkout() {
 
   useEffect(() => {
     document.title = "Checkout — Alo Fitness Pro";
-    const t = window.setTimeout(() => setHydrating(false), 450);
-    return () => window.clearTimeout(t);
   }, []);
 
   const {
@@ -73,6 +69,7 @@ export default function Checkout() {
       (i) =>
         `• ${i.name} — ${i.color ? `${i.color} / ` : ""}${i.size} × ${i.quantity} (${formatMoney(i.priceCents * i.quantity)})`,
     );
+    const pickup = PICKUP_LOCATIONS.find((l) => l.id === pickupLocation);
     return (
       `Hi AFP! I'd like to place this order:\n` +
       `Order ref: ${orderRef}\n\n` +
@@ -81,11 +78,11 @@ export default function Checkout() {
       `${fulfillment === "pickup" ? "Pickup" : "Delivery"}: ${shipping === 0 ? "Free" : formatMoney(shipping)}\n` +
       `VAT (17.5%): ${formatMoney(tax)}\n` +
       `Total: ${formatMoney(total)}\n\n` +
-      (fulfillment === "pickup" ? "Pickup preferred." : "Please arrange delivery.")
+      (fulfillment === "pickup"
+        ? `Pickup preferred — ${pickup?.name ?? "location to confirm"}.`
+        : "Please arrange delivery.")
     );
-  }, [items, subtotal, shipping, tax, total, fulfillment, orderRef]);
-
-  if (hydrating) return <CheckoutSkeleton />;
+  }, [items, subtotal, shipping, tax, total, fulfillment, pickupLocation, orderRef]);
 
   if (count === 0) {
     return (
@@ -97,8 +94,7 @@ export default function Checkout() {
           <p className="text-graphite mb-8">Add something you love before checking out.</p>
           <Link
             to="/shop/women"
-            className="inline-flex items-center justify-center rounded-full px-8 h-12 text-sm font-bold uppercase tracking-wider text-black hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground/20"
-            style={{ background: LIME }}
+            className="inline-flex items-center justify-center px-8 h-12 eyebrow bg-ink text-bone hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
           >
             Continue Shopping
           </Link>
@@ -138,7 +134,7 @@ export default function Checkout() {
                   meta={
                     subtotal >= FREE_SHIPPING_THRESHOLD_CENTS
                       ? "Free over BDS $300"
-                      : "From BDS $15 · 2–4 days"
+                      : "From BDS $15 · Island-wide"
                   }
                 />
                 <FulfillmentCard
@@ -216,8 +212,7 @@ export default function Checkout() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Send this order to AFP on WhatsApp (opens in a new tab)"
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-full px-6 h-12 text-sm font-bold uppercase tracking-wider text-black hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground/20"
-                    style={{ background: LIME }}
+                    className="w-full inline-flex items-center justify-center gap-2 px-6 h-12 eyebrow bg-ink text-bone hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
                   >
                     <MessageCircle aria-hidden="true" className="w-4 h-4" /> Send Order on WhatsApp
                   </a>
