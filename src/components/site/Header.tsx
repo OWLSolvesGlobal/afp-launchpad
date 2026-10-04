@@ -1,6 +1,6 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Menu, ShoppingBag, Search, X } from "lucide-react";
+import { Menu, ShoppingBag, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import afpLogo from "@/assets/afp-logo.png";
 import { useCart } from "@/context/CartContext";
@@ -75,7 +75,7 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
               to={n.to}
               className={({ isActive }) =>
                 cn(
-                  "text-[11px] uppercase tracking-[0.32em] font-medium link-safety transition-opacity whitespace-nowrap",
+                  "text-[11px] uppercase tracking-[0.32em] font-medium link-accent transition-opacity whitespace-nowrap",
                   isActive ? "opacity-100" : "opacity-80 hover:opacity-100"
                 )
               }
@@ -86,9 +86,6 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
         </nav>
 
         <div className="flex items-center gap-1 md:gap-2">
-          <button aria-label="Search" className="p-2 hover:opacity-60 transition-opacity">
-            <Search className="w-5 h-5" />
-          </button>
           <button
             aria-label={`Cart (${count} ${count === 1 ? "item" : "items"})`}
             onClick={openCart}
@@ -96,7 +93,7 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
           >
             <ShoppingBag className="w-5 h-5" />
             {count > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-foreground text-background text-[10px] font-stencil min-w-4 h-4 px-1 grid place-items-center rounded-full">
+              <span className="absolute -top-0.5 -right-0.5 bg-foreground text-background text-[10px] font-medium min-w-4 h-4 px-1 grid place-items-center rounded-full">
                 {count}
               </span>
             )}

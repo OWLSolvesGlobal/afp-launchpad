@@ -19,7 +19,7 @@ export function LogoLoader({ label = "Loading", className, size = "md" }: LogoLo
       <div className="relative">
         <div
           className={cn(
-            "absolute inset-0 rounded-full bg-safety/30 blur-xl animate-pulse",
+            "absolute inset-0 rounded-full bg-accent/30 blur-xl animate-pulse",
             sizeMap[size],
           )}
           aria-hidden
@@ -37,9 +37,9 @@ export function LogoLoader({ label = "Loading", className, size = "md" }: LogoLo
       <div className="flex items-center gap-2">
         <span className="eyebrow text-graphite tracking-[0.25em]">{label}</span>
         <span className="flex gap-1">
-          <span className="h-1 w-1 rounded-full bg-safety animate-[dot-bounce_1s_ease-in-out_infinite]" />
-          <span className="h-1 w-1 rounded-full bg-safety animate-[dot-bounce_1s_ease-in-out_0.15s_infinite]" />
-          <span className="h-1 w-1 rounded-full bg-safety animate-[dot-bounce_1s_ease-in-out_0.3s_infinite]" />
+          <span className="h-1 w-1 rounded-full bg-accent animate-[dot-bounce_1s_ease-in-out_infinite]" />
+          <span className="h-1 w-1 rounded-full bg-accent animate-[dot-bounce_1s_ease-in-out_0.15s_infinite]" />
+          <span className="h-1 w-1 rounded-full bg-accent animate-[dot-bounce_1s_ease-in-out_0.3s_infinite]" />
         </span>
       </div>
     </div>

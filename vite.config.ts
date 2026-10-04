@@ -26,12 +26,11 @@ export default defineConfig(() => ({
     ],
   },
   build: {
-    // Split heavy vendor code so shoppers don't download 3D libs to view a product.
+    // Split heavy vendor code out of the entry chunk.
     rollupOptions: {
       output: {
         manualChunks: {
           "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-three": ["three", "@react-three/fiber", "@react-three/drei"],
           "vendor-charts": ["recharts"],
         },
       },

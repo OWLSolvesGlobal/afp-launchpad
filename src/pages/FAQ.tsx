@@ -1,84 +1,81 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Minus, Truck, RotateCcw, Ruler, ShieldCheck, Mail } from "lucide-react";
+import { Plus, Minus, Truck, RotateCcw, Ruler, ShieldCheck, MessageCircle } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { PHONE_DISPLAY, waLink } from "@/lib/brand";
 
 const sections = [
   {
+    id: "shipping",
     icon: Truck,
-    title: "Shipping",
+    title: "Ordering & Delivery",
     items: [
       {
-        q: "How long does shipping take?",
-        a: "Standard US orders ship in 1–2 business days and arrive in 3–5 business days. Express options are available at checkout. International orders typically take 7–14 business days depending on customs.",
+        q: "How do I place an order?",
+        a: "Add your pieces to the bag and head to checkout — it builds a WhatsApp message with your items, totals, and an order reference. Press send and we confirm everything in chat, including payment and delivery details.",
       },
       {
-        q: "Do you offer free shipping?",
-        a: "Yes — free standard US shipping on all orders over $150.",
+        q: "How much is delivery?",
+        a: "Island-wide delivery across Barbados is BDS $15, and free on orders over BDS $300. We arrange the delivery day with you on WhatsApp after you order.",
       },
       {
-        q: "Can I pick up locally?",
-        a: "We offer free pickup at two locations: Downtown and Westside. Choose 'Store Pickup' at checkout to see address and ready-time details.",
+        q: "Can I pick up instead?",
+        a: "Yes — pickup is free. Choose Store Pickup at checkout: AFP HQ in St Michael (by appointment) or a Bridgetown meet-up, both confirmed via WhatsApp.",
       },
       {
-        q: "Do you ship internationally?",
-        a: "We ship worldwide. Duties and taxes are calculated at checkout for most regions.",
+        q: "Do you ship outside Barbados?",
+        a: `Right now we deliver within Barbados. If you're overseas, message us on WhatsApp (${PHONE_DISPLAY}) and we'll see what we can arrange.`,
       },
     ],
   },
   {
+    id: "returns",
     icon: RotateCcw,
     title: "Returns & Exchanges",
     items: [
       {
-        q: "What's your return policy?",
-        a: "30 days, no questions asked. Items must be unworn, with tags attached. Initiate a return from your order email or contact us.",
+        q: "Something doesn't fit — what now?",
+        a: "Message us on WhatsApp and we'll arrange a size exchange. Pieces need to be unworn and unwashed with tags attached.",
       },
       {
-        q: "Are exchanges free?",
-        a: "Size exchanges within 30 days are free in the US. We'll send the new size as soon as the original ships back.",
-      },
-      {
-        q: "What about sale items?",
-        a: "Sale items are eligible for store credit only. Final-sale items are clearly marked at checkout.",
+        q: "How do exchanges work?",
+        a: "We confirm the new size is in stock, then arrange the swap at delivery or pickup — all coordinated in the same WhatsApp chat as your order.",
       },
     ],
   },
   {
+    id: "sizing",
     icon: Ruler,
     title: "Sizing & Fit",
     items: [
       {
         q: "How do AFP pieces fit?",
-        a: "Most styles are true to size. Compression pieces (Apex, Sculpt, Pulse) fit snug — size up for a relaxed feel. Oversized styles are intentionally roomy; size down if you prefer a closer fit.",
+        a: "Most styles are true to size with a sculpting, compressive feel — if you're between sizes or prefer a relaxed fit, size up. Each product page shows exactly which sizes are available for that piece.",
       },
       {
-        q: "Where can I find a size guide?",
-        a: "Each product page has a 'Size guide' link next to the size selector with measurements in inches and cm.",
+        q: "What sizes do you carry?",
+        a: "Most pieces run S–XL, with selected styles in XS–XL. The size buttons on each product page show live availability — if a size is crossed out, it's out of stock.",
       },
       {
-        q: "What if it doesn't fit?",
-        a: "Free size exchanges within 30 days (US). Reach out and we'll make it right.",
+        q: "Not sure which size to order?",
+        a: "Message us on WhatsApp with your usual size and the piece you're eyeing — we know how every style fits and we'll steer you right.",
       },
     ],
   },
   {
+    id: "care",
     icon: ShieldCheck,
     title: "Product & Care",
     items: [
       {
-        q: "What are AFP pieces made from?",
-        a: "Most styles use 82% recycled polyester and 18% elastane for four-way stretch and moisture-wicking performance. Heavyweight pieces use a brushed cotton-poly blend.",
+        q: "How should I wash my AFP pieces?",
+        a: "We recommend a cold machine wash and low tumble dry or hang dry. Skip bleach and fabric softener, and wash seamless and compression pieces inside out to keep their colour and stretch.",
       },
       {
-        q: "How should I wash my gear?",
-        a: "Machine wash cold, tumble dry low. No bleach, no fabric softener. Wash compression pieces inside out to preserve color.",
-      },
-      {
-        q: "Are your products tested?",
-        a: "Every style is athlete-tested through real workouts before it makes the line. If it doesn't survive a brutal session, it doesn't ship.",
+        q: "How do I keep seamless sets looking new?",
+        a: "Wash them with similar fabrics (no zips or velcro that can snag), and avoid high heat — it breaks down elastane over time.",
       },
     ],
   },
@@ -92,9 +89,9 @@ function Item({ q, a, defaultOpen = false }: { q: string; a: string; defaultOpen
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="w-full flex items-start justify-between gap-6 py-5 text-left hover:text-safety transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="w-full flex items-start justify-between gap-6 py-5 text-left hover:text-accent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
-        <span className="font-display text-base md:text-lg leading-snug">{q}</span>
+        <span className="text-base md:text-lg font-medium leading-snug">{q}</span>
         <span className="shrink-0 mt-1 text-ink">
           {open ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
         </span>
@@ -107,12 +104,25 @@ function Item({ q, a, defaultOpen = false }: { q: string; a: string; defaultOpen
 }
 
 export default function FAQ() {
+  const { hash } = useLocation();
+
   useEffect(() => {
-    document.title = "FAQ — AFP | Alo Fitness Pro";
+    document.title = "FAQ — Alo Fitness Pro";
     const meta = document.querySelector('meta[name="description"]');
-    const content = "Frequently asked questions about Alo Fitness Pro — shipping, returns, sizing, and care.";
+    const content =
+      "Frequently asked questions about Alo Fitness Pro — ordering on WhatsApp, delivery across Barbados, sizing, and care.";
     if (meta) meta.setAttribute("content", content);
   }, []);
+
+  // Support deep links like /faq#returns (used by the footer).
+  useEffect(() => {
+    if (!hash) return;
+    const el = document.getElementById(hash.slice(1));
+    if (el) {
+      // Let the page lay out first, then scroll.
+      requestAnimationFrame(() => el.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }, [hash]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -121,13 +131,14 @@ export default function FAQ() {
       <main id="main" className="pt-24 md:pt-28">
         <section className="container py-12 md:py-20">
           <div className="eyebrow text-graphite mb-4">— Help Center</div>
-          <h1 className="font-display text-5xl md:text-7xl leading-[0.95] tracking-tight max-w-3xl">
+          <h1 className="display-lg max-w-3xl">
             Answers,<br />
-            <span className="italic font-light">on the record.</span>
+            <span className="font-serif italic font-light">on the record.</span>
           </h1>
           <p className="mt-6 max-w-xl text-base md:text-lg text-graphite leading-relaxed">
-            Everything you need to know about ordering, sizing, and caring for your AFP gear.
-            Still stuck? <Link to="/contact" className="text-ink underline underline-offset-4 hover:text-safety">Talk to a human</Link>.
+            Everything you need to know about ordering, delivery across Barbados,
+            sizing, and caring for your AFP pieces.
+            Still stuck? <Link to="/contact" className="text-ink underline underline-offset-4 hover:text-accent">Talk to a human</Link>.
           </p>
         </section>
 
@@ -135,16 +146,17 @@ export default function FAQ() {
           {sections.map((s, si) => (
             <motion.div
               key={s.title}
+              id={s.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
               transition={{ duration: 0.6, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
-              className="grid grid-cols-12 gap-6 md:gap-10"
+              className="grid grid-cols-12 gap-6 md:gap-10 scroll-mt-28"
             >
               <div className="col-span-12 md:col-span-4">
                 <div className="md:sticky md:top-28 flex md:block items-center gap-4">
                   <s.icon className="w-6 h-6 md:w-8 md:h-8 text-ink mb-0 md:mb-4" />
-                  <h2 className="font-display text-2xl md:text-4xl">{s.title}</h2>
+                  <h2 className="display-md">{s.title}</h2>
                 </div>
               </div>
               <div className="col-span-12 md:col-span-8">
@@ -159,19 +171,22 @@ export default function FAQ() {
         {/* CTA */}
         <section className="bg-ink text-bone py-16 md:py-24">
           <div className="container text-center max-w-2xl mx-auto">
-            <Mail className="w-8 h-8 mx-auto text-safety mb-4" />
-            <h2 className="font-display text-3xl md:text-5xl leading-[1.05] mb-4">
+            <MessageCircle className="w-8 h-8 mx-auto text-accent mb-4" />
+            <h2 className="display-md mb-4">
               Still have questions?
             </h2>
             <p className="text-bone/85 mb-8">
-              Reach out — a real person will get back to you within 24 hours.
+              Message us on WhatsApp — {PHONE_DISPLAY} — and a real person will
+              get back to you.
             </p>
-            <Link
-              to="/contact"
-              className="inline-flex items-center gap-2 bg-bone text-ink px-8 py-4 eyebrow hover:bg-safety hover:text-bone transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bone"
+            <a
+              href={waLink("Hi AFP! I have a question.")}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 bg-bone text-ink px-8 py-4 eyebrow hover:bg-accent hover:text-bone transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bone"
             >
-              Contact Us →
-            </Link>
+              <MessageCircle className="w-3.5 h-3.5" /> Chat with us
+            </a>
           </div>
         </section>
       </main>

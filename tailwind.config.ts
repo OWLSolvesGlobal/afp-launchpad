@@ -12,9 +12,6 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Oswald", "Impact", "system-ui", "sans-serif"],
-        stencil: ['"Stardos Stencil"', "Oswald", "system-ui", "sans-serif"],
-        heading: ["Oswald", "system-ui", "sans-serif"],
         body: ["Inter", "system-ui", "sans-serif"],
         serif: ["Fraunces", "Times New Roman", "Georgia", "serif"],
       },
@@ -28,19 +25,8 @@ export default {
           DEFAULT: "hsl(var(--ink))",
           soft: "hsl(var(--ink-soft))",
         },
-        steel: "hsl(var(--steel))",
         graphite: "hsl(var(--graphite))",
         bone: "hsl(var(--bone))",
-        chalk: "hsl(var(--chalk))",
-        safety: {
-          DEFAULT: "hsl(var(--safety))",
-          deep: "hsl(var(--safety-deep))",
-        },
-        lime: "hsl(var(--lime))",
-        blush: "hsl(var(--blush))",
-        lilac: "hsl(var(--lilac))",
-        sky: "hsl(var(--sky))",
-        sand: "hsl(var(--sand))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -84,11 +70,6 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius))",
         sm: "calc(var(--radius))",
-      },
-      boxShadow: {
-        card: "var(--shadow-card)",
-        "card-hover": "var(--shadow-card-hover)",
-        safety: "var(--shadow-safety)",
       },
       transitionTimingFunction: {
         "out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",

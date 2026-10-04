@@ -47,7 +47,7 @@ export function RouteProgress() {
         className="fixed top-0 inset-x-0 z-[60] h-[2px] pointer-events-none"
       >
         <div
-          className="h-full bg-gradient-to-r from-safety via-ink to-safety transition-[width,opacity] duration-300 ease-out shadow-[0_0_12px_hsl(var(--safety)/0.6)]"
+          className="h-full bg-gradient-to-r from-accent via-ink to-accent transition-[width,opacity] duration-300 ease-out shadow-[0_0_12px_hsl(var(--accent)/0.6)]"
           style={{
             width: `${progress}%`,
             opacity: active ? 1 : 0,
@@ -62,7 +62,7 @@ export function RouteProgress() {
           active ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="absolute inset-x-0 top-0 h-px bg-safety/30" />
+        <div className="absolute inset-x-0 top-0 h-px bg-accent/30" />
         <div className="absolute inset-0 bg-background/0" />
       </div>
     </>
