@@ -5,7 +5,7 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { ProductCard } from "@/components/site/ProductCard";
 import blueFront from "@/assets/product-blue-aura-set-front.webp";
-import lockers from "@/assets/accent-gym-lockers-lifestyle.webp";
+import lifestyle from "@/assets/ashlee-golf.webp";
 import mensTile from "@/assets/afp-mens-black.webp";
 import { INSTAGRAM_HANDLE, INSTAGRAM_URL, TAGLINE, waLink } from "@/lib/brand";
 import {
@@ -241,8 +241,8 @@ const Index = () => {
         {/* LIFESTYLE BAND */}
         <section className="relative h-[420px] md:h-[520px] overflow-hidden">
           <img
-            src={lockers}
-            alt="AFP lifestyle"
+            src={lifestyle}
+            alt="AFP tennis dress on the golf course"
             loading="lazy"
             className="absolute inset-0 w-full h-full object-cover"
           />
