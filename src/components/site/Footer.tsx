@@ -1,23 +1,23 @@
 import { Link } from "react-router-dom";
-import { Instagram } from "lucide-react";
+import { Instagram, MessageCircle } from "lucide-react";
 import afpLogo from "@/assets/afp-logo.png";
+import { INSTAGRAM_HANDLE, INSTAGRAM_URL, PHONE_DISPLAY, TAGLINE, waLink } from "@/lib/brand";
 
 const cols = [
   {
     title: "Shop",
     links: [
-      { label: "Men", to: "/shop/men" },
       { label: "Women", to: "/shop/women" },
-      { label: "New Drops", to: "/shop/men?sort=new" },
-      { label: "Bestsellers", to: "/shop/women?sort=best" },
+      { label: "Men", to: "/shop/men" },
+      { label: "New Drops", to: "/shop/women?sort=new" },
     ],
   },
   {
     title: "Help",
     links: [
-      { label: "Shipping", to: "/faq" },
-      { label: "Returns", to: "/faq" },
-      { label: "Size Guide", to: "/faq" },
+      { label: "Delivery", to: "/faq#shipping" },
+      { label: "Exchanges", to: "/faq#returns" },
+      { label: "Sizing", to: "/faq#sizing" },
       { label: "Contact", to: "/contact" },
     ],
   },
@@ -25,7 +25,6 @@ const cols = [
     title: "Company",
     links: [
       { label: "About", to: "/about" },
-      { label: "Instagram", to: "https://instagram.com/alofitnesspro" },
       { label: "FAQ", to: "/faq" },
     ],
   },
@@ -41,7 +40,7 @@ export const Footer = () => {
             <div key={i} className="flex items-center gap-8 pr-8">
               {Array.from({ length: 6 }).map((_, j) => (
                 <span key={j} className="flex items-center gap-8">
-                  Built for the life you live
+                  {TAGLINE}
                   <span className="text-bone/40 not-italic">✦</span>
                 </span>
               ))}
@@ -56,17 +55,27 @@ export const Footer = () => {
             <img src={afpLogo} alt="Alo Fitness Pro" className="h-12 w-auto invert" />
           </Link>
           <p className="mt-4 max-w-xs text-sm text-bone/70 leading-relaxed">
-            Performance apparel for women and men. Designed for the gym,
-            the green, and everywhere in between. Shipped worldwide.
+            Activewear designed in Barbados for women and men — the studio,
+            the green, and everywhere in between.
           </p>
-          <a
-            href="https://instagram.com/alofitnesspro"
-            target="_blank"
-            rel="noreferrer"
-            className="mt-6 inline-flex items-center gap-2 eyebrow hover:text-bone transition-colors text-bone/70"
-          >
-            <Instagram className="w-4 h-4" /> @alofitnesspro
-          </a>
+          <div className="mt-6 flex flex-col gap-3">
+            <a
+              href={waLink("Hi AFP!")}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 eyebrow hover:text-bone transition-colors text-bone/70"
+            >
+              <MessageCircle className="w-4 h-4" /> {PHONE_DISPLAY}
+            </a>
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 eyebrow hover:text-bone transition-colors text-bone/70"
+            >
+              <Instagram className="w-4 h-4" /> {INSTAGRAM_HANDLE}
+            </a>
+          </div>
         </div>
 
         {cols.map((c) => (
@@ -88,7 +97,7 @@ export const Footer = () => {
       <div className="border-t border-ink-soft">
         <div className="container py-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-bone/75">
           <span>© {new Date().getFullYear()} Alo Fitness Pro. All rights reserved.</span>
-          <span className="eyebrow">Ships across Barbados &amp; worldwide · Prices in BBD</span>
+          <span className="eyebrow">Island-wide delivery across Barbados · Prices in BBD</span>
         </div>
       </div>
     </footer>

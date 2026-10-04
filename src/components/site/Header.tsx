@@ -1,6 +1,6 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Menu, ShoppingBag, Search, X } from "lucide-react";
+import { Menu, ShoppingBag, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import afpLogo from "@/assets/afp-logo.png";
 import { useCart } from "@/context/CartContext";
@@ -86,9 +86,6 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
         </nav>
 
         <div className="flex items-center gap-1 md:gap-2">
-          <button aria-label="Search" className="p-2 hover:opacity-60 transition-opacity">
-            <Search className="w-5 h-5" />
-          </button>
           <button
             aria-label={`Cart (${count} ${count === 1 ? "item" : "items"})`}
             onClick={openCart}

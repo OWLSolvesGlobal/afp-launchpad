@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams, Navigate } from "react-router-dom";
+import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronRight, Minus, Plus, Truck, RotateCcw, ShieldCheck } from "lucide-react";
+import { ChevronRight, Minus, Plus, Truck, RotateCcw, MapPin } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { ProductCard } from "@/components/site/ProductCard";
@@ -23,6 +23,7 @@ export default function ProductDetail() {
   const { data: product, isLoading } = useProduct(slug);
   const { data: all } = useProducts();
   const { addItem } = useCart();
+  const navigate = useNavigate();
 
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
@@ -30,7 +31,7 @@ export default function ProductDetail() {
 
   useEffect(() => {
     if (!product) return;
-    document.title = `${product.name} — AFP Performance Apparel`;
+    document.title = `${product.name} — Alo Fitness Pro`;
     // One-size items don't need a size decision; pre-select it. Same for a
     // single colour — only multi-colour items ask the shopper to choose.
     setSelectedSize(product.sizes.length === 1 ? product.sizes[0] : "");
@@ -60,20 +61,27 @@ export default function ProductDetail() {
   const sizeSoldOut = !!selectedSize && variantQty <= 0;
   const shopGender = product.gender === "men" ? "men" : "women";
 
-  const handleAdd = () => {
-    if (soldOut) return;
+  const handleAdd = (): boolean => {
+    if (soldOut) return false;
     if (!selectedSize) {
       toast.error("Please select a size");
-      return;
+      return false;
     }
     if (variantQty < qty) {
       toast.error(sizeSoldOut ? "Sold out in this size" : `Only ${variantQty} left`);
-      return;
+      return false;
     }
     addItem(product, { size: selectedSize, color: selectedColor, quantity: qty });
     toast.success(`${product.name} added to bag`, {
       description: `${selectedColor ? `${selectedColor} · ` : ""}Size ${selectedSize} · Qty ${qty}`,
     });
+    return true;
+  };
+
+  // Buy Now only proceeds to checkout when the add actually succeeded —
+  // a missing size or sold-out variant must not navigate.
+  const handleBuyNow = () => {
+    if (handleAdd()) navigate("/checkout");
   };
 
   return (
@@ -267,45 +275,29 @@ export default function ProductDetail() {
                 : `Add to Bag — ${formatPrice(product.priceCents * qty)}`}
             </button>
             {!soldOut && (
-              <Link
-                to="/checkout"
-                onClick={handleAdd}
-                className="block w-full text-center border border-ink text-ink py-4 eyebrow hover:bg-ink hover:text-bone transition-colors"
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                disabled={sizeSoldOut}
+                className="block w-full text-center border border-ink text-ink py-4 eyebrow hover:bg-ink hover:text-bone transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Buy Now
-              </Link>
+              </button>
             )}
 
-            {/* Perks */}
+            {/* Perks — only claims we actually honour */}
             <div className="mt-8 pt-8 border-t border-border grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-graphite">
               <div className="flex items-start gap-2">
                 <Truck className="w-4 h-4 mt-0.5 shrink-0 text-ink" />
-                <div><div className="text-ink font-medium mb-0.5">Free shipping</div>On orders over BDS $300</div>
+                <div><div className="text-ink font-medium mb-0.5">Free delivery</div>On orders over BDS $300</div>
               </div>
               <div className="flex items-start gap-2">
                 <RotateCcw className="w-4 h-4 mt-0.5 shrink-0 text-ink" />
-                <div><div className="text-ink font-medium mb-0.5">30-day returns</div>No questions asked</div>
+                <div><div className="text-ink font-medium mb-0.5">Easy exchanges</div>Arranged via WhatsApp</div>
               </div>
               <div className="flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0 text-ink" />
-                <div><div className="text-ink font-medium mb-0.5">Lifetime quality</div>Built to last</div>
-              </div>
-            </div>
-
-            {/* Details accordion-lite */}
-            <div className="mt-10 space-y-6">
-              <div>
-                <h2 className="eyebrow mb-2">Fabric & Care</h2>
-                <p className="text-sm text-graphite leading-relaxed">
-                  82% recycled polyester, 18% elastane. Machine wash cold, tumble dry low.
-                  Do not bleach. Designed and tested by athletes.
-                </p>
-              </div>
-              <div>
-                <h2 className="eyebrow mb-2">Fit</h2>
-                <p className="text-sm text-graphite leading-relaxed">
-                  True to size. For a relaxed fit, size up.
-                </p>
+                <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-ink" />
+                <div><div className="text-ink font-medium mb-0.5">Island-wide delivery</div>Across Barbados</div>
               </div>
             </div>
           </motion.div>

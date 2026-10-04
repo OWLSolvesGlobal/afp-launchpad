@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { ProductCard } from "@/components/site/ProductCard";
@@ -20,14 +20,20 @@ export default function Shop() {
     [all, isWomen],
   );
 
+  const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
 
   useEffect(() => {
-    setFilters(defaultFilters);
+    // Honour links like /shop/women?sort=new while still resetting the rest
+    // of the filters when the gender page changes.
+    const sortParam = searchParams.get("sort");
+    const sorts: FilterState["sort"][] = ["featured", "new", "price-asc", "price-desc"];
+    const sort = sorts.find((s) => s === sortParam) ?? defaultFilters.sort;
+    setFilters({ ...defaultFilters, sort });
     document.title = isWomen
-      ? "Shop Women — AFP Performance Apparel"
-      : "Shop Men — AFP Performance Apparel";
-  }, [isWomen]);
+      ? "Shop Women — Alo Fitness Pro"
+      : "Shop Men — Alo Fitness Pro";
+  }, [isWomen, searchParams]);
 
   const facets = useMemo(() => {
     const cats = new Set<string>();
@@ -64,7 +70,9 @@ export default function Shop() {
         out = [...out].sort((a, b) => b.priceCents - a.priceCents);
         break;
       case "new":
-        out = [...out].sort((a, b) => (a.badge === "NEW" ? -1 : 1));
+        out = [...out].sort(
+          (a, b) => Number(b.badge === "NEW") - Number(a.badge === "NEW"),
+        );
         break;
     }
     return out;
@@ -88,7 +96,7 @@ export default function Shop() {
           <p className="mt-3 text-sm md:text-base text-graphite max-w-xl">
             {isWomen
               ? "Sculpted, supportive, second-skin. Engineered for every rep."
-              : "Tested under load. Built for the heaviest sets and longest miles."}
+              : "Performance basics for the men who train heavy and dress sharp."}
           </p>
         </div>
       </section>

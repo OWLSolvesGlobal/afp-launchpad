@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Instagram, MessageCircle, MapPin, Clock, Send, CheckCircle2 } from "lucide-react";
+import { Instagram, MessageCircle, MapPin, Clock } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
-import { toast } from "sonner";
+import { INSTAGRAM_HANDLE, INSTAGRAM_URL, PHONE_DISPLAY, waLink } from "@/lib/brand";
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -13,26 +14,13 @@ const fadeUp = {
 };
 
 export default function Contact() {
-  const [sent, setSent] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
   useEffect(() => {
-    document.title = "Contact — AFP | Alo Fitness Pro";
+    document.title = "Contact — Alo Fitness Pro";
     const meta = document.querySelector('meta[name="description"]');
-    const content = "Get in touch with Alo Fitness Pro — questions about orders, sizing, partnerships, or just to say hello.";
+    const content =
+      "Get in touch with Alo Fitness Pro on WhatsApp or Instagram — questions about orders, sizing, pickup, or just to say hello.";
     if (meta) meta.setAttribute("content", content);
   }, []);
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setSubmitting(true);
-    // Simulated submit — wire to backend when Cloud is enabled
-    setTimeout(() => {
-      setSubmitting(false);
-      setSent(true);
-      toast.success("Message received — we'll be in touch within 24 hours.");
-    }, 700);
-  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -48,49 +36,42 @@ export default function Contact() {
             className="display-lg max-w-4xl"
           >
             Let's talk.<br />
-            <span className="italic font-light">We're listening.</span>
+            <span className="font-serif italic font-light">We're listening.</span>
           </motion.h1>
           <motion.p
             {...fadeUp}
             transition={{ ...fadeUp.transition, delay: 0.1 }}
             className="mt-6 max-w-xl text-base md:text-lg text-graphite leading-relaxed"
           >
-            Order question, sizing help, partnership pitch, or just want to share your AFP fit?
-            Drop us a line — a real human reads every message.
+            Order question, sizing help, or just want to share your AFP fit?
+            Message us — a real human reads every message.
           </motion.p>
         </section>
 
-        {/* Quick contact tiles */}
+        {/* Contact channels */}
         <section className="container pb-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {[
               {
-                icon: Mail,
-                eyebrow: "Email",
-                title: "hello@alofitnesspro.com",
-                body: "Average reply: under 24 hours.",
-                href: "mailto:hello@alofitnesspro.com",
+                icon: MessageCircle,
+                eyebrow: "WhatsApp — fastest",
+                title: PHONE_DISPLAY,
+                body: "Orders, sizing, pickup, everything. This is where we live.",
+                href: waLink("Hi AFP! I have a question."),
               },
               {
                 icon: Instagram,
-                eyebrow: "DM",
-                title: "@alofitnesspro",
-                body: "Fastest for fit pics & shoutouts.",
-                href: "https://instagram.com/alofitnesspro",
-              },
-              {
-                icon: MessageCircle,
-                eyebrow: "Press / Wholesale",
-                title: "press@alofitnesspro.com",
-                body: "Editorial, collabs, retail partners.",
-                href: "mailto:press@alofitnesspro.com",
+                eyebrow: "Instagram",
+                title: INSTAGRAM_HANDLE,
+                body: "DMs, fit pics & shoutouts.",
+                href: INSTAGRAM_URL,
               },
             ].map((c, i) => (
               <motion.a
                 key={c.title}
                 href={c.href}
-                target={c.href.startsWith("http") ? "_blank" : undefined}
-                rel={c.href.startsWith("http") ? "noreferrer" : undefined}
+                target="_blank"
+                rel="noreferrer"
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
@@ -110,75 +91,28 @@ export default function Contact() {
           </div>
         </section>
 
-        {/* Form + sidebar */}
+        {/* WhatsApp CTA + sidebar */}
         <section className="container pb-20 md:pb-32 grid grid-cols-12 gap-6 md:gap-12">
           <motion.div {...fadeUp} className="col-span-12 lg:col-span-7">
             <div className="border border-border bg-card p-6 md:p-10">
-              <h2 className="display-md mb-2">Send us a message</h2>
-              <p className="text-sm text-graphite mb-8">
-                Fields marked <span className="text-accent">*</span> are required.
+              <h2 className="display-md mb-4">Message us on WhatsApp</h2>
+              <p className="text-graphite leading-relaxed mb-8 max-w-md">
+                It's how every AFP order happens — and the fastest way to get an
+                answer about sizing, stock, delivery, or pickup. Tap below and
+                the chat opens ready to go.
               </p>
-
-              {sent ? (
-                <div
-                  role="status"
-                  aria-live="polite"
-                  className="flex items-start gap-3 border border-ink bg-bone p-6"
-                >
-                  <CheckCircle2 className="w-5 h-5 text-accent mt-0.5 shrink-0" />
-                  <div>
-                    <div className="text-lg font-medium tracking-tight mb-1">Message sent</div>
-                    <p className="text-sm text-graphite">
-                      Thanks for reaching out. We typically reply within 24 hours, Monday–Friday.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <Field label="Name" id="name" required />
-                    <Field label="Email" id="email" type="email" required />
-                  </div>
-                  <Field label="Subject" id="subject" required />
-                  <div>
-                    <label htmlFor="topic" className="eyebrow block mb-2">Topic</label>
-                    <select
-                      id="topic"
-                      name="topic"
-                      defaultValue="order"
-                      className="w-full bg-background border border-border h-11 px-3 text-sm focus:outline-none focus:border-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-                    >
-                      <option value="order">Order / Shipping</option>
-                      <option value="sizing">Sizing & Fit</option>
-                      <option value="returns">Returns & Exchanges</option>
-                      <option value="partnership">Partnership / Press</option>
-                      <option value="other">Something else</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="message" className="eyebrow block mb-2">
-                      Message <span className="text-accent">*</span>
-                    </label>
-                    <textarea
-                      id="message"
-                      name="message"
-                      required
-                      rows={6}
-                      className="w-full bg-background border border-border p-3 text-sm leading-relaxed focus:outline-none focus:border-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink resize-none"
-                      placeholder="Tell us a bit about what you need…"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="inline-flex items-center justify-center gap-2 bg-ink text-bone py-4 px-8 eyebrow hover:bg-accent transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-                  >
-                    <Send className="w-4 h-4" />
-                    {submitting ? "Sending…" : "Send Message"}
-                  </button>
-                </form>
-              )}
+              <a
+                href={waLink("Hi AFP! I have a question.")}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Chat with AFP on WhatsApp (opens in a new tab)"
+                className="inline-flex items-center justify-center gap-2 bg-ink text-bone py-4 px-8 eyebrow hover:bg-accent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+              >
+                <MessageCircle className="w-4 h-4" /> Start a chat
+              </a>
+              <p className="mt-6 text-sm text-graphite">
+                Prefer to dial or save the number? {PHONE_DISPLAY}
+              </p>
             </div>
           </motion.div>
 
@@ -193,15 +127,17 @@ export default function Contact() {
                 <div className="flex items-start gap-3">
                   <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-accent" />
                   <div>
-                    <div className="font-medium text-bone mb-0.5">By appointment only</div>
-                    <div className="text-bone/80">Pop-up showroom locations rotate. Email to book.</div>
+                    <div className="font-medium text-bone mb-0.5">St Michael, Barbados</div>
+                    <div className="text-bone/80">
+                      Pickups by appointment — arranged on WhatsApp.
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <Clock className="w-4 h-4 mt-0.5 shrink-0 text-accent" />
                   <div>
-                    <div className="font-medium text-bone mb-0.5">Support hours</div>
-                    <div className="text-bone/80">Mon–Fri · 9am – 6pm EST</div>
+                    <div className="font-medium text-bone mb-0.5">Hours</div>
+                    <div className="text-bone/80">Mon–Sat · 8am – 6pm</div>
                   </div>
                 </div>
               </div>
@@ -210,40 +146,21 @@ export default function Contact() {
             <div className="border border-border bg-bone p-6 md:p-8">
               <div className="eyebrow text-graphite mb-3">— Quick Answers</div>
               <p className="text-sm text-graphite leading-relaxed mb-4">
-                Most questions about shipping, returns, and sizing are answered on our FAQ.
+                Most questions about delivery, exchanges, and sizing are
+                answered on our FAQ.
               </p>
-              <a
-                href="/faq"
+              <Link
+                to="/faq"
                 className="inline-flex items-center gap-2 text-sm font-medium text-ink underline underline-offset-4 hover:text-accent transition-colors"
               >
                 Visit the FAQ →
-              </a>
+              </Link>
             </div>
           </motion.aside>
         </section>
       </main>
 
       <Footer />
-    </div>
-  );
-}
-
-function Field({
-  label, id, type = "text", required = false,
-}: { label: string; id: string; type?: string; required?: boolean }) {
-  return (
-    <div>
-      <label htmlFor={id} className="eyebrow block mb-2">
-        {label} {required && <span className="text-accent">*</span>}
-      </label>
-      <input
-        id={id}
-        name={id}
-        type={type}
-        required={required}
-        autoComplete={id === "email" ? "email" : id === "name" ? "name" : "off"}
-        className="w-full bg-background border border-border h-11 px-3 text-sm focus:outline-none focus:border-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-      />
     </div>
   );
 }
