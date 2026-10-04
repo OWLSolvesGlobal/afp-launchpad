@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T00:00:00.000Z",
+  "generatedAt": "2026-10-04T00:00:00.000Z",
   "products": [
     {
       "sku": "W-ROM-001",
@@ -30,13 +30,15 @@
     },
     {
       "sku": "W-ROM-002",
-      "slug": "luxe-lift-romper-lime",
-      "name": "Luxe Lift Romper — Lime",
+      "slug": "luxe-lift-romper-green",
+      "name": "Luxe Lift Romper — Green",
       "description": "Flexible rompers made for comfort and movement.",
       "gender": "women",
       "category": "Bodysuits & Rompers",
       "colors": [
-        "Lime"
+        "Green",
+        "Black",
+        "Pink"
       ],
       "priceCents": 10000,
       "compareAtCents": null,
@@ -84,16 +86,16 @@
     },
     {
       "sku": "W-SET-001",
-      "slug": "vestra-set",
-      "name": "Vestra Set",
+      "slug": "vestra-two-piece-set",
+      "name": "Vestra Two-Piece Set",
       "description": "",
       "gender": "women",
       "category": "Two-Piece Sets",
       "colors": [
         "Peach",
         "Royal Blue",
-        "Aqua Blue",
-        "Purple"
+        "Purple",
+        "Black"
       ],
       "priceCents": 13000,
       "compareAtCents": null,
@@ -114,15 +116,15 @@
     },
     {
       "sku": "W-SET-002",
-      "slug": "bubble-skirt-set-pink",
-      "name": "Bubble Skirt Set — Pink",
+      "slug": "princess-skirt-set-pink",
+      "name": "Princess Skirt Set - Pink",
       "description": "",
       "gender": "women",
-      "category": "Two-Piece Sets",
+      "category": "Two-Piece Skirt Set",
       "colors": [
         "Pink"
       ],
-      "priceCents": 0,
+      "priceCents": 6000,
       "compareAtCents": null,
       "sizes": [
         "S",
@@ -143,8 +145,8 @@
     },
     {
       "sku": "W-DRS-001",
-      "slug": "tennis-golf-dress-white",
-      "name": "Tennis/Golf Dress — White",
+      "slug": "all-sports-dress-white",
+      "name": "All Sports Dress - White",
       "description": "",
       "gender": "women",
       "category": "Tennis & Golf",
@@ -172,8 +174,8 @@
     },
     {
       "sku": "W-DRS-002",
-      "slug": "tennis-golf-dress-navy",
-      "name": "Tennis/Golf Dress — Navy",
+      "slug": "all-sports-dress-navy",
+      "name": "All Sports Dress - Navy",
       "description": "",
       "gender": "women",
       "category": "Tennis & Golf",
@@ -224,8 +226,8 @@
     },
     {
       "sku": "M-TEE-001",
-      "slug": "mens-performance-tee-white",
-      "name": "Men's Performance Tee — White",
+      "slug": "mens-performance-pants-set-white",
+      "name": "Men's Performance Pants Set — White",
       "description": "",
       "gender": "men",
       "category": "Men: T-Shirts",
@@ -253,8 +255,8 @@
     },
     {
       "sku": "M-TEE-002",
-      "slug": "mens-performance-tee-black",
-      "name": "Men's Performance Tee — Black",
+      "slug": "mens-performance-pants-set-black",
+      "name": "Men's Performance Pants Set — Black",
       "description": "",
       "gender": "men",
       "category": "Men: T-Shirts",
@@ -451,8 +453,8 @@
     },
     {
       "sku": "W-SET-006",
-      "slug": "halter-bra-and-leggings-set-black",
-      "name": "Halter Bra & Leggings Set — Black",
+      "slug": "eclipse-bra-and-leggings-set-black",
+      "name": "Eclipse Bra & Leggings Set — Black",
       "description": "",
       "gender": "women",
       "category": "Two-Piece Sets",
@@ -661,7 +663,7 @@
     "Men: Shorts"
   ],
   "config": {
-    "announcementBar": "Free island-wide delivery on orders over BDS $300",
+    "announcementBar": "SHOP NOW !",
     "featuredSkus": [
       "W-SET-007",
       "W-SET-008",
