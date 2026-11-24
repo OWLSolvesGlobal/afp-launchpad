@@ -1,0 +1,94 @@
+{
+  "_readme": [
+    "Website-only details that Loyverse cannot hold. Loyverse stays the master for items, sizes, prices and stock.",
+    "Keys under 'items' are Loyverse item names, exactly as they appear in the Loyverse item list (case is ignored).",
+    "Per item: image (a filename in src/assets), imageAlt, description, gender (women | men | unisex), hidden (true keeps it off the site), badge.",
+    "Items not listed here still appear, with the placeholder image, once they have a fixed price in Loyverse.",
+    "The 15 items marked hidden carry placeholder prices entered on 24 Nov 2026. Remove 'hidden' once the owner confirms each price in Loyverse."
+  ],
+  "accessoryCategories": [
+    "Add Ons"
+  ],
+  "uncategorisedLabel": "More",
+  "config": {
+    "announcementBar": "SHOP NOW !",
+    "featuredSkus": [],
+    "heroOrder": [],
+    "paymentsCardEnabled": false,
+    "paymentsTransferEnabled": false,
+    "transferInstructions": ""
+  },
+  "items": {
+    "Black Vest Shorts Set": {
+      "hidden": true
+    },
+    "Turquoise Vest Shorts Set": {
+      "hidden": true
+    },
+    "Polka Dot Short Set": {
+      "hidden": true
+    },
+    "Brown Butter Set": {
+      "hidden": true
+    },
+    "Skirt Set Beige": {
+      "hidden": true
+    },
+    "Skirt Set Black": {
+      "hidden": true
+    },
+    "Tennis Skirt Set Est. 2022": {
+      "hidden": true
+    },
+    "Dusty Blue + Navy Tennis Dress": {
+      "hidden": true
+    },
+    "Jumpsuit + Jacket Black": {
+      "hidden": true
+    },
+    "Jumpsuit + Jacket Blue Grey": {
+      "hidden": true
+    },
+    "Travel Set White": {
+      "hidden": true
+    },
+    "Women Jacket Black": {
+      "hidden": true
+    },
+    "Leggings Nude": {
+      "hidden": true
+    },
+    "Shirts Men’s Black": {
+      "hidden": true
+    },
+    "Vest Men’s White Camo": {
+      "hidden": true
+    },
+    "Luxelift Romper Pink": {
+      "image": "ashlee-pink.webp",
+      "imageAlt": "Luxe Lift romper in pink"
+    },
+    "Luxelift Romper Green": {
+      "image": "ashlee-apple.webp",
+      "imageAlt": "Luxe Lift romper in green"
+    },
+    "Shorts Set Buttercup Yellow": {
+      "image": "afp-seamless-set-butter-front.webp",
+      "imageAlt": "Seamless tee and shorts set in buttercup yellow"
+    },
+    "Shorts Set Pistachio Green": {
+      "image": "afp-seamless-set-mint-front.webp",
+      "imageAlt": "Seamless tee and shorts set in pistachio green"
+    },
+    "Solara Sets ORANGE": {
+      "image": "afp-solara-set-coral.webp",
+      "imageAlt": "Solara set in orange stripe"
+    },
+    "Vest Camo Style Blue": {
+      "gender": "men"
+    },
+    "Vest Powder Blue": {
+      "gender": "men"
+    }
+  }
+}

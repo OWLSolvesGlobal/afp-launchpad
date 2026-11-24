@@ -5,7 +5,7 @@
 
   // This Worker now has a script (a deliberate change from the previous
   // assets-only setup): it serves GET /api/catalog from KV and runs the
-  // 5-minute cron that copies the Google Sheet into KV. Every other request
+  // 5-minute cron that copies the Loyverse item list into KV. Every other request
   // falls through to static assets via env.ASSETS.fetch(), so SPA routing
   // and edge caching behave exactly as before.
   "main": "worker/index.ts",
@@ -26,20 +26,18 @@
     "run_worker_first": ["/api/*"]
   },
 
-  // Pulls the Google Sheet into KV every 5 minutes. Harmless until the
-  // GOOGLE_SERVICE_ACCOUNT_JSON and CATALOG_SHEET_ID secrets are set — the
-  // sync logs that it is unconfigured and exits.
+  // Copies the Loyverse item list (items, sizes, prices, stock) into KV every
+  // 5 minutes. Harmless until the AFPWebsite secret (the Loyverse access
+  // token) is set: the sync logs that it is unconfigured and exits.
   "triggers": {
     "crons": ["*/5 * * * *"]
   },
 
-  // ONE-TIME SETUP — the catalog KV namespace does not exist yet.
-  // Run:  npx wrangler kv namespace create AFP_CATALOG
-  // then paste the returned id below and uncomment. Until then the site
-  // serves the bundled seed catalog and the cron sync no-ops.
-  // "kv_namespaces": [
-  //   { "binding": "AFP_CATALOG", "id": "PASTE_NAMESPACE_ID_HERE" }
-  // ],
+  // Catalog snapshot store. Created 24 Nov 2026. If this binding is ever
+  // removed the site keeps working on the bundled seed catalog.
+  "kv_namespaces": [
+    { "binding": "AFP_CATALOG", "id": "78d73e1a5ae24b9fa708ce321de3ceba" }
+  ],
 
   "observability": {
     "enabled": true

@@ -6,8 +6,8 @@ Context for anyone (human or agent) making changes to this repo.
 
 E-commerce storefront for Alo Fitness Pro, a Barbados-based activewear brand.
 React 18 + Vite + TypeScript + Tailwind + shadcn/ui. Hosted on Cloudflare
-Workers. The product catalog lives in a Google Sheet, mirrored into
-Cloudflare KV by a Worker cron.
+Workers. The product catalog lives in Loyverse (the shop's point of sale),
+mirrored into Cloudflare KV by a Worker cron.
 
 ```bash
 npm run dev      # localhost:8080
@@ -37,38 +37,48 @@ characteristics of the whole site — don't.
 
 ## Catalog architecture
 
-**The Google Sheet is the single source of truth for products, stock, and
-site config.** Nothing else is. Full detail in `docs/CATALOG-ARCHITECTURE.md`;
-owner-facing instructions in `docs/RUNBOOK.md`; the Sheet schema in
-`docs/SHEET_TEMPLATE.md`.
+**Loyverse (the shop's point of sale) is the single source of truth for
+items, sizes, prices and stock.** The owner manages them there and nowhere
+else. Website-only details that Loyverse cannot hold (photo, description,
+Men/Women section, show/hide, site config) live in
+`src/data/site-settings.json`, keyed by Loyverse item name. Full detail in
+`docs/CATALOG-ARCHITECTURE.md`.
 
 ```text
-Google Sheet ──(cron every 5 min, Worker scheduled())──► KV AFP_CATALOG "catalog:v1"
-                                                               │
+Loyverse API ──(cron every 5 min, Worker scheduled())──► KV AFP_CATALOG "catalog:v1"
+   + site-settings.json (bundled)                              │
 GET /api/catalog (max-age=60) ◄── Worker fetch() ──────────────┘ (seed JSON if empty)
         │
         ▼
 React storefront (useCatalog / useProducts / useProduct)
 ```
 
-- Shared parsing/guard logic: `src/lib/catalog-core.ts` — imported by the
-  Worker, the frontend, and the tests. Change sheet semantics there and only
-  there.
+- Loyverse mapping: `src/lib/loyverse-core.ts` (pure, tested). Shared types
+  and render guards: `src/lib/catalog-core.ts`. The Sheet-parsing functions
+  still in catalog-core are legacy from the Google Sheet pipeline and are no
+  longer called by the Worker.
+- **The sync is read-only.** It sends GET requests to Loyverse and nothing
+  else. Writing sales back to Loyverse is future work and needs human review.
+- One Loyverse item = one product page. Each colour is its own item in
+  Loyverse, so each colour is its own page for now.
 - KV namespace binding `AFP_CATALOG`, key `catalog:v1`. Snapshot shape:
-  `{ generatedAt, products, categories, config }`.
-- Sync cron: every 5 minutes. Site cache: 60s. A Sheet edit is live in ~6
-  minutes, no deploy.
-- If the Sheet is unreachable or secrets are missing, the sync exits and the
-  last good snapshot (or the bundled `src/data/seed-catalog.json`) keeps
-  serving. The site must never white-screen because of catalog problems.
+  `{ generatedAt, products, categories, config }` (unchanged).
+- Sync cron: every 5 minutes. Site cache: 60s. A Loyverse edit is live in ~6
+  minutes, no deploy. A `site-settings.json` edit needs a deploy.
+- If Loyverse is unreachable, returns no items, or the token is missing, the
+  sync exits and the last good snapshot (or the bundled
+  `src/data/seed-catalog.json`) keeps serving. The site must never
+  white-screen because of catalog problems.
 
-**Render guards — do not weaken them.** A product renders only when
-`active = TRUE` *and* `price_bbd > 0` (`isPurchasable`). **Prices must never
-be invented — the Sheet is authoritative.** Seed rows ship with price 0 and
-inactive precisely so nothing unpriced can go live.
+**Render guards — do not weaken them.** A product renders only when it is
+active *and* has a price above 0 (`isPurchasable`). **Prices must never be
+invented — Loyverse is authoritative.** A size with "Variable" pricing in
+Loyverse has no price and is left out; an item with no fixed price stays
+hidden. One product shows one price: sizes priced differently from the rest
+are left out and logged rather than shown at the wrong amount.
 
 **Do not hardcode product data or category lists into components.** Categories
-are free text in the Sheet; navigation and collection pages derive from the
+are the Loyverse categories; navigation and collection pages derive from the
 distinct values present, women-first (`deriveCategories`).
 
 **Currency is BBD only**, integer cents internally, displayed as
@@ -76,18 +86,18 @@ distinct values present, women-first (`deriveCategories`).
 
 **Payment paths are Config-gated.** Checkout always offers WhatsApp; the
 card section (a stub until Fygaro) and bank-transfer section render only
-when `payments_card_enabled` / `payments_transfer_enabled` are TRUE in the
-Sheet's Config tab. Enabling a path is a Sheet edit, never a deploy. The
+when `paymentsCardEnabled` / `paymentsTransferEnabled` are `true` in
+`src/data/site-settings.json`. Both ship `false`. The
 Fygaro integration must touch only `src/components/checkout/CardPaymentSection.tsx`.
 Order lifecycle vocabulary is `pending → paid → delivered → cancelled`
 (`OrderStatus` in catalog-core).
 
-**Product images** are repo files in `src/assets`, referenced from the Sheet
-by filename and resolved through `productImageUrl()`. Never image URLs in the
-Sheet, never hotlinked images.
+**Product images** are repo files in `src/assets`, referenced from
+`site-settings.json` by filename and resolved through `productImageUrl()`.
+Items with no photo show `/placeholder.svg`. Never hotlinked images.
 
-Activating the sync (service account → share Sheet → secrets → KV namespace)
-is documented in `README.md` → "Catalog sync setup".
+Sync setup (KV namespace + the `AFPWebsite` Loyverse token secret) is
+documented in `README.md` → "Catalog sync setup".
 
 ---
 
@@ -114,9 +124,9 @@ pointer stubs left behind by Loveable, referencing `/__l5e/assets-v1/...` —
 a path only Loveable's hosting served. Every image using them broke on
 migration. If you ever see a `.asset.json` file appear, it is a bug.
 
-**Never route Google Sheets access through a third-party gateway.** The sync
-Worker talks to the Sheets API directly with a service-account JWT
-(`worker/index.ts`). This pattern replaced a dependency on Loveable's
+**Never route catalog access through a third-party gateway.** The sync
+Worker talks to the Loyverse API directly with an access token held as a
+Worker secret (`worker/index.ts`). This pattern replaced a dependency on Loveable's
 connector gateway, which would have died with the subscription.
 
 **Keep the routes lazy.** Everything except the landing page is code-split in
@@ -134,7 +144,7 @@ photographic PNGs ship at 3–10× the size of their WebP equivalents.
 `VITE_`-prefixed variables are compiled into the browser bundle and are public
 by design. The storefront currently needs **no** environment variables at all.
 
-Anything actually secret (the Google service-account JSON, future payment API
+Anything actually secret (the Loyverse access token, future payment API
 secrets) lives in **Cloudflare Worker secrets** (`npx wrangler secret put …`).
 Never in `.env`, never in client code, never `VITE_`-prefixed.
 
@@ -185,8 +195,9 @@ Do not merge changes to these without a person reading them line by line:
   are the source of truth for whether an order was paid, because customers
   close tabs.
 - **`wrangler.jsonc` and `public/_headers`.** See gotchas above.
-- **The render guards and sheet parsing in `src/lib/catalog-core.ts`.** They
-  are what keeps unpriced or hidden products off the live site.
+- **The render guards in `src/lib/catalog-core.ts` and the Loyverse mapping
+  in `src/lib/loyverse-core.ts`.** They are what keeps unpriced or hidden
+  products off the live site.
 
 Never confirm a payment from a customer-supplied artifact such as a
 screenshot. Screenshots are trivially forged. Reconcile against your own bank
@@ -213,12 +224,16 @@ in `catalog-core.ts`, expect tests to fail, and update them deliberately.
    candidate — it's First Atlantic Commerce's SMB platform, endorsed by both
    CIBC and RBC in Barbados, and supports JWT-signed payment links plus
    webhooks, which lets this storefront keep its own checkout. When it lands,
-   webhooks should also write rows to the Sheet's `Orders` tab.
-2. **Catalog sync activation.** KV namespace + Google service account +
-   two Worker secrets; steps in `README.md`. Until then the site serves the
-   seed catalog (12 products, all hidden at price 0).
-3. **Real prices and stock in the Sheet.** Every seed row is `active=FALSE`
-   with `price_bbd=0` on purpose.
+   paid orders should be recorded in Loyverse as sales so stock drops.
+2. **Product photos.** Most Loyverse items have no photo in `src/assets` and
+   show the placeholder. Add the file, then map it in `site-settings.json`.
+3. **Placeholder prices.** 15 items carry estimated prices entered in
+   Loyverse on 24 Nov 2026 and are `hidden` in `site-settings.json` until the
+   owner confirms them.
 4. **A product photo for A-SOC-001 (crew socks)** — no dedicated shot exists;
    the socks only appear incidentally in other photos.
 5. **Brand voice split** — see above.
+6. **Colour grouping.** One page per product with a colour picker, instead
+   of one page per Loyverse item.
+7. **Legacy Sheet code.** Remove the unused Sheet parsing from catalog-core
+   and the `docs/SHEET_TEMPLATE.md` / `docs/RUNBOOK.md` Sheet instructions.
