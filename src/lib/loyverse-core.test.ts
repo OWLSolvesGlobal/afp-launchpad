@@ -294,6 +294,34 @@ describe("sync worker", () => {
     expect(JSON.parse(store.get(STATUS_KEY) as string).outcome).toBe("skipped");
   });
 
+  it("reads the token from a Secrets Store binding", async () => {
+    const { store, kv } = makeKv();
+    const seen: string[] = [];
+    const items = [{ id: "i", item_name: "Capri Romper Blue", category_id: "c-romp", variants: [fixed("v-s", "Small", 140)] }];
+    const inner = route(items);
+    const fetchImpl = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      seen.push(String((init?.headers as Record<string, string>).authorization));
+      return inner(input);
+    }) as typeof fetch;
+    await syncCatalog(
+      { AFPWebsite: { get: async () => " store-token " }, AFP_CATALOG: kv } as never,
+      fetchImpl,
+    );
+    expect(seen[0]).toBe("Bearer store-token");
+    expect(store.has(KV_KEY)).toBe(true);
+  });
+
+  it("records it when the Secrets Store cannot be read", async () => {
+    const { store, kv } = makeKv();
+    const fetchImpl = vi.fn();
+    await syncCatalog(
+      { AFPWebsite: { get: async () => { throw new Error("secret not found"); } }, AFP_CATALOG: kv } as never,
+      fetchImpl as typeof fetch,
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(JSON.parse(store.get(STATUS_KEY) as string).detail).toContain("secret not found");
+  });
+
   it("records a failed sync without leaking the token", async () => {
     const { store, kv } = makeKv();
     await syncCatalog(
