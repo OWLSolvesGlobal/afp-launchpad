@@ -17,7 +17,8 @@
  *  - Token not configured       → sync logs why and exits; nothing breaks.
  *  - Loyverse fetch/parse fails → sync logs and exits; the last good
  *    snapshot in KV keeps serving.
- *  - Loyverse returns no items  → sync refuses to overwrite the snapshot.
+ *  - Loyverse returns no items, or nothing sellable comes out of them
+ *                               → sync refuses to overwrite the snapshot.
  *
  * The sync only ever READS from Loyverse (GET requests). It never writes.
  */
@@ -132,8 +133,19 @@ export async function syncCatalog(env: Env, fetchImpl: Fetch = fetch): Promise<v
       new Date().toISOString(),
     );
 
-    await env.AFP_CATALOG.put(KV_KEY, JSON.stringify(snapshot));
     const live = snapshot.products.filter((p) => p.active && p.priceCents > 0).length;
+    if (live === 0) {
+      // Loyverse answered, but nothing came out sellable. That means the data
+      // did not read the way this code expects (or every price was removed),
+      // not that the shop is empty. Never publish an empty shop.
+      console.error(
+        `catalog sync aborted: ${items.length} Loyverse items but 0 sellable products; keeping last snapshot`,
+      );
+      for (const w of warnings.slice(0, 20)) console.error(`catalog sync note: ${w}`);
+      return;
+    }
+
+    await env.AFP_CATALOG.put(KV_KEY, JSON.stringify(snapshot));
     console.log(
       `catalog sync ok: ${items.length} Loyverse items, ${live} live on site, ` +
         `${snapshot.categories.length} categories at ${snapshot.generatedAt}`,

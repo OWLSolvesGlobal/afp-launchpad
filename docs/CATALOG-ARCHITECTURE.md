@@ -70,6 +70,7 @@ reported in the sync log, which catches renames.
 | KV empty (first deploy) | `/api/catalog` serves the bundled seed until the first cron run. |
 | Loyverse errors or times out | Sync logs the status and exits; **last good snapshot keeps serving**. |
 | Loyverse returns no items | Sync refuses to overwrite; last snapshot keeps serving. |
+| Loyverse answers but no product comes out sellable | Sync refuses to publish an empty shop; last snapshot keeps serving. |
 | `/api/catalog` unreachable (local dev) | Frontend `fetchCatalog()` falls back to the bundled seed. |
 
 The response header `x-afp-catalog-source: kv | seed` tells you which path

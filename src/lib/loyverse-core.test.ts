@@ -277,6 +277,13 @@ describe("sync worker", () => {
     expect(failing.store.size).toBe(0);
   });
 
+  it("never publishes an empty shop when no item comes out sellable", async () => {
+    const { store, kv } = makeKv();
+    const items = [{ id: "i", item_name: "Unpriced", variants: [variable("v-s", "Small")] }];
+    await syncCatalog({ AFPWebsite: "t", AFP_CATALOG: kv } as never, route(items) as typeof fetch);
+    expect(store.size).toBe(0);
+  });
+
   it("does nothing without a token", async () => {
     const { store, kv } = makeKv();
     const fetchImpl = vi.fn();
