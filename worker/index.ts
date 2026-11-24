@@ -21,6 +21,9 @@
  *                               → sync refuses to overwrite the snapshot.
  *
  * The sync only ever READS from Loyverse (GET requests). It never writes.
+ *
+ * GET /api/catalog/status reports how the latest sync attempt went, so a
+ * failed sync can be diagnosed without opening the Cloudflare dashboard.
  */
 import {
   buildLoyverseSnapshot,
@@ -43,6 +46,26 @@ export interface Env {
 }
 
 export const KV_KEY = "catalog:v1";
+/** Outcome of the most recent sync attempt, readable at /api/catalog/status. */
+export const STATUS_KEY = "catalog:status";
+
+export interface SyncStatus {
+  at: string;
+  outcome: "ok" | "skipped" | "aborted" | "failed";
+  detail: string;
+  loyverseItems?: number;
+  liveProducts?: number;
+  notes?: string[];
+}
+
+/** Record how the sync went. Never holds the token or any response body. */
+async function recordStatus(env: Env, status: Omit<SyncStatus, "at">): Promise<void> {
+  try {
+    await env.AFP_CATALOG?.put(STATUS_KEY, JSON.stringify({ at: new Date().toISOString(), ...status }));
+  } catch {
+    // Status is a diagnostic aid; failing to write it must not break the sync.
+  }
+}
 
 const LOYVERSE_API = "https://api.loyverse.com/v1.0";
 const PAGE_LIMIT = 250;
@@ -61,6 +84,13 @@ export default {
           "x-afp-catalog-source": stored ? "kv" : "seed",
         },
       });
+    }
+    if (url.pathname === "/api/catalog/status") {
+      const status = await env.AFP_CATALOG?.get(STATUS_KEY, "text").catch(() => null);
+      return new Response(
+        status ?? JSON.stringify({ outcome: "never-run", detail: "No sync attempt has been recorded yet." }),
+        { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } },
+      );
     }
     return env.ASSETS.fetch(request);
   },
@@ -102,12 +132,17 @@ export async function fetchAllPages<T>(
 
 export async function syncCatalog(env: Env, fetchImpl: Fetch = fetch): Promise<void> {
   const token = env.AFPWebsite || env.LOYVERSE_API_TOKEN;
-  if (!token) {
-    console.log("catalog sync skipped: Loyverse token secret (AFPWebsite) not configured yet");
-    return;
-  }
   if (!env.AFP_CATALOG) {
     console.log("catalog sync skipped: AFP_CATALOG KV binding missing");
+    return;
+  }
+  if (!token) {
+    console.log("catalog sync skipped: Loyverse token secret (AFPWebsite) not configured yet");
+    await recordStatus(env, {
+      outcome: "skipped",
+      detail:
+        "The Worker cannot see a secret named AFPWebsite. Add it under the Worker's Settings > Variables and Secrets, type Secret.",
+    });
     return;
   }
 
@@ -122,6 +157,7 @@ export async function syncCatalog(env: Env, fetchImpl: Fetch = fetch): Promise<v
       // An empty answer is far more likely a fault than a real empty shop.
       // Keep the last good snapshot rather than wiping the live catalog.
       console.error("catalog sync aborted: Loyverse returned no items; keeping last snapshot");
+      await recordStatus(env, { outcome: "aborted", detail: "Loyverse returned no items.", loyverseItems: 0 });
       return;
     }
 
@@ -141,7 +177,13 @@ export async function syncCatalog(env: Env, fetchImpl: Fetch = fetch): Promise<v
       console.error(
         `catalog sync aborted: ${items.length} Loyverse items but 0 sellable products; keeping last snapshot`,
       );
-      for (const w of warnings.slice(0, 20)) console.error(`catalog sync note: ${w}`);
+      await recordStatus(env, {
+        outcome: "aborted",
+        detail: "Loyverse items were read but none came out sellable.",
+        loyverseItems: items.length,
+        liveProducts: 0,
+        notes: warnings.slice(0, 20),
+      });
       return;
     }
 
@@ -150,9 +192,17 @@ export async function syncCatalog(env: Env, fetchImpl: Fetch = fetch): Promise<v
       `catalog sync ok: ${items.length} Loyverse items, ${live} live on site, ` +
         `${snapshot.categories.length} categories at ${snapshot.generatedAt}`,
     );
-    for (const w of warnings.slice(0, 50)) console.log(`catalog sync note: ${w}`);
+    await recordStatus(env, {
+      outcome: "ok",
+      detail: "Catalog copied from Loyverse.",
+      loyverseItems: items.length,
+      liveProducts: live,
+      notes: warnings.slice(0, 60),
+    });
   } catch (err) {
     // Leave the last good snapshot in place; the next cron run retries.
-    console.error(`catalog sync failed: ${err instanceof Error ? err.message : String(err)}`);
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`catalog sync failed: ${message}`);
+    await recordStatus(env, { outcome: "failed", detail: message });
   }
 }

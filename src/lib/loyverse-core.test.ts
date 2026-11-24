@@ -9,7 +9,7 @@ import {
   type SiteSettings,
 } from "@/lib/loyverse-core";
 import { isPurchasable, visibleProducts } from "@/lib/catalog-core";
-import { fetchAllPages, syncCatalog, KV_KEY } from "../../worker/index";
+import worker, { fetchAllPages, syncCatalog, KV_KEY, STATUS_KEY } from "../../worker/index";
 import siteSettings from "@/data/site-settings.json";
 
 const fixed = (id: string, size: string | null, price: number) => ({
@@ -267,28 +267,52 @@ describe("sync worker", () => {
   it("keeps the last snapshot when Loyverse returns nothing or errors", async () => {
     const empty = makeKv();
     await syncCatalog({ AFPWebsite: "t", AFP_CATALOG: empty.kv } as never, route([]) as typeof fetch);
-    expect(empty.store.size).toBe(0);
+    expect(empty.store.has(KV_KEY)).toBe(false);
 
     const failing = makeKv();
     await syncCatalog(
       { AFPWebsite: "t", AFP_CATALOG: failing.kv } as never,
       (async () => json({}, 401)) as typeof fetch,
     );
-    expect(failing.store.size).toBe(0);
+    expect(failing.store.has(KV_KEY)).toBe(false);
   });
 
   it("never publishes an empty shop when no item comes out sellable", async () => {
     const { store, kv } = makeKv();
     const items = [{ id: "i", item_name: "Unpriced", variants: [variable("v-s", "Small")] }];
     await syncCatalog({ AFPWebsite: "t", AFP_CATALOG: kv } as never, route(items) as typeof fetch);
-    expect(store.size).toBe(0);
+    expect(store.has(KV_KEY)).toBe(false);
+    expect(JSON.parse(store.get(STATUS_KEY) as string).outcome).toBe("aborted");
   });
 
-  it("does nothing without a token", async () => {
+  it("calls nothing without a token and records why", async () => {
     const { store, kv } = makeKv();
     const fetchImpl = vi.fn();
     await syncCatalog({ AFP_CATALOG: kv } as never, fetchImpl as typeof fetch);
     expect(fetchImpl).not.toHaveBeenCalled();
-    expect(store.size).toBe(0);
+    expect(store.has(KV_KEY)).toBe(false);
+    expect(JSON.parse(store.get(STATUS_KEY) as string).outcome).toBe("skipped");
+  });
+
+  it("records a failed sync without leaking the token", async () => {
+    const { store, kv } = makeKv();
+    await syncCatalog(
+      { AFPWebsite: "super-secret-token", AFP_CATALOG: kv } as never,
+      (async () => json({ errors: ["nope"] }, 401)) as typeof fetch,
+    );
+    const raw = store.get(STATUS_KEY) as string;
+    expect(JSON.parse(raw).outcome).toBe("failed");
+    expect(JSON.parse(raw).detail).toContain("401");
+    expect(raw).not.toContain("super-secret-token");
+  });
+
+  it("serves the latest status at /api/catalog/status", async () => {
+    const kv = { get: async (k: string) => (k === STATUS_KEY ? '{"outcome":"ok"}' : null) };
+    const res = await worker.fetch(
+      new Request("https://x.test/api/catalog/status"),
+      { AFP_CATALOG: kv, ASSETS: { fetch: async () => new Response("asset") } } as never,
+    );
+    expect(await res.json()).toEqual({ outcome: "ok" });
+    expect(res.headers.get("cache-control")).toBe("no-store");
   });
 });
