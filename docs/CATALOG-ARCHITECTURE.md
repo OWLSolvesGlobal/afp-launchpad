@@ -1,16 +1,17 @@
-# Google Sheets–driven product catalog
+# Loyverse-driven product catalog
 
-Goal: the owner edits a Google Sheet → the site updates within ~6 minutes,
-with no deploy, no database, and no third-party gateway. This replaced the
-earlier Supabase-backed pipeline entirely.
+Goal: the owner manages items, sizes, prices and stock in Loyverse, the
+point of sale she already uses in the shop, and the site follows within
+about 6 minutes. No deploy, no database, no third-party gateway. This
+replaced the Google Sheet pipeline (which itself replaced Supabase).
 
 ## Architecture
 
 ```text
-Google Sheet (owner edits: Catalog / Orders / Config tabs)
+Loyverse API  (items, categories, inventory levels: read-only GETs)
       │  cron, every 5 minutes
       ▼
-Sync Worker `scheduled()`  (service-account JWT, read-only Sheets API)
+Sync Worker `scheduled()`  + src/data/site-settings.json (bundled)
       │  writes one JSON snapshot
       ▼
 Cloudflare KV  namespace AFP_CATALOG, key `catalog:v1`
@@ -23,25 +24,53 @@ React storefront   (React Query `useCatalog()`, renders catalog + stock)
 ```
 
 - **One Worker** (`worker/index.ts`) handles both the cron and the API
-  route. Every other request falls through to static assets via
-  `env.ASSETS.fetch()`; `assets.run_worker_first: ["/api/*"]` in
-  `wrangler.jsonc` keeps the Worker out of the static path entirely.
-- **The site never reads the Sheet live.** Sheets API quota, latency, and
-  outages are all absorbed by the snapshot.
-- The snapshot shape is `{ generatedAt, products, categories, config }` —
-  see `CatalogSnapshot` in `src/lib/catalog-core.ts`. That module is the
-  single shared definition of parsing, guards, and derivations, imported
-  by the Worker, the frontend, and the tests.
+  route. Every other request falls through to static assets.
+- **The site never reads Loyverse live.** API rate limits, latency and
+  outages are absorbed by the snapshot.
+- **The sync never writes to Loyverse.** It cannot change a price, a stock
+  count or an item.
+- The snapshot shape is unchanged: `{ generatedAt, products, categories,
+  config }`, see `CatalogSnapshot` in `src/lib/catalog-core.ts`. The
+  storefront did not need to change.
+
+## How a Loyverse item becomes a product
+
+All of this lives in `src/lib/loyverse-core.ts` and is covered by
+`src/lib/loyverse-core.test.ts`.
+
+| Loyverse | Website |
+| --- | --- |
+| Item | One product page. Each colour is its own Loyverse item, so each colour is its own page for now. |
+| Item name | Product name and URL slug |
+| Category | Category filter and collection page. No category reads as "More". |
+| Variant option (Small, Medium, Large...) | Size (S, M, L...). An item with one unnamed variant is ONE SIZE. |
+| Variant price, pricing type FIXED | Price. "Variable" pricing means no price. |
+| Inventory level per variant | Stock per size, summed across stores, never below 0 |
+| Deleted item or variant | Left out |
+
+Section (Women / Men / Accessories) is derived: an item whose category is
+listed in `accessoryCategories` is unisex, an item with "Men's" in its name
+is men's, everything else is women's. `site-settings.json` can override it
+per item.
+
+## Website-only settings
+
+`src/data/site-settings.json`, keyed by Loyverse item name (case ignored):
+`image`, `imageAlt`, `description`, `gender`, `hidden`, `badge`, plus the
+site `config` block (announcement bar, featured products, payment switches).
+Changing it needs a deploy. A setting whose name matches no Loyverse item is
+reported in the sync log, which catches renames.
 
 ## Resilience ladder
 
 | Failure | Behaviour |
 | --- | --- |
-| Secrets not configured yet | Sync logs "skipped: not configured" and exits. |
-| KV namespace not bound | `/api/catalog` serves the bundled seed (`src/data/seed-catalog.json`); sync no-ops. |
-| KV empty (first deploy) | `/api/catalog` serves the bundled seed. |
-| Sheet fetch/auth fails | Sync logs and exits; **last good snapshot keeps serving**. |
-| Sheet emptied (header-only tab) | Sync refuses to overwrite; last snapshot keeps serving. |
+| Token secret not set | Sync logs "skipped" and exits. |
+| KV namespace not bound | `/api/catalog` serves the bundled seed; sync no-ops. |
+| KV empty (first deploy) | `/api/catalog` serves the bundled seed until the first cron run. |
+| Loyverse errors or times out | Sync logs the status and exits; **last good snapshot keeps serving**. |
+| Loyverse returns no items | Sync refuses to overwrite; last snapshot keeps serving. |
+| Loyverse answers but no product comes out sellable | Sync refuses to publish an empty shop; last snapshot keeps serving. |
 | `/api/catalog` unreachable (local dev) | Frontend `fetchCatalog()` falls back to the bundled seed. |
 
 The response header `x-afp-catalog-source: kv | seed` tells you which path
@@ -49,49 +78,31 @@ you're on.
 
 ## Render guards (why a product doesn't show)
 
-A product renders only when `active = TRUE` **and** `price_bbd > 0`
-(`isPurchasable` in catalog-core). The price guard is deliberate belt and
-suspenders: seed rows and half-filled Sheet rows carry price 0, so nothing
-unpriced can ever go live. Prices are never invented by code — the Sheet
-is authoritative.
+A product renders only when it is active **and** its price is above 0
+(`isPurchasable` in catalog-core). On top of that, the Loyverse mapping:
+
+- leaves out any size with "Variable" pricing; an item with no fixed price
+  at all is hidden;
+- shows one price per product: if sizes carry different prices, the most
+  common price wins and the other sizes are left out and logged, so the site
+  never quotes the wrong amount for a size;
+- hides anything marked `hidden` in `site-settings.json`.
+
+Prices are never invented by code. Loyverse is authoritative.
 
 Per-size stock renders sold-out sizes as disabled (never hidden); a fully
 sold-out product stays visible with a "Sold out" state.
 
 ## Images
 
-The Sheet's `image` column is a **filename** in `src/assets`, not a URL.
-`productImageUrl()` in `src/lib/catalog.ts` maps filenames to Vite's
-hashed bundle URLs via `import.meta.glob`; unknown or blank filenames get
-`/placeholder.svg`. Adding a product photo = commit the file to
-`src/assets`, then reference its filename in the Sheet.
-
-## Categories and navigation
-
-Categories are free text in the Sheet. `deriveCategories()` orders them
-women-first (any-women → unisex-only → men-only, stable within groups) and
-the header nav plus `/collection/:slug` pages are generated from that
-list. There is no hardcoded category list anywhere — keep it that way.
+`image` in `site-settings.json` is a **filename** in `src/assets`, not a
+URL. `productImageUrl()` in `src/lib/catalog.ts` maps filenames to Vite's
+hashed bundle URLs; unknown or blank filenames get `/placeholder.svg`.
+Adding a product photo = commit the file to `src/assets`, then map it to the
+Loyverse item name in `site-settings.json`.
 
 ## Orders
 
-The `Orders` tab is a hand-maintained ledger for WhatsApp sales. The site
-generates an `AFP-YYYYMMDD-XXX` reference in the checkout WhatsApp message
-(`newOrderId()` in catalog-core) so the owner can copy it into the Sheet.
-The site does not write to the Sheet; that arrives with payment webhooks
-(Fygaro is the leading candidate).
-
-## Activation
-
-See `README.md` → "Catalog sync setup" for the exact commands: create the
-`AFP_CATALOG` KV namespace and uncomment its binding in `wrangler.jsonc`,
-create a Google service account with Sheets API enabled, share the Sheet
-with it, and set the `GOOGLE_SERVICE_ACCOUNT_JSON` + `CATALOG_SHEET_ID`
-Worker secrets. Until then the site serves the seed snapshot.
-
-## Sheet template
-
-Tabs and columns are documented for the owner in `SHEET_TEMPLATE.md`, with
-importable CSVs (`sheet-catalog-template.csv`, `sheet-orders-template.csv`,
-`sheet-config-template.csv`) pre-filled with the 12 launch products at
-price 0 / inactive.
+Checkout still hands off to WhatsApp with an `AFP-YYYYMMDD-XXX` reference
+(`newOrderId()` in catalog-core). Online orders are not yet recorded in
+Loyverse; the owner rings them up at the till so stock stays right.

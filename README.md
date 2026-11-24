@@ -1,9 +1,9 @@
 # Alo Fitness Pro — Storefront
 
 Editorial activewear storefront for AFP. React + Vite + TypeScript +
-Tailwind, hosted on Cloudflare Workers. The catalog, stock, and site config
-live in a Google Sheet, mirrored into Cloudflare KV every 5 minutes by the
-site Worker.
+Tailwind, hosted on Cloudflare Workers. Items, sizes, prices and stock live
+in Loyverse (the shop's point of sale), mirrored into Cloudflare KV every 5
+minutes by the site Worker.
 
 ---
 
@@ -102,50 +102,40 @@ HTML instead, breaking the site. SPA routing is handled by
 
 ## Architecture notes
 
-- **Catalog source of truth** is a Google Sheet, mirrored into Cloudflare KV
-  by the Worker's 5-minute cron and served as one JSON snapshot at
-  `GET /api/catalog`. See `docs/CATALOG-ARCHITECTURE.md` (developer detail),
-  `docs/SHEET_TEMPLATE.md` (sheet schema + importable CSVs), and
-  `docs/RUNBOOK.md` (owner guide).
-- **Images** are files in `src/assets`, referenced from the Sheet by
-  filename.
+- **Catalog source of truth** is Loyverse (items, sizes, prices, stock),
+  mirrored into Cloudflare KV by the Worker's 5-minute cron and served as
+  one JSON snapshot at `GET /api/catalog`. Website-only details live in
+  `src/data/site-settings.json`. See `docs/CATALOG-ARCHITECTURE.md`.
+- **Images** are files in `src/assets`, referenced from
+  `site-settings.json` by filename.
 - **Checkout** collects the order and hands off to WhatsApp with an
   `AFP-YYYYMMDD-XXX` order reference. There is no card payment processor
   wired in yet.
-- The site degrades gracefully: with no KV namespace, no secrets, and no
-  Sheet, it serves the bundled seed catalog.
+- The site degrades gracefully: with no KV namespace, no token, or Loyverse
+  unreachable, it serves the last snapshot or the bundled seed catalog.
 
 ## Catalog sync setup (one-time)
 
-Until these steps are done, the site works but serves the seed catalog and
-the cron sync no-ops.
+Both steps were completed on 24 Nov 2026; they are recorded here in case the
+site is ever rebuilt in a new Cloudflare account.
 
-1. **Create the KV namespace** and wire it up:
+1. **KV namespace.** `npx wrangler kv namespace create AFP_CATALOG`, then put
+   the returned id in the `kv_namespaces` block in `wrangler.jsonc`.
 
-   ```bash
-   npx wrangler kv namespace create AFP_CATALOG
-   ```
-
-   Paste the returned id into the commented `kv_namespaces` block in
-   `wrangler.jsonc` and uncomment it.
-
-2. **Create a Google service account**: in Google Cloud Console, create a
-   service account, enable the **Google Sheets API** for the project, and
-   download the service account's JSON key.
-
-3. **Share the catalog Sheet** with the service account's email address
-   (Viewer is enough — the sync only reads).
-
-4. **Set the two Worker secrets**:
+2. **Loyverse access token.** In the Loyverse Back Office, open Access tokens
+   and add a token. Store it as a Worker secret named `AFPWebsite`:
 
    ```bash
-   npx wrangler secret put GOOGLE_SERVICE_ACCOUNT_JSON   # paste the whole JSON key file
-   npx wrangler secret put CATALOG_SHEET_ID              # the id from the Sheet's URL
+   npx wrangler secret put AFPWebsite
    ```
 
-Deploy (or wait for the next push to `main`), and the next cron tick starts
-syncing. Verify with `curl -sI https://<site>/api/catalog | grep x-afp` —
-`x-afp-catalog-source: kv` means live Sheet data; `seed` means the fallback.
+   Never commit the token or paste it into chat, an issue, or a PR.
+
+The next cron tick (within 5 minutes of a deploy) starts syncing. Verify with
+`curl -sI https://<site>/api/catalog | grep x-afp`:
+`x-afp-catalog-source: kv` means live Loyverse data; `seed` means the
+fallback. Sync results and notes on left-out items appear in the Worker's
+logs in the Cloudflare dashboard.
 
 ---
 

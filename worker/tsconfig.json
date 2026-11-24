@@ -14,6 +14,8 @@
     "./**/*.ts",
     "../node_modules/@cloudflare/workers-types/index.d.ts",
     "../src/lib/catalog-core.ts",
+    "../src/lib/loyverse-core.ts",
+    "../src/data/site-settings.json",
     "../src/data/seed-catalog.json"
   ]
 }
