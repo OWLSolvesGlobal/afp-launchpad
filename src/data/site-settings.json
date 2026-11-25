@@ -4,7 +4,7 @@
     "Keys under 'items' are Loyverse item names, exactly as they appear in the Loyverse item list (case is ignored).",
     "Per item: image (a filename in src/assets), imageAlt, description, gender (women | men | unisex), hidden (true keeps it off the site), badge.",
     "Items not listed here still appear, with the placeholder image, once they have a fixed price in Loyverse.",
-    "The 15 items marked hidden carry placeholder prices entered on 24 Nov 2026. Remove 'hidden' once the owner confirms each price in Loyverse."
+    "The items marked hidden carry placeholder prices entered on 24 Nov 2026. Remove 'hidden' once the owner confirms each price in Loyverse."
   ],
   "accessoryCategories": [
     "Add Ons"
@@ -19,16 +19,7 @@
     "transferInstructions": ""
   },
   "items": {
-    "Black Vest Shorts Set": {
-      "hidden": true
-    },
-    "Turquoise Vest Shorts Set": {
-      "hidden": true
-    },
     "Polka Dot Short Set": {
-      "hidden": true
-    },
-    "Brown Butter Set": {
       "hidden": true
     },
     "Skirt Set Beige": {

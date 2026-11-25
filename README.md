@@ -112,7 +112,8 @@ HTML instead, breaking the site. SPA routing is handled by
   `AFP-YYYYMMDD-XXX` order reference. There is no card payment processor
   wired in yet.
 - The site degrades gracefully: with no KV namespace, no token, or Loyverse
-  unreachable, it serves the last snapshot or the bundled seed catalog.
+  unreachable, it serves the last snapshot. With no snapshot at all it shows
+  an empty shop, never stale sample products.
 
 ## Catalog sync setup (one-time)
 
@@ -132,8 +133,8 @@ site is ever rebuilt in a new Cloudflare account.
 
 The next cron tick (within 5 minutes of a deploy) starts syncing. Verify with
 `curl -sI https://<site>/api/catalog | grep x-afp`:
-`x-afp-catalog-source: kv` means live Loyverse data; `seed` means the
-fallback. Sync results and notes on left-out items appear in the Worker's
+`x-afp-catalog-source: kv` means live Loyverse data; `seed` means the empty
+fallback. `GET /api/catalog/status` shows how the latest sync went. Sync results and notes on left-out items appear in the Worker's
 logs in the Cloudflare dashboard.
 
 ---

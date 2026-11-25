@@ -10,8 +10,8 @@ import { categorySlug, useCatalog, visibleProducts } from "@/lib/catalog";
 import { LogoLoader } from "@/components/site/LogoLoader";
 
 /**
- * Collection pages are the Sheet's categories. Adding or retiring a category
- * is purely a Sheet edit — nothing here is hardcoded.
+ * Collection pages are the Loyverse categories. Adding or retiring a category
+ * is purely a Loyverse edit — nothing here is hardcoded.
  */
 export default function Collection() {
   const { slug } = useParams<{ slug: string }>();

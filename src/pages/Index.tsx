@@ -27,7 +27,7 @@ const Index = () => {
     [catalog],
   );
 
-  // Category tiles are derived from the Sheet (women-first), never hardcoded.
+  // Category tiles are derived from Loyverse (women-first), never hardcoded.
   const collections = useMemo(
     () =>
       (catalog?.categories ?? []).slice(0, 4).map((category) => ({
@@ -40,7 +40,7 @@ const Index = () => {
     [catalog, products],
   );
 
-  // Featured grid: the Sheet's featured_skus config row, else newest-first
+  // Featured grid: the featuredSkus setting, else newest-first
   // women's pieces.
   const featured = useMemo(() => {
     const bySku = new Map(products.map((p) => [p.sku, p]));
@@ -51,7 +51,7 @@ const Index = () => {
     return products.filter((p) => p.gender !== "men").slice(0, 6);
   }, [catalog, products]);
 
-  // hero_order lets the owner pick the hero image straight from the Sheet.
+  // hero_order lets the owner pick the hero image in site-settings.json.
   const heroImage = useMemo(() => {
     const bySku = new Map(products.map((p) => [p.sku, p]));
     for (const sku of catalog?.config.heroOrder ?? []) {
@@ -118,7 +118,7 @@ const Index = () => {
           </div>
         </section>
 
-        {/* COLLECTIONS STRIP — categories straight from the Sheet */}
+        {/* COLLECTIONS STRIP — categories straight from Loyverse */}
         {collections.length > 0 && (
           <section className="container py-14 md:py-20">
             <div className="flex items-end justify-between mb-8">

@@ -1,7 +1,7 @@
 import { CreditCard } from "lucide-react";
 
 /**
- * Card payment path — rendered only when the Sheet's Config tab has
+ * Card payment path — rendered only when site-settings.json has
  * `payments_card_enabled = TRUE`.
  *
  * Deliberately a stub: the Fygaro integration (JWT-signed payment links +

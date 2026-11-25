@@ -1,10 +1,10 @@
 import { Landmark } from "lucide-react";
 
 /**
- * Bank transfer payment path — rendered only when the Sheet's Config tab has
+ * Bank transfer payment path — rendered only when site-settings.json has
  * `payments_transfer_enabled = TRUE`. The instructions text comes verbatim
  * from the Config tab's `transfer_instructions` value (multiline allowed),
- * so account/BimPay/1stPay details are a Sheet edit, never a deploy.
+ * so account/BimPay/1stPay details live in site-settings.json.
  */
 export function BankTransferSection({
   orderRef,

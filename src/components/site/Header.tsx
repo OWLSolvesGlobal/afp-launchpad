@@ -10,7 +10,7 @@ import { categorySlug, productImageUrl, useCatalog, visibleProducts } from "@/li
 /**
  * Minimal header: a single menu button (3-bar), centered logo, cart.
  * All navigation lives in the full-screen menu, where the category list is
- * derived from the Sheet — women-first, never hardcoded.
+ * derived from Loyverse — women-first, never hardcoded.
  */
 export const Header = ({ transparent = false }: { transparent?: boolean }) => {
   const [scrolled, setScrolled] = useState(false);
@@ -25,7 +25,7 @@ export const Header = ({ transparent = false }: { transparent?: boolean }) => {
   }));
   const announcement = catalog?.config.announcementBar ?? "";
 
-  // One inviting image inside the menu (desktop) — the Sheet's hero pick,
+  // One inviting image inside the menu (desktop) — the heroOrder pick,
   // else the first live product.
   const menuImage = useMemo(() => {
     const products = catalog ? visibleProducts(catalog.products) : [];
