@@ -93,14 +93,17 @@ switched on 25 Nov 2026. The card section is a stub until Fygaro and stays
 `false`. The Fygaro integration must touch only
 `src/components/checkout/CardPaymentSection.tsx`.
 
-**How QR payment works.** AFP is paid into its CIBC account by 1st Pay. Two
-codes exist: `qr-1stpay-cibc.png` (CIBC customers only) and
-`qr-1stpay-plus.png` (1st Pay Plus, any other Barbados-dollar bank). The
-site takes no payment itself: the customer pays from their banking app,
-typing the amount and the `AFP-YYYYMMDD-XXX` reference (a bank QR code
-cannot carry either), then sends the order on WhatsApp. The owner confirms
-each payment against the bank record. There is no server-side order record
-or stock hold yet; that is the next piece of work.
+**How QR payment works.** AFP is paid into its CIBC account by 1st Pay.
+One code is shown, `qr-1stpay-cibc.png`, which only CIBC customers can pay.
+(The "1st Pay Plus" code for other banks did not work when tested on 25 Nov
+2026 and was removed.) The site takes no payment itself: the customer pays
+from their CIBC app, typing the amount and the `AFP-YYYYMMDD-XXX` reference
+(a bank QR code cannot carry either), then sends the order on WhatsApp. The
+owner confirms each payment against the bank record. Customers of any other
+bank order on WhatsApp and arrange payment with the owner directly; their
+items are held for 24 hours, a hold the owner keeps by hand. There is no
+server-side order record or automatic stock hold yet; that is the next piece
+of work. Keep the code large and on plain white so it scans off a screen.
 
 **Prices include VAT.** Loyverse prices are VAT-inclusive, so the customer
 pays the shelf price online exactly as at the till. `taxCents` adds nothing

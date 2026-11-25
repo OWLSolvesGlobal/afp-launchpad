@@ -8,11 +8,7 @@ import { newOrderId, useCatalog } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { waLink } from "@/lib/brand";
 import { CardPaymentSection } from "@/components/checkout/CardPaymentSection";
-import {
-  BankTransferSection,
-  paymentSchemeFor,
-  type PayerBank,
-} from "@/components/checkout/BankTransferSection";
+import { BankTransferSection } from "@/components/checkout/BankTransferSection";
 import { calculateOrderTotal, FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/pricing";
 
 import type { Fulfillment } from "@/lib/pricing";
@@ -65,11 +61,11 @@ export default function Checkout() {
     fulfillment,
   });
 
-  // The order message sent to AFP on WhatsApp. `paidWith` is set when the
-  // customer has already paid by bank QR code, so the owner knows to look for
+  // The order message sent to AFP on WhatsApp. `paid` is true when the
+  // customer has already paid by CIBC 1st Pay, so the owner knows to look for
   // the payment in her bank record under this reference.
   const buildOrderMessage = useCallback(
-    (paidWith?: PayerBank) => {
+    (paid = false) => {
       if (items.length === 0) return "Hi AFP!";
       const lines = items.map(
         (i) =>
@@ -83,9 +79,9 @@ export default function Checkout() {
         `Subtotal: ${formatMoney(subtotal)}\n` +
         `${fulfillment === "pickup" ? "Pickup" : "Delivery"}: ${shipping === 0 ? "Free" : formatMoney(shipping)}\n` +
         `Total (VAT included): ${formatMoney(total)}\n\n` +
-        (paidWith
-          ? `I have paid ${formatMoney(total)} by ${paymentSchemeFor(paidWith)} with reference ${orderRef}.\n\n`
-          : "") +
+        (paid
+          ? `I have paid ${formatMoney(total)} by CIBC 1st Pay with reference ${orderRef}.\n\n`
+          : "Please hold my items. I will arrange payment with you here.\n\n") +
         (fulfillment === "pickup"
           ? `Pickup preferred — ${pickup?.name ?? "location to confirm"}.`
           : "Please arrange delivery.")
@@ -199,13 +195,13 @@ export default function Checkout() {
             <section>
               <h2 className="eyebrow text-graphite mb-4">02 — Payment</h2>
               <div className="space-y-4">
-                {/* Bank QR code — primary path when enabled in site settings */}
+                {/* CIBC 1st Pay QR code — when enabled in site settings */}
                 {transferEnabled && (
                   <BankTransferSection
                     orderRef={orderRef}
                     totalLabel={formatMoney(total)}
                     totalPlain={(total / 100).toFixed(2)}
-                    paidHref={(bank) => waLink(buildOrderMessage(bank))}
+                    paidHref={waLink(buildOrderMessage(true))}
                   />
                 )}
 
@@ -217,17 +213,18 @@ export default function Checkout() {
                     </span>
                     <div>
                       <div className="font-medium">
-                        {transferEnabled ? "Or order first, pay after" : "Order on WhatsApp"}
+                        {transferEnabled ? "Any other bank: order on WhatsApp" : "Order on WhatsApp"}
                       </div>
                       <div className="text-sm text-graphite">
-                        We confirm your order and arrange payment in chat
+                        Message Ashlee, AFP's owner, and arrange payment with her directly
                       </div>
                     </div>
                   </div>
                   <p className="text-sm text-graphite mb-4">
                     Your order details and reference{" "}
                     <span className="font-medium text-foreground">{orderRef}</span> are
-                    pre-filled — just press send.
+                    pre-filled — just press send. Your items are held for 24 hours while
+                    payment is arranged. After that an unpaid order is released.
                   </p>
                   <a
                     href={waLink(buildOrderMessage())}
