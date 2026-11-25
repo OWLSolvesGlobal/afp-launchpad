@@ -56,6 +56,11 @@ export function productImageUrl(filename: string): string {
   return (filename && assetsByName[filename]) || placeholder;
 }
 
+/** True when a real photo file exists for this product. */
+export function hasProductPhoto(filename: string): boolean {
+  return Boolean(filename && assetsByName[filename]);
+}
+
 export async function fetchCatalog(): Promise<CatalogSnapshot> {
   try {
     const res = await fetch("/api/catalog", { headers: { accept: "application/json" } });

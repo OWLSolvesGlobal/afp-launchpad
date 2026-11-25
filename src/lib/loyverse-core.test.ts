@@ -221,10 +221,11 @@ describe("bundled site-settings.json", () => {
       if (s.image) expect(files, `${name} -> ${s.image}`).toContain(s.image);
     }
   });
-  it("ships with every payment path off", () => {
+  // Bank QR code was switched on deliberately (25 Nov 2026). The card path is
+  // a stub and must stay off until a processor is wired in and reviewed.
+  it("ships with the card path off", () => {
     const c = (siteSettings as unknown as SiteSettings).config ?? {};
     expect(c.paymentsCardEnabled).toBe(false);
-    expect(c.paymentsTransferEnabled).toBe(false);
   });
 });
 

@@ -86,11 +86,33 @@ distinct values present, women-first (`deriveCategories`).
 **Currency is BBD only**, integer cents internally, displayed as
 `BDS $189.00` via `formatBbd`. No USD anywhere.
 
-**Payment paths are Config-gated.** Checkout always offers WhatsApp; the
-card section (a stub until Fygaro) and bank-transfer section render only
-when `paymentsCardEnabled` / `paymentsTransferEnabled` are `true` in
-`src/data/site-settings.json`. Both ship `false`. The
-Fygaro integration must touch only `src/components/checkout/CardPaymentSection.tsx`.
+**Payment paths are Config-gated.** Checkout always offers WhatsApp. The
+bank QR code section (`BankTransferSection.tsx`) renders when
+`paymentsTransferEnabled` is `true` in `src/data/site-settings.json`; it was
+switched on 25 Nov 2026. The card section is a stub until Fygaro and stays
+`false`. The Fygaro integration must touch only
+`src/components/checkout/CardPaymentSection.tsx`.
+
+**How QR payment works.** AFP is paid into its CIBC account by 1st Pay. Two
+codes exist: `qr-1stpay-cibc.png` (CIBC customers only) and
+`qr-1stpay-plus.png` (1st Pay Plus, any other Barbados-dollar bank). The
+site takes no payment itself: the customer pays from their banking app,
+typing the amount and the `AFP-YYYYMMDD-XXX` reference (a bank QR code
+cannot carry either), then sends the order on WhatsApp. The owner confirms
+each payment against the bank record. There is no server-side order record
+or stock hold yet; that is the next piece of work.
+
+**Prices include VAT.** Loyverse prices are VAT-inclusive, so the customer
+pays the shelf price online exactly as at the till. `taxCents` adds nothing
+on top (`PRICES_INCLUDE_VAT` in `src/lib/pricing.ts`). Total = subtotal +
+delivery.
+
+**No featured products.** The owner wants every item shown under its
+category with equal standing: the home page renders one row per Loyverse
+category. Products without a photo show a branded name tile
+(`ProductImage.tsx`); never a generated or borrowed image standing in for a
+real garment.
+
 Order lifecycle vocabulary is `pending → paid → delivered → cancelled`
 (`OrderStatus` in catalog-core).
 
@@ -224,12 +246,13 @@ tests to fail, and update them deliberately.
 
 ## Outstanding work
 
-1. **Payments.** No processor is wired in; checkout hands off to WhatsApp
-   with an `AFP-YYYYMMDD-XXX` order reference. Fygaro is the leading
-   candidate — it's First Atlantic Commerce's SMB platform, endorsed by both
-   CIBC and RBC in Barbados, and supports JWT-signed payment links plus
-   webhooks, which lets this storefront keep its own checkout. When it lands,
-   paid orders should be recorded in Loyverse as sales so stock drops.
+1. **Orders and holds.** Checkout shows the bank QR codes but nothing is
+   recorded server-side: the order exists only as the customer's WhatsApp
+   message, and stock is not held. Next: save orders, hold stock for 24
+   hours, email the owner (alofitnesspro@outlook.com, with
+   brandonhlouis@outlook.com as the test address), an orders page to mark
+   paid / delivered / cancelled, and record paid orders in Loyverse so stock
+   drops. Card payments via Fygaro (First Atlantic Commerce) come after.
 2. **Product photos.** Most Loyverse items have no photo in `src/assets` and
    show the placeholder. Add the file, then map it in `site-settings.json`.
 3. **Placeholder prices.** 15 items carry estimated prices entered in
