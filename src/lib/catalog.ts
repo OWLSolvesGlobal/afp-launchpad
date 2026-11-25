@@ -2,10 +2,10 @@
  * Catalog data layer for the storefront.
  *
  * The site reads one thing: the JSON snapshot at /api/catalog (served by the
- * site Worker from KV, refreshed from the Google Sheet every 5 minutes). It
+ * site Worker from KV, refreshed from Loyverse every 5 minutes). It
  * never talks to Google directly. If the endpoint is unavailable — local dev
  * without the Worker, or a brand-new deployment with an empty KV — the
- * bundled seed snapshot keeps the site rendering instead of white-screening.
+ * built-in empty catalog keeps the site rendering instead of white-screening.
  */
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -36,7 +36,7 @@ export {
 
 const seed = seedCatalog as unknown as CatalogSnapshot;
 
-// The Sheet's `image` column holds a filename from src/assets (never a URL).
+// A product's `image` is a filename from src/assets (never a URL).
 // Vite fingerprints those files at build time; this registry maps the plain
 // filename back to the hashed URL that actually exists in the bundle.
 const assetUrls = import.meta.glob("../assets/*", {
@@ -51,7 +51,7 @@ for (const [path, url] of Object.entries(assetUrls)) {
   if (base) assetsByName[base] = url;
 }
 
-/** Resolve a Sheet image filename to a servable URL, or the placeholder. */
+/** Resolve an image filename to a servable URL, or the placeholder. */
 export function productImageUrl(filename: string): string {
   return (filename && assetsByName[filename]) || placeholder;
 }

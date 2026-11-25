@@ -158,7 +158,7 @@ export default function ProductDetail() {
               )}
             </div>
 
-            {/* Owner-written copy from the Sheet's description column.
+            {/* Owner-written copy from site-settings.json.
                 Blank renders nothing — no placeholder text. */}
             {product.description && (
               <p className="text-sm text-graphite leading-relaxed mb-8 max-w-md whitespace-pre-line">

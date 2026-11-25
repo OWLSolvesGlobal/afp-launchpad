@@ -1,6 +1,6 @@
 /**
  * Brand constants — the single source for voice and contact details.
- * The Sheet's Config tab owns runtime config (announcement bar, payment
+ * site-settings.json owns runtime config (announcement bar, payment
  * flags); this file owns what is baked into the build.
  */
 

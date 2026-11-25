@@ -26,7 +26,7 @@ describe("fetchCatalog — seed fallback", () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("boom", { status: 500 })));
     const out = await fetchCatalog();
     expect(out.generatedAt).toBe(seed.generatedAt);
-    expect(out.products).toHaveLength(23);
+    expect(out.products).toHaveLength(0);
   });
 
   it("falls back when the dev server answers with index.html", async () => {
@@ -43,35 +43,22 @@ describe("fetchCatalog — seed fallback", () => {
   it("falls back when fetch itself throws (offline)", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("network down"); }));
     const out = await fetchCatalog();
-    expect(out.products).toHaveLength(23);
+    expect(out.products).toHaveLength(0);
   });
 });
 
-describe("seed catalog contract", () => {
-  it("never actives a product without a real client-supplied price", () => {
-    expect(seed.products).toHaveLength(23);
-    for (const p of seed.products) {
-      if (p.active) expect(p.priceCents).toBeGreaterThan(0);
-    }
+describe("built-in fallback catalog", () => {
+  // Loyverse is the only source of products. The bundled fallback exists so
+  // the site renders (empty) instead of white-screening; it must never carry
+  // products of its own, or stale data could be shown as if it were live.
+  it("carries no products and no categories", () => {
+    expect(seed.products).toEqual([]);
+    expect(seed.categories).toEqual([]);
   });
 
-  it("every live product's photo file actually resolves", () => {
-    for (const p of seed.products) {
-      if (p.active) {
-        expect(p.image).not.toBe("");
-        expect(productImageUrl(p.image)).not.toBe("/placeholder.svg");
-      }
-    }
-  });
-
-  it("derives categories only from purchasable products, women-first", () => {
-    expect(seed.categories).toEqual([
-      "Bodysuits & Rompers",
-      "Two-Piece Sets",
-      "Tennis & Golf",
-      "Men: T-Shirts",
-      "Men: Shorts",
-    ]);
+  it("ships with every payment path off", () => {
+    expect(seed.config.paymentsCardEnabled).toBe(false);
+    expect(seed.config.paymentsTransferEnabled).toBe(false);
   });
 });
 
@@ -100,7 +87,7 @@ describe("worker /api/catalog — KV-empty seed fallback", () => {
     expect(res.headers.get("x-afp-catalog-source")).toBe("seed");
     expect(res.headers.get("cache-control")).toBe("public, max-age=60");
     const body = await res.json();
-    expect(body.products).toHaveLength(23);
+    expect(body.products).toHaveLength(0);
   });
 
   it("serves the bundled seed when the KV binding is missing entirely", async () => {

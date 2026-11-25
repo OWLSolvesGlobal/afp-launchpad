@@ -54,9 +54,12 @@ React storefront (useCatalog / useProducts / useProduct)
 ```
 
 - Loyverse mapping: `src/lib/loyverse-core.ts` (pure, tested). Shared types
-  and render guards: `src/lib/catalog-core.ts`. The Sheet-parsing functions
-  still in catalog-core are legacy from the Google Sheet pipeline and are no
-  longer called by the Worker.
+  and render guards: `src/lib/catalog-core.ts`.
+- **Nothing else feeds the catalog.** The Google Sheet pipeline and its
+  sample products were removed on 25 Nov 2026. The bundled fallback
+  (`src/data/seed-catalog.json`) is deliberately empty: if KV has no
+  snapshot the shop shows no products, never stale ones. Do not put
+  products in it.
 - **The sync is read-only.** It sends GET requests to Loyverse and nothing
   else. Writing sales back to Loyverse is future work and needs human review.
 - One Loyverse item = one product page. Each colour is its own item in
@@ -66,8 +69,7 @@ React storefront (useCatalog / useProducts / useProduct)
 - Sync cron: every 5 minutes. Site cache: 60s. A Loyverse edit is live in ~6
   minutes, no deploy. A `site-settings.json` edit needs a deploy.
 - If Loyverse is unreachable, returns no items, or the token is missing, the
-  sync exits and the last good snapshot (or the bundled
-  `src/data/seed-catalog.json`) keeps serving. The site must never
+  sync exits and the last good snapshot keeps serving. The site must never
   white-screen because of catalog problems.
 
 **Render guards — do not weaken them.** A product renders only when it is
@@ -211,11 +213,12 @@ record or a signed webhook, never against the buyer's evidence.
 
 `npm run verify` = build + tests, and must pass with **zero** environment
 variables set. Suites cover cart totals, order pricing (VAT/shipping/credit
-rules), sheet parsing (sizes default, one-size stock, per-size availability),
-the render guards (inactive and price-0 exclusion), the seed fallback (KV
-empty, endpoint unavailable), and the order-reference format. The sheet
-parsing and guard tests have been mutation-checked — if you change semantics
-in `catalog-core.ts`, expect tests to fail, and update them deliberately.
+rules), the Loyverse mapping (sizes, prices, stock, sections, settings), the
+sync Worker (paging, read-only, token handling, refusal to publish an empty
+shop), the render guards (inactive and price-0 exclusion), the empty
+fallback (KV empty, endpoint unavailable), and the order-reference format.
+If you change semantics in `catalog-core.ts` or `loyverse-core.ts`, expect
+tests to fail, and update them deliberately.
 
 ---
 
@@ -237,5 +240,3 @@ in `catalog-core.ts`, expect tests to fail, and update them deliberately.
 5. **Brand voice split** — see above.
 6. **Colour grouping.** One page per product with a colour picker, instead
    of one page per Loyverse item.
-7. **Legacy Sheet code.** Remove the unused Sheet parsing from catalog-core
-   and the `docs/SHEET_TEMPLATE.md` / `docs/RUNBOOK.md` Sheet instructions.

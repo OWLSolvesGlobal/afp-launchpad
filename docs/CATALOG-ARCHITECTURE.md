@@ -66,15 +66,19 @@ reported in the sync log, which catches renames.
 | Failure | Behaviour |
 | --- | --- |
 | Token secret not set | Sync logs "skipped" and exits. |
-| KV namespace not bound | `/api/catalog` serves the bundled seed; sync no-ops. |
-| KV empty (first deploy) | `/api/catalog` serves the bundled seed until the first cron run. |
+| KV namespace not bound | `/api/catalog` serves the empty built-in fallback (no products); sync no-ops. |
+| KV empty (first deploy) | Empty fallback until the first cron run, at most 5 minutes. |
 | Loyverse errors or times out | Sync logs the status and exits; **last good snapshot keeps serving**. |
 | Loyverse returns no items | Sync refuses to overwrite; last snapshot keeps serving. |
 | Loyverse answers but no product comes out sellable | Sync refuses to publish an empty shop; last snapshot keeps serving. |
-| `/api/catalog` unreachable (local dev) | Frontend `fetchCatalog()` falls back to the bundled seed. |
+| `/api/catalog` unreachable (local dev) | Frontend `fetchCatalog()` falls back to the empty built-in catalog. |
 
 The response header `x-afp-catalog-source: kv | seed` tells you which path
-you're on.
+you're on. `GET /api/catalog/status` reports how the latest sync went.
+
+The built-in fallback (`src/data/seed-catalog.json`) is deliberately empty.
+Loyverse is the only source of products; the old Google Sheet pipeline and
+its sample products were removed on 25 Nov 2026.
 
 ## Render guards (why a product doesn't show)
 

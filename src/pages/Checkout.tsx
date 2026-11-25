@@ -32,8 +32,8 @@ const PICKUP_LOCATIONS = [
  * Checkout: cart review → order reference → payment paths.
  *
  * WhatsApp is always available. Card and Bank Transfer appear only when the
- * Sheet's Config tab enables them (payments_card_enabled /
- * payments_transfer_enabled) — turning a payment path on is a Sheet edit,
+ * site settings enable them (paymentsCardEnabled /
+ * paymentsTransferEnabled) — turning a payment path on is a settings edit,
  * never a deploy. The card section is a stub until Fygaro lands.
  */
 export default function Checkout() {
@@ -218,7 +218,7 @@ export default function Checkout() {
                   </a>
                 </div>
 
-                {/* Card + transfer render only when enabled from the Sheet */}
+                {/* Card + transfer render only when enabled in site settings */}
                 {cardEnabled && <CardPaymentSection orderRef={orderRef} />}
                 {transferEnabled && (
                   <BankTransferSection
