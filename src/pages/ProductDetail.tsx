@@ -3,12 +3,12 @@ import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronRight, Minus, Plus, Truck, RotateCcw, MapPin } from "lucide-react";
 import { Header } from "@/components/site/Header";
+import { ProductImage } from "@/components/site/ProductImage";
 import { Footer } from "@/components/site/Footer";
 import { ProductCard } from "@/components/site/ProductCard";
 import {
   formatPrice,
   isSoldOut,
-  productImageUrl,
   sizeStock,
   useProduct,
   useProducts,
@@ -109,13 +109,7 @@ export default function ProductDetail() {
             transition={{ duration: 0.6 }}
           >
             <div className="aspect-[4/5] overflow-hidden bg-muted relative">
-              <img
-                src={productImageUrl(product.image)}
-                alt={product.imageAlt}
-                width={1200}
-                height={1500}
-                className="w-full h-full object-cover"
-              />
+              <ProductImage product={product} width={1200} height={1500} eager size="hero" />
               {soldOut && (
                 <span className="absolute top-3 left-3 font-medium uppercase text-[10px] tracking-wider px-2 py-1 bg-ink text-bone">
                   Sold out

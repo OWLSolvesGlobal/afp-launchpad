@@ -15,7 +15,7 @@
     "featuredSkus": [],
     "heroOrder": [],
     "paymentsCardEnabled": false,
-    "paymentsTransferEnabled": false,
+    "paymentsTransferEnabled": true,
     "transferInstructions": ""
   },
   "items": {

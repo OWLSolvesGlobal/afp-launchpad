@@ -36,19 +36,11 @@ describe("shippingCents", () => {
 });
 
 describe("taxCents", () => {
-  it("is zero on an empty cart", () => {
+  // Shelf prices include VAT, so the site charges the same amount as the till.
+  it("adds nothing on top, because prices already include VAT", () => {
     expect(taxCents(0)).toBe(0);
-  });
-
-  it("applies 17.5% VAT", () => {
-    expect(taxCents(10_000)).toBe(1_750);
-    expect(taxCents(20_000)).toBe(3_500);
-  });
-
-  it("returns whole cents, never fractions", () => {
-    const tax = taxCents(999);
-    expect(Number.isInteger(tax)).toBe(true);
-    expect(tax).toBe(175); // 174.825 rounds to 175
+    expect(taxCents(10_000)).toBe(0);
+    expect(taxCents(13_000)).toBe(0);
   });
 });
 
@@ -98,15 +90,15 @@ describe("redeemCents", () => {
 });
 
 describe("calculateOrderTotal", () => {
-  it("sums subtotal, shipping and tax for a small delivery order", () => {
+  it("charges the shelf price plus delivery for a small delivery order", () => {
     const t = calculateOrderTotal({
       subtotalCents: 20_000,
       fulfillment: "delivery",
     });
     expect(t.shippingCents).toBe(1_500);
-    expect(t.taxCents).toBe(3_500);
+    expect(t.taxCents).toBe(0);
     expect(t.redeemedCents).toBe(0);
-    expect(t.totalCents).toBe(25_000);
+    expect(t.totalCents).toBe(21_500);
   });
 
   it("drops the shipping line once the order qualifies for free delivery", () => {
@@ -115,7 +107,7 @@ describe("calculateOrderTotal", () => {
       fulfillment: "delivery",
     });
     expect(t.shippingCents).toBe(0);
-    expect(t.totalCents).toBe(30_000 + 5_250);
+    expect(t.totalCents).toBe(30_000);
   });
 
   it("subtracts applied store credit", () => {
@@ -126,7 +118,7 @@ describe("calculateOrderTotal", () => {
       redeemDollarsInput: "50",
     });
     expect(t.redeemedCents).toBe(5_000);
-    expect(t.totalCents).toBe(20_000 + 1_500 + 3_500 - 5_000);
+    expect(t.totalCents).toBe(20_000 + 1_500 - 5_000);
   });
 
   it("caps credit at half the subtotal even when the balance is larger", () => {
@@ -137,7 +129,7 @@ describe("calculateOrderTotal", () => {
       redeemDollarsInput: "999",
     });
     expect(t.redeemedCents).toBe(10_000);
-    expect(t.totalCents).toBe(15_000);
+    expect(t.totalCents).toBe(11_500);
   });
 
   it("charges nothing for an empty cart", () => {

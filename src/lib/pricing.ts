@@ -21,8 +21,13 @@ export const FREE_SHIPPING_THRESHOLD_CENTS = 30_000; // BBD $300
 /** Flat island-wide delivery fee below the free-shipping threshold. */
 export const FLAT_SHIPPING_CENTS = 1_500; // BBD $15
 
-/** Barbados VAT. */
+/**
+ * Barbados VAT rate. AFP's prices (set in Loyverse) already INCLUDE VAT, so
+ * the customer pays the shelf price online exactly as at the till and
+ * nothing is added on top at checkout.
+ */
 export const VAT_RATE = 0.175;
+export const PRICES_INCLUDE_VAT = true;
 
 /** Store credit may cover at most this share of the subtotal. */
 export const MAX_CREDIT_SHARE_OF_SUBTOTAL = 0.5;
@@ -36,7 +41,12 @@ export function shippingCents(
   return subtotalCents >= FREE_SHIPPING_THRESHOLD_CENTS ? 0 : FLAT_SHIPPING_CENTS;
 }
 
+/**
+ * Tax added ON TOP of the subtotal. Zero while prices include VAT; the rate
+ * only applies if the shop ever switches to VAT-exclusive pricing.
+ */
 export function taxCents(subtotalCents: number): number {
+  if (PRICES_INCLUDE_VAT) return 0;
   return Math.round(subtotalCents * VAT_RATE);
 }
 

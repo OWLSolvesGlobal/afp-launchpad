@@ -117,7 +117,7 @@ export const CartDrawer = () => {
                 <span className="font-serif text-2xl">{formatMoney(subtotal)}</span>
               </div>
               <p className="text-[11px] text-graphite uppercase tracking-wider">
-                Shipping & taxes calculated at checkout
+                Prices include VAT · Delivery calculated at checkout
               </p>
               <button
                 onClick={goToCheckout}

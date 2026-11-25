@@ -5,10 +5,10 @@ import {
   firstAvailableSize,
   formatPrice,
   isSoldOut,
-  productImageUrl,
   type Product,
 } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
+import { ProductImage } from "@/components/site/ProductImage";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 
@@ -50,13 +50,11 @@ export const ProductCard = ({ product, index = 0 }: Props) => {
         aria-label={`${product.name} — ${formatPrice(product.priceCents)}`}
       >
         <div className="relative aspect-[4/5] overflow-hidden bg-muted">
-          <img
-            src={productImageUrl(product.image)}
-            alt={product.imageAlt}
-            loading="lazy"
+          <ProductImage
+            product={product}
             width={800}
             height={1000}
-            className="w-full h-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
+            className="transition-transform duration-700 ease-out-expo group-hover:scale-105"
           />
 
           {soldOut ? (

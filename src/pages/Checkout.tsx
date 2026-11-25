@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, MapPin, Store, Check, MessageCircle } from "lucide-react";
 import { Header } from "@/components/site/Header";
@@ -8,7 +8,11 @@ import { newOrderId, useCatalog } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { waLink } from "@/lib/brand";
 import { CardPaymentSection } from "@/components/checkout/CardPaymentSection";
-import { BankTransferSection } from "@/components/checkout/BankTransferSection";
+import {
+  BankTransferSection,
+  paymentSchemeFor,
+  type PayerBank,
+} from "@/components/checkout/BankTransferSection";
 import { calculateOrderTotal, FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/pricing";
 
 import type { Fulfillment } from "@/lib/pricing";
@@ -31,10 +35,10 @@ const PICKUP_LOCATIONS = [
 /**
  * Checkout: cart review → order reference → payment paths.
  *
- * WhatsApp is always available. Card and Bank Transfer appear only when the
- * site settings enable them (paymentsCardEnabled /
- * paymentsTransferEnabled) — turning a payment path on is a settings edit,
- * never a deploy. The card section is a stub until Fygaro lands.
+ * WhatsApp is always available. Bank QR code and Card appear only when the
+ * site settings enable them (paymentsTransferEnabled /
+ * paymentsCardEnabled). The card section is a stub until Fygaro lands.
+ * Prices include VAT, so the total is subtotal plus delivery.
  */
 export default function Checkout() {
   const { items, subtotal, count } = useCart();
@@ -48,7 +52,6 @@ export default function Checkout() {
 
   const cardEnabled = catalog?.config.paymentsCardEnabled ?? false;
   const transferEnabled = catalog?.config.paymentsTransferEnabled ?? false;
-  const transferInstructions = catalog?.config.transferInstructions ?? "";
 
   useEffect(() => {
     document.title = "Checkout — Alo Fitness Pro";
@@ -56,33 +59,40 @@ export default function Checkout() {
 
   const {
     shippingCents: shipping,
-    taxCents: tax,
     totalCents: total,
   } = calculateOrderTotal({
     subtotalCents: subtotal,
     fulfillment,
   });
 
-  const waCheckoutMessage = useMemo(() => {
-    if (items.length === 0) return "Hi AFP!";
-    const lines = items.map(
-      (i) =>
-        `• ${i.name} — ${i.color ? `${i.color} / ` : ""}${i.size} × ${i.quantity} (${formatMoney(i.priceCents * i.quantity)})`,
-    );
-    const pickup = PICKUP_LOCATIONS.find((l) => l.id === pickupLocation);
-    return (
-      `Hi AFP! I'd like to place this order:\n` +
-      `Order ref: ${orderRef}\n\n` +
-      `${lines.join("\n")}\n\n` +
-      `Subtotal: ${formatMoney(subtotal)}\n` +
-      `${fulfillment === "pickup" ? "Pickup" : "Delivery"}: ${shipping === 0 ? "Free" : formatMoney(shipping)}\n` +
-      `VAT (17.5%): ${formatMoney(tax)}\n` +
-      `Total: ${formatMoney(total)}\n\n` +
-      (fulfillment === "pickup"
-        ? `Pickup preferred — ${pickup?.name ?? "location to confirm"}.`
-        : "Please arrange delivery.")
-    );
-  }, [items, subtotal, shipping, tax, total, fulfillment, pickupLocation, orderRef]);
+  // The order message sent to AFP on WhatsApp. `paidWith` is set when the
+  // customer has already paid by bank QR code, so the owner knows to look for
+  // the payment in her bank record under this reference.
+  const buildOrderMessage = useCallback(
+    (paidWith?: PayerBank) => {
+      if (items.length === 0) return "Hi AFP!";
+      const lines = items.map(
+        (i) =>
+          `• ${i.name} — ${i.color ? `${i.color} / ` : ""}${i.size} × ${i.quantity} (${formatMoney(i.priceCents * i.quantity)})`,
+      );
+      const pickup = PICKUP_LOCATIONS.find((l) => l.id === pickupLocation);
+      return (
+        `Hi AFP! I'd like to place this order:\n` +
+        `Order ref: ${orderRef}\n\n` +
+        `${lines.join("\n")}\n\n` +
+        `Subtotal: ${formatMoney(subtotal)}\n` +
+        `${fulfillment === "pickup" ? "Pickup" : "Delivery"}: ${shipping === 0 ? "Free" : formatMoney(shipping)}\n` +
+        `Total (VAT included): ${formatMoney(total)}\n\n` +
+        (paidWith
+          ? `I have paid ${formatMoney(total)} by ${paymentSchemeFor(paidWith)} with reference ${orderRef}.\n\n`
+          : "") +
+        (fulfillment === "pickup"
+          ? `Pickup preferred — ${pickup?.name ?? "location to confirm"}.`
+          : "Please arrange delivery.")
+      );
+    },
+    [items, subtotal, shipping, total, fulfillment, pickupLocation, orderRef],
+  );
 
   if (count === 0) {
     return (
@@ -189,6 +199,16 @@ export default function Checkout() {
             <section>
               <h2 className="eyebrow text-graphite mb-4">02 — Payment</h2>
               <div className="space-y-4">
+                {/* Bank QR code — primary path when enabled in site settings */}
+                {transferEnabled && (
+                  <BankTransferSection
+                    orderRef={orderRef}
+                    totalLabel={formatMoney(total)}
+                    totalPlain={(total / 100).toFixed(2)}
+                    paidHref={(bank) => waLink(buildOrderMessage(bank))}
+                  />
+                )}
+
                 {/* WhatsApp — always available */}
                 <div className="border border-border rounded-2xl p-5">
                   <div className="flex items-center gap-3 mb-2">
@@ -196,7 +216,9 @@ export default function Checkout() {
                       <MessageCircle className="w-5 h-5" strokeWidth={1.5} />
                     </span>
                     <div>
-                      <div className="font-medium">Order on WhatsApp</div>
+                      <div className="font-medium">
+                        {transferEnabled ? "Or order first, pay after" : "Order on WhatsApp"}
+                      </div>
                       <div className="text-sm text-graphite">
                         We confirm your order and arrange payment in chat
                       </div>
@@ -208,24 +230,23 @@ export default function Checkout() {
                     pre-filled — just press send.
                   </p>
                   <a
-                    href={waLink(waCheckoutMessage)}
+                    href={waLink(buildOrderMessage())}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Send this order to AFP on WhatsApp (opens in a new tab)"
-                    className="w-full inline-flex items-center justify-center gap-2 px-6 h-12 eyebrow bg-ink text-bone hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
+                    className={cn(
+                      "w-full inline-flex items-center justify-center gap-2 px-6 h-12 eyebrow transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40",
+                      transferEnabled
+                        ? "border border-foreground text-foreground hover:bg-muted"
+                        : "bg-ink text-bone hover:bg-accent",
+                    )}
                   >
                     <MessageCircle aria-hidden="true" className="w-4 h-4" /> Send Order on WhatsApp
                   </a>
                 </div>
 
-                {/* Card + transfer render only when enabled in site settings */}
+                {/* Card path — a stub until Fygaro; off by default */}
                 {cardEnabled && <CardPaymentSection orderRef={orderRef} />}
-                {transferEnabled && (
-                  <BankTransferSection
-                    orderRef={orderRef}
-                    instructions={transferInstructions}
-                  />
-                )}
               </div>
             </section>
           </div>
@@ -275,7 +296,6 @@ export default function Checkout() {
                   label={fulfillment === "pickup" ? "Pickup" : "Shipping"}
                   value={shipping === 0 ? "Free" : formatMoney(shipping)}
                 />
-                <Row label="VAT (17.5%)" value={formatMoney(tax)} />
               </div>
 
               <div className="flex items-baseline justify-between pt-3 border-t border-border">
@@ -284,7 +304,7 @@ export default function Checkout() {
               </div>
 
               <p className="text-[11px] text-graphite text-center uppercase tracking-wider">
-                Prices in BBD · Orders confirmed on WhatsApp
+                Prices in BBD, VAT included · Orders confirmed on WhatsApp
               </p>
             </div>
           </aside>

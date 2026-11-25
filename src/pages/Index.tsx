@@ -10,6 +10,7 @@ import mensTile from "@/assets/afp-mens-black.webp";
 import { INSTAGRAM_HANDLE, INSTAGRAM_URL, TAGLINE, waLink } from "@/lib/brand";
 import {
   categorySlug,
+  isSoldOut,
   productImageUrl,
   useCatalog,
   visibleProducts,
@@ -27,29 +28,27 @@ const Index = () => {
     [catalog],
   );
 
-  // Category tiles are derived from Loyverse (women-first), never hardcoded.
-  const collections = useMemo(
+  // Every Loyverse category gets its own row on the home page (women-first,
+  // never hardcoded). No "featured" picks: the owner wants every item shown
+  // under its category, with equal standing.
+  const HOME_ROW_SIZE = 4;
+  const categoryRows = useMemo(
     () =>
-      (catalog?.categories ?? []).slice(0, 4).map((category) => ({
-        slug: categorySlug(category),
-        label: category,
-        img: productImageUrl(
-          products.find((p) => p.category === category)?.image ?? "",
-        ),
-      })),
+      (catalog?.categories ?? [])
+        .map((category) => {
+          const all = products.filter((p) => p.category === category);
+          // In-stock pieces first so a row never leads with sold-out items.
+          const ordered = [...all].sort((x, y) => Number(isSoldOut(x)) - Number(isSoldOut(y)));
+          return {
+            slug: categorySlug(category),
+            label: category,
+            count: all.length,
+            items: ordered.slice(0, HOME_ROW_SIZE),
+          };
+        })
+        .filter((row) => row.count > 0),
     [catalog, products],
   );
-
-  // Featured grid: the featuredSkus setting, else newest-first
-  // women's pieces.
-  const featured = useMemo(() => {
-    const bySku = new Map(products.map((p) => [p.sku, p]));
-    const picked = (catalog?.config.featuredSkus ?? [])
-      .map((sku) => bySku.get(sku))
-      .filter((p): p is NonNullable<typeof p> => Boolean(p));
-    if (picked.length) return picked;
-    return products.filter((p) => p.gender !== "men").slice(0, 6);
-  }, [catalog, products]);
 
   // hero_order lets the owner pick the hero image in site-settings.json.
   const heroImage = useMemo(() => {
@@ -118,61 +117,33 @@ const Index = () => {
           </div>
         </section>
 
-        {/* COLLECTIONS STRIP — categories straight from Loyverse */}
-        {collections.length > 0 && (
-          <section className="container py-14 md:py-20">
-            <div className="flex items-end justify-between mb-8">
-              <h2 className="display-md">Collections</h2>
-              <span className="eyebrow text-graphite">Explore</span>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
-              {collections.map((c) => (
-                <Link
-                  key={c.slug}
-                  to={`/collection/${c.slug}`}
-                  className="group relative aspect-[3/4] overflow-hidden bg-muted"
-                >
-                  <img
-                    src={c.img}
-                    alt={c.label}
-                    loading="lazy"
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-card-hover" />
-                  <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
-                    <span className="text-bone font-medium tracking-tight">
-                      {c.label}
-                    </span>
-                    <ArrowRight className="w-4 h-4 text-bone transition-transform group-hover:translate-x-1" />
-                  </div>
-                </Link>
+        {/* SHOP BY CATEGORY — jump links, straight from Loyverse */}
+        {categoryRows.length > 0 && (
+          <nav aria-label="Shop by category" className="container pt-12 md:pt-16">
+            <div className="eyebrow text-graphite mb-4">Shop by category</div>
+            <ul className="flex flex-wrap gap-2">
+              {categoryRows.map((row) => (
+                <li key={row.slug}>
+                  <a
+                    href={`#cat-${row.slug}`}
+                    className="inline-flex items-center gap-2 border border-border px-4 h-10 text-sm font-medium hover:bg-ink hover:text-bone transition-colors"
+                  >
+                    {row.label}
+                    <span className="text-[11px] opacity-60 tabular-nums">{row.count}</span>
+                  </a>
+                </li>
               ))}
-            </div>
-          </section>
+            </ul>
+          </nav>
         )}
 
-        {/* FEATURED SHOP */}
-        <section id="shop" className="bg-bone py-16 md:py-24">
-          <div className="container">
-            <div className="flex items-end justify-between mb-8 md:mb-10">
-              <div>
-                <div className="eyebrow text-accent mb-3">Shop</div>
-                <h2 className="display-md">Featured</h2>
-              </div>
-              <Link
-                to="/shop/women"
-                className="hidden md:inline-flex items-center gap-2 text-sm font-medium link-accent"
-              >
-                See full catalog <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {featured.length === 0 ? (
+        {/* ONE ROW PER CATEGORY */}
+        <div id="shop">
+          {categoryRows.length === 0 ? (
+            <section className="container py-16 md:py-24">
               <div className="bg-card p-10 md:p-16 text-center">
                 <div className="eyebrow text-accent mb-4">New drop loading</div>
-                <h3 className="display-md mb-4">
-                  The next collection is landing soon.
-                </h3>
+                <h3 className="display-md mb-4">The next collection is landing soon.</h3>
                 <p className="text-graphite mb-8 max-w-md mx-auto">
                   Message us on WhatsApp and we'll tell you the moment it drops.
                 </p>
@@ -185,27 +156,34 @@ const Index = () => {
                   <MessageCircle className="w-3.5 h-3.5" /> Notify me on WhatsApp
                 </a>
               </div>
-            ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {featured.map((p, i) => (
-                  <ProductCard key={p.sku} product={p} index={i} />
-                ))}
-              </div>
-            )}
-            <p className="mt-10 text-center text-sm text-graphite">
-              More drops on the way —{" "}
-              <a
-                href={waLink("Hi! Notify me when new AFP pieces drop.")}
-                target="_blank"
-                rel="noreferrer"
-                className="underline underline-offset-4 font-medium text-ink hover:text-accent transition-colors"
+            </section>
+          ) : (
+            categoryRows.map((row, rowIndex) => (
+              <section
+                key={row.slug}
+                id={`cat-${row.slug}`}
+                className={`scroll-mt-24 py-12 md:py-16 ${rowIndex % 2 === 1 ? "bg-bone" : ""}`}
               >
-                get first access on WhatsApp
-              </a>
-              .
-            </p>
-          </div>
-        </section>
+                <div className="container">
+                  <div className="flex items-end justify-between mb-6 md:mb-8">
+                    <h2 className="display-md">{row.label}</h2>
+                    <Link
+                      to={`/collection/${row.slug}`}
+                      className="inline-flex items-center gap-2 text-sm font-medium link-accent"
+                    >
+                      View all {row.count} <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    {row.items.map((p, i) => (
+                      <ProductCard key={p.sku} product={p} index={i} />
+                    ))}
+                  </div>
+                </div>
+              </section>
+            ))
+          )}
+        </div>
 
         {/* AFP MEN BAND */}
         <section className="container py-6 md:py-10">
