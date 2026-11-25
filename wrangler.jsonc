@@ -39,6 +39,19 @@
     { "binding": "AFP_CATALOG", "id": "78d73e1a5ae24b9fa708ce321de3ceba" }
   ],
 
+  // The Loyverse access token. It lives in the account's Secrets Store under
+  // the name AFPWebsite; this binding is what lets the Worker read it
+  // (`await env.AFPWebsite.get()`). The store id is not secret. If the token
+  // is ever replaced, update the secret's value in the Secrets Store; nothing
+  // here changes.
+  "secrets_store_secrets": [
+    {
+      "binding": "AFPWebsite",
+      "store_id": "beb8798f2923435cb4a6ebd35e1f07b3",
+      "secret_name": "AFPWebsite"
+    }
+  ],
+
   "observability": {
     "enabled": true
   }
