@@ -123,11 +123,10 @@ site is ever rebuilt in a new Cloudflare account.
    the returned id in the `kv_namespaces` block in `wrangler.jsonc`.
 
 2. **Loyverse access token.** In the Loyverse Back Office, open Access tokens
-   and add a token. Store it as a Worker secret named `AFPWebsite`:
-
-   ```bash
-   npx wrangler secret put AFPWebsite
-   ```
+   and add a token. Store it in Cloudflare's **Secrets Store** (Storage &
+   Databases > Secrets Store) as a secret named `AFPWebsite` with the Workers
+   scope. The `secrets_store_secrets` block in `wrangler.jsonc` binds it to
+   the Worker by store id.
 
    Never commit the token or paste it into chat, an issue, or a PR.
 

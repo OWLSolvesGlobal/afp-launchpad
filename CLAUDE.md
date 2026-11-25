@@ -96,8 +96,10 @@ Order lifecycle vocabulary is `pending → paid → delivered → cancelled`
 `site-settings.json` by filename and resolved through `productImageUrl()`.
 Items with no photo show `/placeholder.svg`. Never hotlinked images.
 
-Sync setup (KV namespace + the `AFPWebsite` Loyverse token secret) is
-documented in `README.md` → "Catalog sync setup".
+Sync setup (KV namespace + the `AFPWebsite` Loyverse token, held in the
+account's Secrets Store and bound in `wrangler.jsonc`) is documented in
+`README.md` → "Catalog sync setup". `GET /api/catalog/status` reports how
+the latest sync went.
 
 ---
 

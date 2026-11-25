@@ -39,10 +39,29 @@ export interface Env {
   ASSETS: Fetcher;
   /** Optional so a deployment without the namespace still serves the seed. */
   AFP_CATALOG?: KVNamespace;
-  /** Loyverse access token (Worker secret). Named as created in Cloudflare. */
-  AFPWebsite?: string;
-  /** Alternative secret name, if the token is ever re-created. */
+  /**
+   * Loyverse access token. It lives in the account's Secrets Store under the
+   * name AFPWebsite and reaches the Worker through the `secrets_store_secrets`
+   * binding in wrangler.jsonc, which exposes an object with an async get().
+   * A plain Worker secret of the same name (a string) is accepted too.
+   */
+  AFPWebsite?: string | SecretBinding;
+  /** Alternative plain Worker secret, if the token is ever re-created. */
   LOYVERSE_API_TOKEN?: string;
+}
+
+interface SecretBinding {
+  get(): Promise<string>;
+}
+
+/** Read the token from whichever form it was provided in. Empty -> null. */
+export async function resolveToken(env: Env): Promise<string | null> {
+  const source = env.AFPWebsite;
+  let value: string | undefined;
+  if (typeof source === "string") value = source;
+  else if (source && typeof source.get === "function") value = await source.get();
+  value = (value ?? "").trim() || (env.LOYVERSE_API_TOKEN ?? "").trim();
+  return value || null;
 }
 
 export const KV_KEY = "catalog:v1";
@@ -131,9 +150,20 @@ export async function fetchAllPages<T>(
 }
 
 export async function syncCatalog(env: Env, fetchImpl: Fetch = fetch): Promise<void> {
-  const token = env.AFPWebsite || env.LOYVERSE_API_TOKEN;
   if (!env.AFP_CATALOG) {
     console.log("catalog sync skipped: AFP_CATALOG KV binding missing");
+    return;
+  }
+  let token: string | null = null;
+  try {
+    token = await resolveToken(env);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`catalog sync failed: could not read the AFPWebsite secret: ${message}`);
+    await recordStatus(env, {
+      outcome: "failed",
+      detail: `Could not read the AFPWebsite secret from the Secrets Store: ${message}`,
+    });
     return;
   }
   if (!token) {
@@ -141,7 +171,7 @@ export async function syncCatalog(env: Env, fetchImpl: Fetch = fetch): Promise<v
     await recordStatus(env, {
       outcome: "skipped",
       detail:
-        "The Worker cannot see a secret named AFPWebsite. Add it under the Worker's Settings > Variables and Secrets, type Secret.",
+        "The Worker cannot see the AFPWebsite secret. Check the secrets_store_secrets binding in wrangler.jsonc and that the secret's scope includes Workers.",
     });
     return;
   }
