@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ClipboardList, History, Inbox, Settings as Cog } from "lucide-react";
+import { ClipboardList, Inbox, Settings as Cog } from "lucide-react";
 import afpLogo from "@/assets/afp-logo.png";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { cn } from "@/lib/utils";
@@ -17,7 +17,6 @@ const NAV = [
   { to: "/admin", label: "Needs you", icon: Inbox, end: true },
   { to: "/admin/orders", label: "Orders", icon: ClipboardList, end: false },
   { to: "/admin/settings", label: "Settings", icon: Cog, end: false },
-  { to: "/admin/activity", label: "Activity", icon: History, end: false },
 ];
 
 /**
@@ -119,7 +118,7 @@ export default function Admin() {
 
       {/* Phone: the four places, within thumb reach. */}
       <nav aria-label="Portal" className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-background border-t border-border pb-[env(safe-area-inset-bottom)]">
-        <ul className="grid grid-cols-4">
+        <ul className="grid grid-cols-3">
           {NAV.map((n) => (
             <li key={n.to}>
               <NavLink

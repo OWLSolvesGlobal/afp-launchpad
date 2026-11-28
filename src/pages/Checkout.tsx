@@ -10,7 +10,7 @@ import { waLink } from "@/lib/brand";
 import { calculateOrderTotal, FREE_SHIPPING_THRESHOLD_CENTS, type Fulfillment } from "@/lib/pricing";
 import {
   clearActiveOrder,
-  fetchPickupLocations,
+  fetchCheckoutConfig,
   isFailure,
   lastOrder,
   loadActiveOrder,
@@ -220,11 +220,15 @@ function DetailsStep({ onReserved }: { onReserved: (view: OrderView, token: stri
   const { data: catalog } = useCatalog();
   const [fulfillment, setFulfillment] = useState<Fulfillment>("delivery");
   // Pickup locations are the owner's list, set in the portal.
-  const { data: pickupLocations = DEFAULT_PICKUP_LOCATIONS } = useQuery({
+  const { data: checkoutConfig } = useQuery({
     queryKey: ["checkout-config"],
-    queryFn: fetchPickupLocations,
+    queryFn: fetchCheckoutConfig,
     staleTime: 60_000,
   });
+  const pickupLocations = checkoutConfig?.pickupLocations ?? DEFAULT_PICKUP_LOCATIONS;
+  // Said before anything is reserved, so nobody finds out too late that they can't pay.
+  const cibc = catalog?.config.paymentsTransferEnabled ?? false;
+  const payWith = [cibc ? "CIBC 1st Pay" : "", checkoutConfig?.bankTransfer ? "bank transfer from any bank" : ""].filter(Boolean);
   const [chosenPickup, setChosenPickup] = useState("");
   const pickupLocation = pickupLocations.some((l) => l.name === chosenPickup) ? chosenPickup : (pickupLocations[0]?.name ?? "");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
@@ -536,6 +540,11 @@ function DetailsStep({ onReserved }: { onReserved: (view: OrderView, token: stri
           </label>
 
           <div className="space-y-3">
+            {payWith.length > 0 && (
+              <p className="text-sm">
+                <span className="font-medium">How you'll pay:</span> {payWith.join(" or ")}, from your own banking app.
+              </p>
+            )}
             <button
               type="submit"
               disabled={submitting || gone.length > 0}
@@ -544,8 +553,8 @@ function DetailsStep({ onReserved }: { onReserved: (view: OrderView, token: stri
               {submitting ? "Reserving your items…" : "Reserve my items and pay"}
             </button>
             <p className="text-xs text-graphite">
-              We'll hold your items for 60 minutes while you pay from your banking app and upload proof of payment.
-              Nothing is charged by this site.
+              We'll hold your items for 60 minutes while you pay and upload a screenshot as proof of payment. Nothing
+              is charged by this site.
             </p>
             <HelpLink />
           </div>

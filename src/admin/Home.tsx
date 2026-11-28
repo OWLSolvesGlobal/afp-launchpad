@@ -88,7 +88,7 @@ export default function Home() {
             <Tile label="Proofs to check" value={String(s.proofsWaiting)} />
             <Tile label="To deliver" value={String(s.toDeliver)} />
             <Tile label="Paid today" value={formatBbd(s.paidTodayCents)} hint={`${s.paidTodayCount} ${s.paidTodayCount === 1 ? "order" : "orders"}`} />
-            <Tile label="Held, not yet paid" value={String(s.heldUnpaid)} hint="Customers still paying" />
+            <Tile label="To ring up in Loyverse" value={String(s.needsLoyverse)} hint={s.needsLoyverse === 0 ? "All recorded" : "Paid, not yet at the till"} />
           </>
         ) : (
           Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-[104px]" />)

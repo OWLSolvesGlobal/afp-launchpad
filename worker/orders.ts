@@ -182,7 +182,10 @@ export async function loadPickupLocations(db: OrdersDb) {
 export async function checkoutConfig(env: OrdersEnv): Promise<Response> {
   const db = env.ORDERS_DB;
   const pickupLocations = db ? await loadPickupLocations(db).catch(() => parsePickupLocations(null)) : parsePickupLocations(null);
-  return json({ pickupLocations }, 200, { "cache-control": "public, max-age=60" });
+  // Whether bank transfer is on, as a yes/no only. The details themselves go
+  // out solely with a valid order token.
+  const bankTransfer = db ? Boolean(await loadBankDetails(db).catch(() => null)) : false;
+  return json({ pickupLocations, bankTransfer }, 200, { "cache-control": "public, max-age=60" });
 }
 
 /** Payment details for an order that is still waiting to be paid. */
@@ -207,9 +210,20 @@ export async function authoriseOrder(request: Request, db: OrdersDb, ref: string
 
 export const orderNotFound = (): Response => json({ error: "We couldn't find that order." }, 404);
 
-/** A visitor's address, hashed. Used for rate limits; the address is never stored. */
-export async function clientHashOf(request: Request): Promise<string> {
+/** A visitor's network address, hashed. Used for rate limits; the address is never stored. */
+export async function networkHashOf(request: Request): Promise<string> {
   return sha256Hex(`afp-client|${request.headers.get("cf-connecting-ip") ?? "unknown"}`);
+}
+
+/**
+ * One device on one network, hashed. The browser sends a random id it made
+ * up for itself (x-afp-device); it identifies nobody and is only ever used to
+ * count. Without one, the device is simply the network.
+ */
+export async function clientHashOf(request: Request): Promise<string> {
+  const network = await networkHashOf(request);
+  const device = (request.headers.get("x-afp-device") ?? "").trim();
+  return /^[0-9a-f]{32}$/.test(device) ? sha256Hex(`afp-device|${network}|${device}`) : network;
 }
 
 export interface OrdersEnv {
@@ -254,10 +268,31 @@ export async function createOrder(
     }
   }
 
-  // --- Rate limits, per visitor (hashed address; the address itself is not stored)
+  // --- Rate limits: tight per device, loose per network (many customers can
+  // share one phone-network address). Hashes only; no address is stored.
   const clientHash = await clientHashOf(request);
+  const netHash = await networkHashOf(request);
   const nowIso = now.toISOString();
   const windowStart = new Date(now.getTime() - ORDER_LIMITS.windowMinutes * 60_000).toISOString();
+
+  const network = await db
+    .prepare(
+      `SELECT SUM(CASE WHEN created_at > ?1 THEN 1 ELSE 0 END) AS recent,
+              SUM(CASE WHEN status = 'reserved' AND expires_at > ?2 THEN 1 ELSE 0 END) AS open
+         FROM orders WHERE net_hash = ?3`,
+    )
+    .bind(windowStart, nowIso, netHash)
+    .first<{ recent: number | null; open: number | null }>();
+  if (
+    Number(network?.recent ?? 0) >= ORDER_LIMITS.maxNetworkOrdersPerWindow ||
+    Number(network?.open ?? 0) >= ORDER_LIMITS.maxNetworkOpenReservations
+  ) {
+    return json(
+      { error: "The shop is very busy on your network right now. Please try again in a few minutes." },
+      429,
+      { "retry-after": String(ORDER_LIMITS.windowMinutes * 60) },
+    );
+  }
 
   const recent = await db
     .prepare(`SELECT COUNT(*) AS n FROM orders WHERE client_hash = ? AND created_at > ?`)
@@ -306,8 +341,8 @@ export async function createOrder(
           `INSERT INTO orders
              (ref, token_hash, status, fulfillment, pickup_location, customer_name, customer_phone,
               customer_email, delivery_address, subtotal_cents, shipping_cents, total_cents,
-              created_at, expires_at, client_hash, marketing_opt_in, marketing_opt_in_at)
-           VALUES (?, ?, 'reserved', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              created_at, expires_at, client_hash, marketing_opt_in, marketing_opt_in_at, net_hash)
+           VALUES (?, ?, 'reserved', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           ref,
@@ -326,6 +361,7 @@ export async function createOrder(
           clientHash,
           input.marketingOptIn ? 1 : 0,
           input.marketingOptIn ? nowIso : null,
+          netHash,
         ),
       ...order.lines.map((line) =>
         db

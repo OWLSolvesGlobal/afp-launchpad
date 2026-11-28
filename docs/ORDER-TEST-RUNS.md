@@ -34,7 +34,7 @@ Reservation window: 60 minutes. Delivery: BDS $15, free at BDS $300 or more.
 | 13 | Item sells out at the till, or its price changes, while in a cart | Sold out: refused. Price change: new price shown and charged | 1 | yes | |
 | 14 | Admin presses Mark paid twice | One sale in Loyverse, not two | 5 | | |
 | 15 | Loyverse unreachable when marking paid | Order is still Paid; flagged "not recorded in Loyverse"; stock stays held | 5 | Hold: yes | |
-| 16 | Fifty rapid order attempts from one visitor | Slowed after 6 in 10 minutes; never more than 3 unpaid orders held | 1 | yes | |
+| 16 | Fifty rapid order attempts from one visitor | One device: slowed after 6 in 10 minutes, never more than 3 unpaid orders. One sender inventing devices: stopped at 40 per network | 1 | yes | |
 
 ## Log of hand runs
 

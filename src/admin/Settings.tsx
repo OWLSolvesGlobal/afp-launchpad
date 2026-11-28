@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { PickupLocation } from "@/lib/orders-core";
 import { adminGet, adminPost, when, type AdminError, type AdminSettings } from "./api";
@@ -271,6 +272,17 @@ export default function Settings() {
           )}
         </div>
       </section>
+
+      <Link
+        to="/admin/activity"
+        className={`${card} flex items-center justify-between gap-4 p-5 md:p-6 hover:border-foreground/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40`}
+      >
+        <span>
+          <span className="block font-serif text-2xl">Activity record</span>
+          <span className="block text-sm text-graphite mt-1">Who did what to each order, and when. For when you need to check.</span>
+        </span>
+        <ArrowRight className="w-5 h-5 shrink-0" aria-hidden="true" />
+      </Link>
 
       <p className="text-sm text-graphite">
         Items, sizes, prices, stock and photos are managed in Loyverse, as always. The shop follows within about six minutes.

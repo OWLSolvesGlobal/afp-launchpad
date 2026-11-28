@@ -157,15 +157,47 @@ export interface ReserveInput {
   marketingOptIn: boolean;
 }
 
-/** Pickup locations the owner offers. Falls back to the built-in list if the shop can't be reached. */
-export async function fetchPickupLocations(): Promise<PickupLocation[]> {
+export interface CheckoutConfig {
+  pickupLocations: PickupLocation[];
+  /** True once the owner has saved bank details. Never the details themselves. */
+  bankTransfer: boolean;
+}
+
+/** What checkout needs before an order exists. Falls back to safe defaults if the shop can't be reached. */
+export async function fetchCheckoutConfig(): Promise<CheckoutConfig> {
+  const fallback: CheckoutConfig = { pickupLocations: DEFAULT_PICKUP_LOCATIONS, bankTransfer: false };
   try {
     const res = await fetch("/api/checkout-config");
-    if (!res.ok) return DEFAULT_PICKUP_LOCATIONS;
-    const body = (await res.json()) as { pickupLocations?: PickupLocation[] };
-    return Array.isArray(body.pickupLocations) && body.pickupLocations.length > 0 ? body.pickupLocations : DEFAULT_PICKUP_LOCATIONS;
+    if (!res.ok) return fallback;
+    const body = (await res.json()) as Partial<CheckoutConfig>;
+    return {
+      pickupLocations:
+        Array.isArray(body.pickupLocations) && body.pickupLocations.length > 0 ? body.pickupLocations : DEFAULT_PICKUP_LOCATIONS,
+      bankTransfer: body.bankTransfer === true,
+    };
   } catch {
-    return DEFAULT_PICKUP_LOCATIONS;
+    return fallback;
+  }
+}
+
+const DEVICE_KEY = "afp-device-v1";
+
+/**
+ * A random id this browser makes up for itself, so the shop's order limits
+ * count this device and not everyone who shares its network. It says nothing
+ * about the person and is never used for anything else.
+ */
+export function deviceId(): string {
+  try {
+    const saved = localStorage.getItem(DEVICE_KEY);
+    if (saved && /^[0-9a-f]{32}$/.test(saved)) return saved;
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    const id = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+    localStorage.setItem(DEVICE_KEY, id);
+    return id;
+  } catch {
+    return "";
   }
 }
 
@@ -173,7 +205,7 @@ export async function reserveOrder(input: ReserveInput): Promise<ApiResult<Order
   try {
     const res = await fetch("/api/orders", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", ...(deviceId() ? { "x-afp-device": deviceId() } : {}) },
       body: JSON.stringify(input),
     });
     return toView(await parse<Wire>(res));
@@ -224,6 +256,7 @@ export function uploadProof(
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `/api/orders/${encodeURIComponent(ref)}/proof`);
     xhr.setRequestHeader("x-order-token", token);
+    if (deviceId()) xhr.setRequestHeader("x-afp-device", deviceId());
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress(e.loaded / e.total);
     };

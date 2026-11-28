@@ -23,11 +23,18 @@ export const ORDER_LIMITS = {
   maxLines: 20,
   maxQuantityPerLine: 10,
   maxBodyBytes: 10_000,
-  /** Order attempts allowed per visitor in the window below. */
+  /** Orders one device may place in the window below. */
   maxOrdersPerWindow: 6,
   windowMinutes: 10,
-  /** Unpaid reservations one visitor may hold at once. */
+  /** Unpaid reservations one device may hold at once. */
   maxOpenReservations: 3,
+  /**
+   * Ceilings for a whole network address. Phone networks put many customers
+   * behind one address, so these are far higher than the per-device limits;
+   * they exist to stop one sender inventing device after device.
+   */
+  maxNetworkOrdersPerWindow: 40,
+  maxNetworkOpenReservations: 15,
 } as const;
 
 export const ORDER_STATUSES = [

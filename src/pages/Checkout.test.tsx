@@ -93,6 +93,7 @@ type Handler = (url: string, init?: RequestInit) => Response | Promise<Response>
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 
+let bankTransfer = false;
 let calls: { url: string; init?: RequestInit }[] = [];
 function mockFetch(handler: Handler) {
   calls = [];
@@ -101,7 +102,7 @@ function mockFetch(handler: Handler) {
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url.startsWith("/api/catalog")) return json(CATALOG);
-      if (url.startsWith("/api/checkout-config")) return json({ pickupLocations: PICKUP });
+      if (url.startsWith("/api/checkout-config")) return json({ pickupLocations: PICKUP, bankTransfer });
       calls.push({ url, init });
       return handler(url, init);
     }),
@@ -279,6 +280,27 @@ describe("checkout: details step", () => {
     renderAt("/checkout");
     expect(await screen.findByText(/Babydoll Romper BLACK is now BDS \$130.00 \(was BDS \$120.00\)/)).toBeInTheDocument();
     await waitFor(() => expect(JSON.parse(localStorage.getItem("afp-cart-v2")!)[0].priceCents).toBe(13000));
+  });
+
+  it("says how the customer can pay before anything is reserved, and identifies the device for fair limits", async () => {
+    mockFetch(() => json({ order: order(), token: TOKEN, serverTime: new Date(NOW).toISOString(), payment: { bank: null } }, 201));
+    renderAt("/checkout");
+    expect(await screen.findByText(/CIBC 1st Pay, from your own banking app/)).toBeInTheDocument();
+    cleanup();
+
+    bankTransfer = true;
+    try {
+      renderAt("/checkout");
+      expect(await screen.findByText(/CIBC 1st Pay or bank transfer from any bank, from your own banking app/)).toBeInTheDocument();
+      fillDetails();
+      fireEvent.click(screen.getByRole("button", { name: "Reserve my items and pay" }));
+      await waitFor(() => expect(calls).toHaveLength(1));
+      const device = (calls[0].init?.headers as Record<string, string>)["x-afp-device"];
+      expect(device).toMatch(/^[0-9a-f]{32}$/);
+      expect(localStorage.getItem("afp-device-v1")).toBe(device);
+    } finally {
+      bankTransfer = false;
+    }
   });
 
   it("has no order-on-WhatsApp path, only the help link and the overseas note", async () => {
