@@ -27,8 +27,8 @@ For anything non-trivial, work on a branch and open a PR rather than pushing
 straight to `main`.
 
 Config lives in `wrangler.jsonc`. The Worker script (`worker/index.ts`) exists
-for exactly two jobs: serving `GET /api/catalog` from KV and running the
-catalog sync cron. `assets.run_worker_first` is scoped to `/api/*` so every
+for three jobs: serving `GET /api/catalog` from KV, serving item photos at
+`/api/image/*`, and running the catalog sync cron. `assets.run_worker_first` is scoped to `/api/*` so every
 other request is still served straight from edge cache without invoking the
 Worker. Widening that scope changes the billing and performance
 characteristics of the whole site — don't.
@@ -119,9 +119,15 @@ real garment.
 Order lifecycle vocabulary is `pending → paid → delivered → cancelled`
 (`OrderStatus` in catalog-core).
 
-**Product images** are repo files in `src/assets`, referenced from
-`site-settings.json` by filename and resolved through `productImageUrl()`.
-Items with no photo show `/placeholder.svg`. Never hotlinked images.
+**Product photos live in Loyverse.** The owner adds or changes an item's
+photo in Loyverse and the site follows on the next sync. The sync records
+each item's photo address in KV (`catalog:images`, private) and the Worker
+serves it from this site at `/api/image/<item id>?v=<fingerprint>`; the
+browser never talks to Loyverse. A Loyverse photo wins over a repo file.
+Repo files in `src/assets`, mapped by filename in `site-settings.json`, are
+the fallback, and an item with neither shows a name tile. Loyverse holds one
+photo per item. `GET /api/catalog/status` reports `photos` (how many items
+have one).
 
 Sync setup (KV namespace + the `AFPWebsite` Loyverse token, held in the
 account's Secrets Store and bound in `wrangler.jsonc`) is documented in
@@ -256,8 +262,8 @@ tests to fail, and update them deliberately.
    brandonhlouis@outlook.com as the test address), an orders page to mark
    paid / delivered / cancelled, and record paid orders in Loyverse so stock
    drops. Card payments via Fygaro (First Atlantic Commerce) come after.
-2. **Product photos.** Most Loyverse items have no photo in `src/assets` and
-   show the placeholder. Add the file, then map it in `site-settings.json`.
+2. **Product photos.** Items without a photo in Loyverse show a name tile.
+   The owner adds photos in Loyverse.
 3. **Placeholder prices.** 15 items carry estimated prices entered in
    Loyverse on 24 Nov 2026 and are `hidden` in `site-settings.json` until the
    owner confirms them.

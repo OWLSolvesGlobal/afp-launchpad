@@ -1,8 +1,13 @@
-import { hasProductPhoto, productImageUrl, type Product } from "@/lib/catalog";
+import { useEffect, useState } from "react";
+import { productPhoto, type Product } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 
 /**
  * A product's photo, or a branded tile when no photo exists yet.
+ *
+ * Photos come from Loyverse (the owner adds or changes them there); a file in
+ * src/assets is the fallback. If a photo fails to load, the tile is shown
+ * instead of a broken image.
  *
  * The tile shows the real product name and category. It never stands in a
  * generated or borrowed picture for a garment we have no photo of: a customer
@@ -16,21 +21,26 @@ export function ProductImage({
   size = "card",
   className,
 }: {
-  product: Pick<Product, "name" | "category" | "image" | "imageAlt">;
+  product: Pick<Product, "name" | "category" | "image" | "imageUrl" | "imageAlt">;
   width: number;
   height: number;
   eager?: boolean;
   size?: "card" | "hero";
   className?: string;
 }) {
-  if (hasProductPhoto(product.image)) {
+  const src = productPhoto(product);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+
+  if (src && !failed) {
     return (
       <img
-        src={productImageUrl(product.image)}
+        src={src}
         alt={product.imageAlt}
         loading={eager ? "eager" : "lazy"}
         width={width}
         height={height}
+        onError={() => setFailed(true)}
         className={cn("w-full h-full object-cover", className)}
       />
     );

@@ -61,6 +61,17 @@ export function hasProductPhoto(filename: string): boolean {
   return Boolean(filename && assetsByName[filename]);
 }
 
+type PhotoFields = { image: string; imageUrl?: string };
+
+/**
+ * The photo to show for a product, or "" when there is none.
+ * The owner's Loyverse photo wins; a file in src/assets is the fallback.
+ */
+export function productPhoto(product: PhotoFields): string {
+  if (product.imageUrl) return product.imageUrl;
+  return hasProductPhoto(product.image) ? productImageUrl(product.image) : "";
+}
+
 export async function fetchCatalog(): Promise<CatalogSnapshot> {
   try {
     const res = await fetch("/api/catalog", { headers: { accept: "application/json" } });

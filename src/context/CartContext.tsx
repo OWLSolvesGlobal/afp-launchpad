@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { firstAvailableSize, formatBbd, productImageUrl, type Product } from "@/lib/catalog";
+import { firstAvailableSize, formatBbd, productImageUrl, productPhoto, type Product } from "@/lib/catalog";
 
 export interface CartItem {
   id: string; // composite: sku + size + color
@@ -79,7 +79,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             slug: product.slug,
             name: product.name,
             priceCents: product.priceCents,
-            image: productImageUrl(product.image),
+            image: productPhoto(product) || productImageUrl(product.image),
             size,
             color,
             quantity,

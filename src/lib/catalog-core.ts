@@ -28,6 +28,12 @@ export interface CatalogProduct {
   stock: Record<string, number>;
   /** Filename of an image in src/assets (not a URL). May be "". */
   image: string;
+  /**
+   * Site-relative URL of the item's Loyverse photo (served by the Worker at
+   * /api/image/<item id>), or "" when the item has no photo in Loyverse.
+   * When present it wins over `image`: the owner controls photos in Loyverse.
+   */
+  imageUrl?: string;
   imageAlt: string;
   badge: string | null;
   active: boolean;

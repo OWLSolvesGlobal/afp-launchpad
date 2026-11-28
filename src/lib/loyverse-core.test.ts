@@ -9,7 +9,14 @@ import {
   type SiteSettings,
 } from "@/lib/loyverse-core";
 import { isPurchasable, visibleProducts } from "@/lib/catalog-core";
-import worker, { fetchAllPages, syncCatalog, KV_KEY, STATUS_KEY } from "../../worker/index";
+import worker, {
+  fetchAllPages,
+  serveItemImage,
+  syncCatalog,
+  IMAGES_KEY,
+  KV_KEY,
+  STATUS_KEY,
+} from "../../worker/index";
 import siteSettings from "@/data/site-settings.json";
 
 const fixed = (id: string, size: string | null, price: number) => ({
@@ -213,6 +220,83 @@ describe("buildLoyverseSnapshot", () => {
   });
 });
 
+describe("Loyverse photos", () => {
+  const withPhoto: LoyverseItem = {
+    id: "item-9",
+    item_name: "Red Loungie",
+    image_url: "http://cdn.loyverse.example/photos/red.jpg",
+    variants: [fixed("v", "Small", 140)],
+  };
+
+  it("gives a product a photo address on this site, not Loyverse's", () => {
+    const { snapshot, imageSources } = build([withPhoto]);
+    const p = snapshot.products[0];
+    expect(p.imageUrl).toMatch(/^\/api\/image\/item-9\?v=[a-z0-9]+$/);
+    // The Loyverse address is kept out of the public snapshot.
+    expect(JSON.stringify(snapshot)).not.toContain("cdn.loyverse.example");
+    expect(imageSources).toEqual({ "item-9": "https://cdn.loyverse.example/photos/red.jpg" });
+  });
+
+  it("changes the address when the owner changes the photo", () => {
+    const a = build([withPhoto]).snapshot.products[0].imageUrl;
+    const b = build([{ ...withPhoto, image_url: "https://cdn.loyverse.example/photos/new.jpg" }])
+      .snapshot.products[0].imageUrl;
+    expect(a).not.toBe(b);
+  });
+
+  it("leaves imageUrl empty when the item has no usable photo", () => {
+    for (const image_url of [null, "", "not-a-url", "ftp://x/y.jpg"]) {
+      const { snapshot, imageSources } = build([{ ...withPhoto, image_url }]);
+      expect(snapshot.products[0].imageUrl).toBe("");
+      expect(imageSources).toEqual({});
+    }
+  });
+});
+
+describe("photo route", () => {
+  const kv = (sources: Record<string, string>) => ({
+    get: async (k: string) => (k === IMAGES_KEY ? sources : null),
+  });
+  const call = (path: string, sources: Record<string, string>, fetchImpl: typeof fetch) =>
+    serveItemImage(
+      new Request(`https://x.test${path}`),
+      { AFP_CATALOG: kv(sources) } as never,
+      new URL(`https://x.test${path}`),
+      fetchImpl,
+    );
+  const image = () => new Response("bytes", { headers: { "content-type": "image/jpeg" } });
+
+  it("serves the photo recorded for that item", async () => {
+    const fetchImpl = vi.fn(async () => image());
+    const res = await call("/api/image/item-9?v=abc", { "item-9": "https://cdn.example/a.jpg" }, fetchImpl as never);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("image/jpeg");
+    expect(fetchImpl.mock.calls[0][0]).toBe("https://cdn.example/a.jpg");
+  });
+
+  it("fetches nothing for an item it has no photo for", async () => {
+    const fetchImpl = vi.fn(async () => image());
+    const res = await call("/api/image/https%3A%2F%2Fevil.example%2Fx", { "item-9": "https://cdn.example/a.jpg" }, fetchImpl as never);
+    expect(res.status).toBe(404);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("refuses a recorded address that is not https, and anything that is not an image", async () => {
+    const fetchImpl = vi.fn(async () => new Response("<html>", { headers: { "content-type": "text/html" } }));
+    expect((await call("/api/image/a", { a: "http://cdn.example/a.jpg" }, fetchImpl as never)).status).toBe(404);
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect((await call("/api/image/b", { b: "https://cdn.example/b" }, fetchImpl as never)).status).toBe(404);
+  });
+
+  it("is reachable through the Worker", async () => {
+    const res = await worker.fetch(
+      new Request("https://x.test/api/image/none"),
+      { AFP_CATALOG: kv({}), ASSETS: { fetch: async () => new Response("asset") } } as never,
+    );
+    expect(res.status).toBe(404);
+  });
+});
+
 describe("bundled site-settings.json", () => {
   it("only references photos that exist in src/assets", async () => {
     const files = Object.keys(import.meta.glob("../assets/*")).map((p) => p.split("/").pop());
@@ -263,6 +347,12 @@ describe("sync worker", () => {
     const snapshot = JSON.parse(store.get(KV_KEY) as string);
     expect(snapshot.products[0].priceCents).toBe(14000);
     expect(snapshot.products[0].stock.S).toBe(3);
+    const status = JSON.parse(store.get(STATUS_KEY) as string);
+    expect(status.photos).toBe(0);
+    // With no photos found, the field names Loyverse sent are recorded so a
+    // renamed photo field can be diagnosed from the status page.
+    expect(status.itemFields).toEqual(["category_id", "id", "item_name", "variants"]);
+    expect(store.has(IMAGES_KEY)).toBe(true);
   });
 
   it("keeps the last snapshot when Loyverse returns nothing or errors", async () => {

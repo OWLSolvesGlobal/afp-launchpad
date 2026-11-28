@@ -3,9 +3,9 @@
  * Imported by the sync Worker and the tests.
  *
  * Loyverse (the shop's point of sale) is the source of truth for items,
- * sizes, prices and stock. It has no place for website-only details (photo,
- * description, Men/Women section, show/hide), so those come from
- * `src/data/site-settings.json`, keyed by the Loyverse item name.
+ * sizes, prices, stock and each item's photo. It has no place for the other
+ * website-only details (description, Men/Women section, show/hide), so
+ * those come from `src/data/site-settings.json`, keyed by Loyverse item name.
  *
  * Safety rules, in the same spirit as the render guards in catalog-core:
  *  - A size is sellable online only if Loyverse holds a FIXED price for it.
@@ -52,6 +52,8 @@ export interface LoyverseItem {
   item_name: string;
   category_id?: string | null;
   variants?: LoyverseVariant[] | null;
+  /** The item's photo, if the owner added one in Loyverse. */
+  image_url?: string | null;
   deleted_at?: string | null;
 }
 
@@ -93,6 +95,12 @@ export interface SiteSettings {
 
 export interface LoyverseBuildResult {
   snapshot: CatalogSnapshot;
+  /**
+   * Loyverse item id -> the photo's address at Loyverse. Kept OUT of the
+   * public snapshot: the Worker uses it to fetch photos and serve them from
+   * this site's own address (/api/image/<item id>).
+   */
+  imageSources: Record<string, string>;
   /** Human-readable notes for the sync log: what was left out and why. */
   warnings: string[];
 }
@@ -199,6 +207,20 @@ export function buildConfig(settings: SiteSettings): CatalogConfig {
   };
 }
 
+/** Short stable fingerprint, so a changed photo gets a new address. */
+export function shortHash(text: string): string {
+  let h = 5381;
+  for (let i = 0; i < text.length; i += 1) h = ((h << 5) + h + text.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+
+/** A usable photo address from Loyverse, upgraded to https, or "". */
+export function cleanImageSource(raw: string | null | undefined): string {
+  const value = (raw ?? "").trim();
+  if (!/^https?:\/\//i.test(value)) return "";
+  return value.replace(/^http:\/\//i, "https://");
+}
+
 // --- The mapping -------------------------------------------------------------
 
 export function buildLoyverseSnapshot(
@@ -230,6 +252,7 @@ export function buildLoyverseSnapshot(
 
   const usedSlugs = new Set<string>();
   const products: CatalogProduct[] = [];
+  const imageSources: Record<string, string> = {};
 
   for (const item of items) {
     if (item.deleted_at) continue;
@@ -292,6 +315,8 @@ export function buildLoyverseSnapshot(
     usedSlugs.add(slug);
 
     const image = (site.image ?? "").trim();
+    const imageSource = cleanImageSource(item.image_url);
+    if (imageSource) imageSources[item.id] = imageSource;
     products.push({
       sku: `LV-${item.id}`,
       slug,
@@ -305,6 +330,9 @@ export function buildLoyverseSnapshot(
       sizes,
       stock,
       image,
+      imageUrl: imageSource
+        ? `/api/image/${encodeURIComponent(item.id)}?v=${shortHash(imageSource)}`
+        : "",
       imageAlt: (site.imageAlt ?? "").trim() || name,
       badge: (site.badge ?? "").trim() || null,
       active: site.hidden !== true && sizes.length > 0,
@@ -326,6 +354,7 @@ export function buildLoyverseSnapshot(
       categories: deriveCategories(products),
       config: buildConfig(settings),
     },
+    imageSources,
     warnings,
   };
 }
