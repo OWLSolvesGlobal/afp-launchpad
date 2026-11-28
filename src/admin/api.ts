@@ -97,6 +97,8 @@ export interface Summary {
   needsLoyverse: number;
   paidTodayCount: number;
   paidTodayCents: number;
+  /** "off": email alerts not set up. "trouble": a recent alert could not be sent. */
+  emailAlerts?: "off" | "trouble" | "ok";
 }
 
 export interface AdminSettings {

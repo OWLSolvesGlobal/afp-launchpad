@@ -167,6 +167,30 @@ account (it asks for a payment card) before the bucket can exist; a deploy
 fails if the bucket is missing. The rules the orders code must
 keep are in `CLAUDE.md`; the acceptance runs are in `docs/ORDER-TEST-RUNS.md`.
 
+## Order emails (Cloudflare Email Sending)
+
+The Worker emails the two owners when a proof of payment arrives, plus a
+morning summary when something is waiting. Customer emails are built but
+switched off (`CUSTOMER_EMAILS` in `wrangler.jsonc`).
+
+One-time setup for owner emails (free plan):
+
+1. Apply the migration: `npx wrangler d1 migrations apply afp-orders --remote`.
+2. Cloudflare dashboard → alofitnesspro.com → Email → Email Routing: enable
+   it (this adds MX and SPF records to the domain).
+3. Under Destination addresses, add alofitnesspro@outlook.com and
+   brandonhlouis@outlook.com. Each gets a verification email and must click
+   the link.
+4. Add the binding to `wrangler.jsonc` and deploy:
+   `"send_email": [{ "name": "EMAIL", "allowed_destination_addresses": ["alofitnesspro@outlook.com", "brandonhlouis@outlook.com"] }]`
+
+Until step 4 nothing is sent: alerts wait in the `outbox` table (up to 72
+hours) and the portal home says email alerts are off.
+
+To email customers as well: upgrade to Workers Paid, onboard
+alofitnesspro.com for Email Sending, remove `allowed_destination_addresses`
+from the binding, and set `CUSTOMER_EMAILS` to `"on"`.
+
 ## Owner's portal sign-in (Cloudflare Access)
 
 `/admin` and `/api/admin/*` sit behind a Cloudflare Access application

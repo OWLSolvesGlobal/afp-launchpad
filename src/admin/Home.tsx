@@ -95,6 +95,15 @@ export default function Home() {
         )}
       </section>
 
+      {/* Said only when email alerts can't be relied on. Silent when they work. */}
+      {s && s.emailAlerts && s.emailAlerts !== "ok" && (
+        <p role="status" className="border border-dashed border-foreground/50 rounded-2xl px-5 py-4 text-sm">
+          {s.emailAlerts === "off"
+            ? "Email alerts aren't switched on yet, so new proofs won't email you. Check here for them."
+            : "An email alert couldn't be sent in the last day. Check here for new proofs, and let Brandon know."}
+        </p>
+      )}
+
       <section aria-labelledby="needs-you">
         <h2 id="needs-you" className="eyebrow text-graphite mb-4">
           Needs you

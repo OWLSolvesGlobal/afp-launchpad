@@ -33,7 +33,12 @@
   // secret. Left empty, every /api/admin/* request is refused.
   "vars": {
     "ACCESS_TEAM_DOMAIN": "https://alo-fitness-pro.cloudflareaccess.com",
-    "ACCESS_AUD": "26bf0052f5524595ff7addc6d06a56f964d5aaff69efc6263c7008ad7b2257d7"
+    "ACCESS_AUD": "26bf0052f5524595ff7addc6d06a56f964d5aaff69efc6263c7008ad7b2257d7",
+    // Order emails. The sender must be on a domain set up for Cloudflare
+    // Email Sending. Customer emails need the Workers Paid plan: "on" to
+    // switch them on, anything else for owner emails only.
+    "EMAIL_FROM": "orders@alofitnesspro.com",
+    "CUSTOMER_EMAILS": "off"
   },
 
   "triggers": {

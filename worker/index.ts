@@ -40,6 +40,7 @@ import { applyHolds } from "../src/lib/orders-core";
 import type { CatalogSnapshot } from "../src/lib/catalog-core";
 import { checkoutConfig, createOrder, expireOrders, getOrder, loadHolds, type OrdersDb } from "./orders";
 import { handleAdmin, type ProofReader } from "./admin";
+import { flushOutbox, queueMorningSummary, type EmailSender } from "./email";
 import { cancelOrder, uploadProof, type ProofBucket } from "./order-actions";
 import seedCatalog from "../src/data/seed-catalog.json";
 import siteSettings from "../src/data/site-settings.json";
@@ -55,6 +56,11 @@ export interface Env {
   /** Cloudflare Access team address and application audience tag (plain vars). */
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUD?: string;
+  /** Cloudflare Email Sending. Absent until set up: emails wait in the outbox. */
+  EMAIL?: EmailSender;
+  EMAIL_FROM?: string;
+  /** "on" to email customers too (needs the Workers Paid plan). */
+  CUSTOMER_EMAILS?: string;
   /**
    * Loyverse access token. It lives in the account's Secrets Store under the
    * name AFPWebsite and reaches the Worker through the `secrets_store_secrets`
@@ -114,7 +120,36 @@ const PAGE_LIMIT = 250;
 const MAX_PAGES = 40;
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
+    const response = await route(request, env);
+    // An order just changed: send any emails that queued, without making the
+    // customer or the owner wait for the mail service.
+    const path = new URL(request.url).pathname;
+    if (request.method === "POST" && (path.startsWith("/api/orders") || path.startsWith("/api/admin/"))) {
+      const sending = flushOutbox(env);
+      if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(sending);
+      else await sending;
+    }
+    return response;
+  },
+
+  async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(syncCatalog(env));
+    ctx.waitUntil(
+      (async () => {
+        // Release stock held by orders nobody paid for within the pay window.
+        await expireOrders(env).catch((err) => console.error(`order expiry failed: ${err}`));
+        // Owners' morning summary (only between 8 and 9 am Barbados, only if something waits).
+        await queueMorningSummary(env, new Date());
+        // Send, or retry, whatever is waiting in the outbox.
+        await flushOutbox(env);
+      })(),
+    );
+  },
+} satisfies ExportedHandler<Env>;
+
+async function route(request: Request, env: Env): Promise<Response> {
+  {
     const url = new URL(request.url);
     if (url.pathname === "/api/catalog") {
       const stored = await env.AFP_CATALOG?.get(KV_KEY, "text").catch(() => null);
@@ -165,14 +200,8 @@ export default {
       );
     }
     return env.ASSETS.fetch(request);
-  },
-
-  async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
-    ctx.waitUntil(syncCatalog(env));
-    // Release stock held by orders nobody paid for within the pay window.
-    ctx.waitUntil(expireOrders(env).catch((err) => console.error(`order expiry failed: ${err}`)));
-  },
-} satisfies ExportedHandler<Env>;
+  }
+}
 
 type Fetch = typeof fetch;
 

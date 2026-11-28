@@ -229,6 +229,28 @@ account's Secrets Store and bound in `wrangler.jsonc`) is documented in
 `README.md` → "Catalog sync setup". `GET /api/catalog/status` reports how
 the latest sync went.
 
+**Order emails (`worker/email.ts`, table `outbox`).** Sent through
+Cloudflare Email Sending (binding `EMAIL`, sender `EMAIL_FROM`). Rules that
+must hold:
+
+- **An email problem never stops an order.** Queueing and sending never
+  throw into the caller. Every email is written to `outbox` first and sent
+  from it; the 5-minute cron retries (5 tries, 72 hours, then it gives up).
+  Each event has a dedupe key, so it is sent once.
+- **Owners** (the two `ADMIN_EMAILS`) are emailed when a proof arrives or is
+  replaced, and get a morning summary (8 am Barbados, only when something is
+  waiting). An owner email carries name, amount, reference and a portal link.
+  Never the proof, never bank details. The email is a nudge: the portal is
+  still where she checks, and marking paid still needs the bank check.
+- **Customer emails are built but off** (`CUSTOMER_EMAILS` is `"off"`).
+  Sending to customers needs the Workers Paid plan and an onboarded sending
+  domain. Do not switch it on without both. Only the first customer email
+  (items held) carries the private order link, and the body is cleared from
+  `outbox` once sent.
+- Logs record why a send failed, never who it was to or what it said.
+- Without the `EMAIL` binding everything waits in `outbox` and the portal
+  home says alerts are off. These are order emails only: no marketing.
+
 ---
 
 ## Gotchas that have already caused outages
@@ -327,6 +349,8 @@ Do not merge changes to these without a person reading them line by line:
 - **`wrangler.jsonc` and `public/_headers`.** See gotchas above.
 - **`worker/access.ts` and `worker/admin.ts`.** They are the lock on the
   owner's portal and the only code that can mark an order paid.
+- **`worker/email.ts`.** It decides what leaves the shop by email and to
+  whom.
 - **`worker/orders.ts`, `worker/order-actions.ts`, `src/lib/orders-core.ts`
   and `migrations/`.** They decide what a customer is charged, what stock is
   held, and which uploads are accepted.
@@ -366,9 +390,9 @@ tests in `src/lib/admin.test.ts` sign real RS256 tokens instead.
 ## Outstanding work
 
 1. **Orders: what is left.** Customers can reserve, pay and upload proof, and
-   the owner's portal manages orders (phases 1 to 3). Still to build: email
-   alerts to alofitnesspro@outlook.com and brandonhlouis@outlook.com when a
-   proof arrives (phase 4); recording paid orders in Loyverse automatically,
+   the owner's portal manages orders (phases 1 to 3), and
+   owners are emailed when a proof arrives (phase 4). Still to do: switch on
+   customer emails (needs Workers Paid; see "Order emails"); recording paid orders in Loyverse automatically,
    replacing the "rung up at the till" button (phase 5); per-item show/hide
    and section in the portal (needs a decision on how portal overrides
    combine with `site-settings.json`); a marketing export for customers who
