@@ -155,5 +155,33 @@ A deploy does not apply migrations; apply a new one by hand:
 npx wrangler d1 migrations apply afp-orders --remote
 ```
 
-`0001_orders.sql` was applied on 28 Nov 2026. The rules the orders code must
+`0001_orders.sql`, `0002_proofs.sql` and `0003_portal.sql` were applied on
+28 Nov 2026.
+
+## Payment proofs
+
+Customers' proofs of payment are stored in the private R2 bucket
+`afp-order-proofs`, bound to the Worker as `PROOFS`. The bucket has no public
+access and no custom domain, and must stay that way: proofs are read only by
+the Worker, for a signed-in admin. R2 has to be enabled on the Cloudflare
+account (it asks for a payment card) before the bucket can exist; a deploy
+fails if the bucket is missing. The rules the orders code must
 keep are in `CLAUDE.md`; the acceptance runs are in `docs/ORDER-TEST-RUNS.md`.
+
+## Owner's portal sign-in (Cloudflare Access)
+
+`/admin` and `/api/admin/*` sit behind a Cloudflare Access application
+(Zero Trust → Access → Applications, self-hosted) with two paths on
+`alofitnesspro.com`: `admin` and `api/admin`. Its policy allows the emails
+`alofitnesspro@outlook.com` and `brandonhlouis@outlook.com` with the one-time
+PIN login method.
+
+The Worker checks the Access token on every admin request. It needs two plain
+vars in `wrangler.jsonc`:
+
+- `ACCESS_TEAM_DOMAIN`: `https://<team-name>.cloudflareaccess.com`
+- `ACCESS_AUD`: the application's Audience (AUD) tag
+
+While either is empty the portal's API refuses every request. To add or remove
+an admin, change BOTH the Access policy and `ADMIN_EMAILS` in
+`src/lib/orders-core.ts`; either one alone is not enough.

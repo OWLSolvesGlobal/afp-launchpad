@@ -7,7 +7,6 @@ import {
   isPurchasable,
   isSoldOut,
   makeOrderId,
-  newOrderId,
   sizeStock,
   slugify,
   totalStock,
@@ -151,12 +150,6 @@ describe("order references", () => {
 
   it("wraps the sequence into three digits", () => {
     expect(makeOrderId(new Date(2026, 7, 5), 1234)).toBe("AFP-20260805-234");
-  });
-
-  it("newOrderId always matches the documented pattern", () => {
-    for (let i = 0; i < 20; i++) {
-      expect(newOrderId(new Date(2026, 11, 9))).toMatch(/^AFP-20261209-\d{3}$/);
-    }
   });
 });
 

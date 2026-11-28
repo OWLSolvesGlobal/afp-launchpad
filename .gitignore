@@ -27,3 +27,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Local Worker state (wrangler dev)
+.wrangler/

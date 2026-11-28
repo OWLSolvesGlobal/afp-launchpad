@@ -38,7 +38,9 @@ import {
 } from "../src/lib/loyverse-core";
 import { applyHolds } from "../src/lib/orders-core";
 import type { CatalogSnapshot } from "../src/lib/catalog-core";
-import { createOrder, expireOrders, getOrder, loadHolds, type OrdersDb } from "./orders";
+import { checkoutConfig, createOrder, expireOrders, getOrder, loadHolds, type OrdersDb } from "./orders";
+import { handleAdmin, type ProofReader } from "./admin";
+import { cancelOrder, uploadProof, type ProofBucket } from "./order-actions";
 import seedCatalog from "../src/data/seed-catalog.json";
 import siteSettings from "../src/data/site-settings.json";
 
@@ -48,6 +50,11 @@ export interface Env {
   AFP_CATALOG?: KVNamespace;
   /** Orders database (D1). Optional so the shop still browses without it. */
   ORDERS_DB?: OrdersDb;
+  /** Private bucket for payment proofs (R2). Never publicly readable. */
+  PROOFS?: ProofBucket & ProofReader;
+  /** Cloudflare Access team address and application audience tag (plain vars). */
+  ACCESS_TEAM_DOMAIN?: string;
+  ACCESS_AUD?: string;
   /**
    * Loyverse access token. It lives in the account's Secrets Store under the
    * name AFPWebsite and reaches the Worker through the `secrets_store_secrets`
@@ -119,6 +126,14 @@ export default {
         },
       });
     }
+    if (url.pathname.startsWith("/api/admin/")) {
+      // The owner's portal. handleAdmin verifies the Access token before anything else.
+      return handleAdmin(request, env, url.pathname.slice("/api/admin/".length));
+    }
+    if (url.pathname === "/api/checkout-config") {
+      if (request.method !== "GET") return new Response("Method not allowed", { status: 405 });
+      return checkoutConfig(env);
+    }
     if (url.pathname === "/api/orders") {
       if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
       const stored = await env.AFP_CATALOG?.get(KV_KEY, "text").catch(() => null);
@@ -131,8 +146,13 @@ export default {
       return createOrder(request, env, snapshot);
     }
     if (url.pathname.startsWith("/api/orders/")) {
-      if (request.method !== "GET") return new Response("Method not allowed", { status: 405 });
-      return getOrder(request, env, decodeURIComponent(url.pathname.slice("/api/orders/".length)));
+      const [ref, action, ...rest] = url.pathname.slice("/api/orders/".length).split("/").map(decodeURIComponent);
+      const notAllowed = () => new Response("Method not allowed", { status: 405 });
+      if (rest.length > 0) return new Response("Not found", { status: 404 });
+      if (action === undefined) return request.method === "GET" ? getOrder(request, env, ref) : notAllowed();
+      if (action === "proof") return request.method === "POST" ? uploadProof(request, env, ref) : notAllowed();
+      if (action === "cancel") return request.method === "POST" ? cancelOrder(request, env, ref) : notAllowed();
+      return new Response("Not found", { status: 404 });
     }
     if (url.pathname.startsWith("/api/image/")) {
       return serveItemImage(request, env, url);

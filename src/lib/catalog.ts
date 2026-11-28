@@ -28,7 +28,6 @@ export {
   isPurchasable,
   isSoldOut,
   makeOrderId,
-  newOrderId,
   sizeStock,
   totalStock,
   visibleProducts,
