@@ -173,19 +173,16 @@ The Worker emails the two owners when a proof of payment arrives, plus a
 morning summary when something is waiting. Customer emails are built but
 switched off (`CUSTOMER_EMAILS` in `wrangler.jsonc`).
 
-One-time setup for owner emails (free plan):
+Set up on 28 Nov 2026 (free plan): Email Routing is on for
+alofitnesspro.com, the domain is onboarded for Email Sending (records on
+`cf-bounce.alofitnesspro.com`, DMARC `p=reject` on the domain), both owner
+addresses are destination addresses, and the `EMAIL` binding in
+`wrangler.jsonc` can email those two addresses only. An owner address must be
+verified (the link in Cloudflare's email) before it can receive alerts.
 
-1. Apply the migration: `npx wrangler d1 migrations apply afp-orders --remote`.
-2. Cloudflare dashboard → alofitnesspro.com → Email → Email Routing: enable
-   it (this adds MX and SPF records to the domain).
-3. Under Destination addresses, add alofitnesspro@outlook.com and
-   brandonhlouis@outlook.com. Each gets a verification email and must click
-   the link.
-4. Add the binding to `wrangler.jsonc` and deploy:
-   `"send_email": [{ "name": "EMAIL", "allowed_destination_addresses": ["alofitnesspro@outlook.com", "brandonhlouis@outlook.com"] }]`
-
-Until step 4 nothing is sent: alerts wait in the `outbox` table (up to 72
-hours) and the portal home says email alerts are off.
+Because of the DMARC rule, any other service that sends as
+@alofitnesspro.com (Omnisend, for example) must be given its own DKIM
+signing on the domain first, or its emails will be refused.
 
 To email customers as well: upgrade to Workers Paid, onboard
 alofitnesspro.com for Email Sending, remove `allowed_destination_addresses`
