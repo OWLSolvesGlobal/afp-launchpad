@@ -144,3 +144,16 @@ logs in the Cloudflare dashboard.
 There are none. `VITE_`-prefixed variables would be compiled into the public
 browser bundle, so real secrets (the service-account JSON, future payment
 keys) live exclusively in Cloudflare Worker secrets.
+
+## Orders database
+
+Orders are stored in the Cloudflare D1 database `afp-orders`, bound to the
+Worker as `ORDERS_DB` in `wrangler.jsonc`. The schema is in `migrations/`.
+A deploy does not apply migrations; apply a new one by hand:
+
+```bash
+npx wrangler d1 migrations apply afp-orders --remote
+```
+
+`0001_orders.sql` was applied on 28 Nov 2026. The rules the orders code must
+keep are in `CLAUDE.md`; the acceptance runs are in `docs/ORDER-TEST-RUNS.md`.

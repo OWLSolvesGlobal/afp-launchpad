@@ -116,8 +116,33 @@ category. Products without a photo show a branded name tile
 (`ProductImage.tsx`); never a generated or borrowed image standing in for a
 real garment.
 
-Order lifecycle vocabulary is `pending → paid → delivered → cancelled`
-(`OrderStatus` in catalog-core).
+**Orders (being built in phases; see `docs/ORDER-TEST-RUNS.md`).** Orders
+live in the D1 database `afp-orders` (binding `ORDERS_DB`, schema in
+`migrations/`). Statuses: `reserved → proof_uploaded → paid → delivered`,
+plus `expired`, `rejected`, `cancelled`. Rules that must hold:
+
+- **The server decides the money.** `POST /api/orders` takes item, size and
+  quantity only; prices, delivery and totals come from the Loyverse snapshot
+  (`priceOrder` in `src/lib/orders-core.ts`). Never trust a total from the
+  browser.
+- **Stock shown = Loyverse stock minus active holds.** A hold is a reserved
+  order inside its 60-minute window, an order with proof awaiting an admin,
+  or a paid order not yet recorded in Loyverse (`HOLDS` in
+  `worker/orders.ts`). Reserving checks stock and inserts the lines in one
+  transaction, so the last piece cannot be sold twice.
+- **An order is read with its reference and its private token** (header
+  `x-order-token`). Only a hash of the token is stored. Wrong token and
+  unknown reference give the same 404.
+- **Proof is evidence, never confirmation.** Only an admin marks an order
+  paid, after checking the bank account.
+- Bank details live in the `settings` table, typed in the owner's portal.
+  Never in the repo, the logs or the browser bundle.
+- If D1 is unreachable the catalog still serves (without holds) and
+  ordering returns 503. The shop must not white-screen.
+
+The older `OrderStatus` in catalog-core (`pending → paid → delivered →
+cancelled`) is unused by the orders system and goes when checkout moves over
+in phase 2.
 
 **Product photos live in Loyverse.** The owner adds or changes an item's
 photo in Loyverse and the site follows on the next sync. The sync records
@@ -230,6 +255,8 @@ Do not merge changes to these without a person reading them line by line:
   are the source of truth for whether an order was paid, because customers
   close tabs.
 - **`wrangler.jsonc` and `public/_headers`.** See gotchas above.
+- **`worker/orders.ts`, `src/lib/orders-core.ts` and `migrations/`.** They
+  decide what a customer is charged and what stock is held.
 - **The render guards in `src/lib/catalog-core.ts` and the Loyverse mapping
   in `src/lib/loyverse-core.ts`.** They are what keeps unpriced or hidden
   products off the live site.
