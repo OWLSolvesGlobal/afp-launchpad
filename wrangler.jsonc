@@ -40,6 +40,15 @@
     "EMAIL_FROM": "orders@alofitnesspro.com",
     "CUSTOMER_EMAILS": "off"
   },
+  // Order emails go out through Cloudflare Email Sending. This binding can
+  // email the two owners and nobody else. To email customers (Workers Paid),
+  // remove the allowlist here and set CUSTOMER_EMAILS to "on".
+  "send_email": [
+    {
+      "name": "EMAIL",
+      "allowed_destination_addresses": ["alofitnesspro@outlook.com", "brandonhlouis@outlook.com"]
+    }
+  ],
 
   "triggers": {
     "crons": ["*/5 * * * *"]
