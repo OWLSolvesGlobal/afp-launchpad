@@ -105,13 +105,25 @@ let db: OrdersDb;
 let raw: DatabaseSync;
 let store: ReturnType<typeof makeBucket>;
 let ipCounter = 0;
-const env = () => ({ ORDERS_DB: db, PROOFS: store.bucket, ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD });
+// The catalog the portal reads to check stock before bringing an order back.
+let catalog: CatalogSnapshot | null = SNAPSHOT;
+let extraEnv: Json = {};
+const env = () => ({
+  ORDERS_DB: db,
+  PROOFS: store.bucket,
+  ACCESS_TEAM_DOMAIN: TEAM,
+  ACCESS_AUD: AUD,
+  AFP_CATALOG: { get: async () => (catalog ? JSON.stringify(catalog) : null) },
+  ...extraEnv,
+});
 
 beforeEach(() => {
   ({ db, raw } = makeDb());
   store = makeBucket();
   clearAccessKeyCache();
   keyFetches = [];
+  catalog = SNAPSHOT;
+  extraEnv = {};
 });
 
 async function placeOrder(opts: { proof?: Uint8Array | false; name?: string; optIn?: boolean; now?: Date } = {}) {
@@ -669,5 +681,236 @@ describe("settings", () => {
     expect((await order("AFP HQ — St Michael")).status).toBe(400); // no longer offered
     expect((await order("<img src=x onerror=alert(1)>")).status).toBe(400);
     expect((await order("Sheraton Mall")).status).toBe(201);
+  });
+});
+
+// ---------------------------------------------------------------------------------
+describe("putting a mistake right", () => {
+  const withStock = (n: number): CatalogSnapshot => ({ ...SNAPSHOT, products: [{ ...product, stock: { S: n } }] });
+  const held = async (now = NOW) => (await loadHolds(db, now)).get(holdKey("LV-romper", "S")) ?? 0;
+
+  it("Mark paid can be undone for ten minutes, back to exactly where it was", async () => {
+    const { ref, token } = await placeOrder();
+    const paid = await admin(`orders/${ref}/paid`, { body: { confirmed: true } });
+    expect(paid.data.order.undoUntil).toBe(later(10).toISOString());
+
+    const undo = await admin(`orders/${ref}/undo`, { body: {}, now: later(9) });
+    expect(undo.res.status).toBe(200);
+    expect(undo.data.order.status).toBe("proof_uploaded");
+    expect(undo.data.order.undoUntil).toBeNull();
+    expect(orderRow(ref).paid_at).toBeNull();
+    expect((await customerView(ref, token, later(9))).order.status).toBe("proof_uploaded");
+    expect(await held(later(9))).toBe(1); // never stopped being held
+    expect(auditRows().at(-1)).toMatchObject({ actor: OWNER, action: "order_undone", detail: "paid -> proof_uploaded (undo)" });
+
+    // Undo is not a toggle: there is nothing left to undo.
+    expect((await admin(`orders/${ref}/undo`, { body: {}, now: later(9) })).res.status).toBe(409);
+    // And she can mark it paid again, properly.
+    expect((await admin(`orders/${ref}/paid`, { body: { confirmed: true }, now: later(9) })).data.order.status).toBe("paid");
+  });
+
+  it("the chance to undo ends after ten minutes, when delivered, or once rung up in Loyverse", async () => {
+    const a = await placeOrder();
+    await admin(`orders/${a.ref}/paid`, { body: { confirmed: true } });
+    const late = await admin(`orders/${a.ref}/undo`, { body: {}, now: later(11) });
+    expect(late.res.status).toBe(409);
+    expect(late.data.error).toBe("The time to undo this has passed.");
+    expect((await admin(`orders/${a.ref}`, { now: later(11) })).data.order.undoUntil).toBeNull();
+
+    const b = await placeOrder();
+    await admin(`orders/${b.ref}/paid`, { body: { confirmed: true } });
+    await admin(`orders/${b.ref}/delivered`, { body: {}, now: later(1) });
+    expect((await admin(`orders/${b.ref}/undo`, { body: {}, now: later(2) })).res.status).toBe(409);
+    expect(orderRow(b.ref).status).toBe("delivered");
+
+    const c = await placeOrder();
+    await admin(`orders/${c.ref}/paid`, { body: { confirmed: true } });
+    await admin(`orders/${c.ref}/recorded`, { body: {}, now: later(1) });
+    expect((await admin(`orders/${c.ref}`, { now: later(2) })).data.order.undoUntil).toBeNull();
+    expect((await admin(`orders/${c.ref}/undo`, { body: {}, now: later(2) })).res.status).toBe(409);
+    expect(orderRow(c.ref).status).toBe("paid");
+  });
+
+  it("Reject and Cancel can be undone, and the items are held again", async () => {
+    const a = await placeOrder();
+    await admin(`orders/${a.ref}/reject`, { body: { reason: "Wrong order, sorry" } });
+    expect(await held()).toBe(0);
+    const undo = await admin(`orders/${a.ref}/undo`, { body: {}, now: later(3) });
+    expect(undo.data.order.status).toBe("proof_uploaded");
+    expect(undo.data.order.closedReason).toBe("");
+    expect(await held(later(3))).toBe(1);
+
+    // A cancelled reservation goes back to waiting for payment, with its original deadline.
+    const b = await placeOrder({ proof: false });
+    await admin(`orders/${b.ref}/cancel`, { body: {} });
+    const back = await admin(`orders/${b.ref}/undo`, { body: {}, now: later(5) });
+    expect(back.data.order.status).toBe("reserved");
+    expect(back.data.order.expiresAt).toBe(later(60).toISOString());
+  });
+
+  it("an undo can never sell the last piece twice", async () => {
+    catalog = withStock(1);
+    const first = await placeOrder();
+    await admin(`orders/${first.ref}/reject`, { body: { reason: "No payment found" } });
+    // The piece is free again and someone else takes it.
+    const res = await createOrder(
+      new Request(`${ORIGIN}/api/orders`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "cf-connecting-ip": "198.51.100.9" },
+        body: JSON.stringify({ items: [{ sku: "LV-romper", size: "S", quantity: 1 }], fulfillment: "delivery", customer: { name: "Second Buyer", phone: "2465550111", email: "b@example.com", address: "1 Other Road" } }),
+      }),
+      env(),
+      catalog,
+      later(2),
+    );
+    expect(res.status).toBe(201);
+
+    const undo = await admin(`orders/${first.ref}/undo`, { body: {}, now: later(3) });
+    expect(undo.res.status).toBe(409);
+    expect(undo.data.error).toMatch(/sold or held for someone else/);
+    expect(orderRow(first.ref).status).toBe("rejected");
+    expect(await held(later(3))).toBe(1);
+    expect(auditRows().filter((r) => r.action === "order_undone")).toHaveLength(0);
+  });
+
+  it("nothing is brought back when the stock cannot be checked", async () => {
+    const { ref } = await placeOrder();
+    await admin(`orders/${ref}/reject`, { body: { reason: "No payment found" } });
+    catalog = null;
+    const undo = await admin(`orders/${ref}/undo`, { body: {}, now: later(1) });
+    expect(undo.res.status).toBe(503);
+    expect(orderRow(ref).status).toBe("rejected");
+  });
+
+  it("two taps on Undo, or two admins, undo once and log once", async () => {
+    const { ref } = await placeOrder();
+    await admin(`orders/${ref}/paid`, { body: { confirmed: true } });
+    const both = await Promise.all([
+      admin(`orders/${ref}/undo`, { body: {}, now: later(1) }),
+      admin(`orders/${ref}/undo`, { body: {}, now: later(1), token: await sign({ email: ADMIN_EMAILS[1] }) }),
+    ]);
+    expect(both.map((r) => r.res.status).sort()).toEqual([200, 409]);
+    expect(auditRows().filter((r) => r.action === "order_undone")).toHaveLength(1);
+  });
+
+  it("undo and reopen need a signed-in admin and a same-site request, like every change", async () => {
+    const { ref, token } = await placeOrder();
+    await admin(`orders/${ref}/paid`, { body: { confirmed: true } });
+    expect((await admin(`orders/${ref}/undo`, { body: {}, token: null })).res.status).toBe(403);
+    expect((await admin(`orders/${ref}/undo`, { body: {}, headers: { origin: "https://evil.example" } })).res.status).toBe(403);
+    expect((await admin(`orders/${ref}/undo`, { method: "GET" })).res.status).toBe(404);
+    // A customer's order token is not an admin pass.
+    expect((await admin(`orders/${ref}/undo`, { body: {}, token: null, headers: { "x-order-token": token } })).res.status).toBe(403);
+    expect(orderRow(ref).status).toBe("paid");
+  });
+
+  it("an order that ran out of time can be reopened, so the customer can still send proof", async () => {
+    const { ref, token } = await placeOrder({ proof: false });
+    expect((await admin(`orders/${ref}`, { now: later(61) })).data.order.canReopen).toBe(true);
+    expect((await admin(`orders/${ref}/reopen`, { body: {} })).res.status).toBe(409); // still live: nothing to reopen
+
+    const reopened = await admin(`orders/${ref}/reopen`, { body: {}, now: later(90) });
+    expect(reopened.res.status).toBe(200);
+    expect(reopened.data.order.status).toBe("reserved");
+    expect(reopened.data.order.expiresAt).toBe(later(90 + 24 * 60).toISOString());
+    expect(await held(later(91))).toBe(1);
+    expect(auditRows().at(-1)).toMatchObject({ actor: OWNER, action: "order_reopened" });
+
+    // The customer's own link works again and takes their proof. It is still not "paid".
+    expect((await customerView(ref, token, later(95))).order.status).toBe("reserved");
+    const form = new FormData();
+    form.set("method", "cibc_qr");
+    form.set("file", new File([JPEG], "p.jpg"));
+    const up = await uploadProof(new Request(`${ORIGIN}/api/orders/${ref}/proof`, { method: "POST", headers: { "x-order-token": token }, body: form }), env(), ref, later(100));
+    expect(up.status).toBe(200);
+    expect(orderRow(ref).status).toBe("proof_uploaded");
+  });
+
+  it("reopening works after the cron has closed the order, and never oversells", async () => {
+    const { expireOrders } = await import("../../worker/orders");
+    catalog = withStock(1);
+    const { ref } = await placeOrder({ proof: false });
+    await expireOrders(env(), later(61));
+    expect(orderRow(ref).status).toBe("expired");
+
+    const other = await placeOrder({ proof: false, now: later(62) });
+    const refused = await admin(`orders/${ref}/reopen`, { body: {}, now: later(63) });
+    expect(refused.res.status).toBe(409);
+    expect(refused.data.error).toMatch(/sold or held for someone else/);
+    expect(orderRow(ref).status).toBe("expired");
+
+    // Once the other order lets go, it can be reopened.
+    await admin(`orders/${other.ref}/cancel`, { body: {}, now: later(64) });
+    expect((await admin(`orders/${ref}/reopen`, { body: {}, now: later(80) })).data.order.status).toBe("reserved");
+    // Paid, rejected and cancelled orders cannot be "reopened".
+    expect((await admin(`orders/${other.ref}/reopen`, { body: {}, now: later(80) })).res.status).toBe(409);
+  });
+
+  it("the same proof file sent for two orders is pointed out on both", async () => {
+    const a = await placeOrder({ name: "First Person" });
+    const b = await placeOrder({ name: "Second Person" });
+    const different = new Uint8Array(JPEG);
+    different[20] = 7;
+    const c = await placeOrder({ name: "Third Person", proof: different });
+
+    expect((await admin(`orders/${a.ref}`)).data.order.sameProofAs).toEqual([{ ref: b.ref, customerName: "Second Person" }]);
+    expect((await admin(`orders/${b.ref}`)).data.order.sameProofAs).toEqual([{ ref: a.ref, customerName: "First Person" }]);
+    expect((await admin(`orders/${c.ref}`)).data.order.sameProofAs).toEqual([]);
+    // The fingerprint itself is never sent to the portal or the customer.
+    const hash = orderRow(a.ref).proof_hash as string;
+    expect(hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(JSON.stringify((await admin(`orders/${a.ref}`)).data)).not.toContain(hash);
+    expect(JSON.stringify(await customerView(a.ref, a.token))).not.toContain(hash);
+  });
+
+  it("she can note a different amount in the bank; it is logged and changes nothing else", async () => {
+    const { ref } = await placeOrder();
+    const short = await admin(`orders/${ref}/received`, { body: { amountCents: 10000 } });
+    expect(short.data.order.receivedCents).toBe(10000);
+    expect(short.data.order.status).toBe("proof_uploaded");
+    expect(auditRows().at(-1)).toMatchObject({ action: "payment_noted", detail: "BDS $100.00 seen in the bank for an order of BDS $145.00: BDS $45.00 short" });
+    await admin(`orders/${ref}/received`, { body: { amountCents: 15000 } });
+    expect(auditRows().at(-1).detail).toMatch(/BDS \$5\.00 over$/);
+
+    for (const bad of [-1, 10.5, "100", null, 99_999_999]) {
+      expect((await admin(`orders/${ref}/received`, { body: { amountCents: bad } })).res.status).toBe(400);
+    }
+    // Noting an amount never marks an order paid: that still needs the bank-check tick.
+    expect((await admin(`orders/${ref}/paid`, { body: {} })).res.status).toBe(400);
+    // A closed order takes no note.
+    await admin(`orders/${ref}/cancel`, { body: {} });
+    expect((await admin(`orders/${ref}/received`, { body: { amountCents: 14500 } })).res.status).toBe(409);
+  });
+
+  it("the home screen counts paid orders left un-rung-up for more than a day", async () => {
+    const { ref } = await placeOrder();
+    await admin(`orders/${ref}/paid`, { body: { confirmed: true } });
+    expect((await admin("summary", { now: later(23 * 60) })).data.loyverseOverdue).toBe(0);
+    expect((await admin("summary", { now: later(25 * 60) })).data.loyverseOverdue).toBe(1);
+    await admin(`orders/${ref}/recorded`, { body: {}, now: later(25 * 60) });
+    expect((await admin("summary", { now: later(26 * 60) })).data.loyverseOverdue).toBe(0);
+  });
+
+  it("a customer email about a move waits out the undo window, and an undo withdraws it", async () => {
+    const { flushOutbox } = await import("../../worker/email");
+    const sent: Json[] = [];
+    extraEnv = { CUSTOMER_EMAILS: "on", EMAIL: { send: async (m: Json) => void sent.push(m) }, EMAIL_FROM: "orders@alofitnesspro.com" };
+    const a = await placeOrder();
+    await flushOutbox(env(), NOW);
+    sent.length = 0;
+
+    await admin(`orders/${a.ref}/paid`, { body: { confirmed: true } });
+    await flushOutbox(env(), later(5));
+    expect(sent.filter((m) => /Payment confirmed/.test(m.subject))).toHaveLength(0); // still undoable: not sent
+    await admin(`orders/${a.ref}/undo`, { body: {}, now: later(6) });
+    await flushOutbox(env(), later(30));
+    expect(sent.filter((m) => /Payment confirmed/.test(m.subject))).toHaveLength(0); // undone: never sent
+
+    // Marked paid again and left alone: the customer is told once the window closes.
+    await admin(`orders/${a.ref}/paid`, { body: { confirmed: true }, now: later(31) });
+    await flushOutbox(env(), later(35));
+    expect(sent.filter((m) => /Payment confirmed/.test(m.subject))).toHaveLength(0);
+    await flushOutbox(env(), later(42));
+    expect(sent.filter((m) => /Payment confirmed/.test(m.subject))).toHaveLength(1);
   });
 });

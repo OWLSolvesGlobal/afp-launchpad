@@ -191,11 +191,26 @@ must hold:
   `ACCESS_AUD` in `wrangler.jsonc`.
 - **GETs never change anything.** Changes are POSTs that must be same-origin
   (an `Origin` header is required), JSON, and carry `x-afp-admin: 1`.
-- **Status moves are the four in `ADMIN_MOVES` and nothing else**, each one
+- **Status moves are the four in `ADMIN_MOVES`, plus Undo and Reopen, and
+  nothing else** (rule widened 28 Nov 2026, owner's decision). Each is one
   conditional UPDATE that re-checks the current status, with its audit line
   written in the same transaction (`WHERE changes() = 1`). Mark paid needs
   `confirmed: true`: the admin's statement that she checked the bank account.
   Reject needs a reason, which the customer sees.
+- **Undo** takes back the last Mark paid, Reject or Cancel for 10 minutes
+  (`ADMIN_RECOVERY`), restoring the status the order had before. It ends
+  once the order is delivered or rung up in Loyverse. **Reopen** puts an
+  order that ran out of time back to `reserved` for 24 hours so a customer
+  who did pay can send proof; it is not a way to mark paid. Undoing a Reject
+  or Cancel, and Reopen, hold the items again, so the same statement checks
+  they are still free (`roomToHoldAgain`): bringing an order back must never
+  sell a piece twice. If the catalog cannot be read, nothing is brought back.
+- **Nets that only speak when needed.** The proof file's SHA-256 is stored
+  (`proof_hash`) and the order screen says when the same file was sent for
+  another order; the fingerprint itself is never sent anywhere. "A different
+  amount arrived" records what she saw in the bank (`received_cents`) as a
+  logged note that never changes status. The home screen says when a paid
+  order has waited more than a day to be rung up in Loyverse.
 - **The audit log is append-only.** Database triggers refuse UPDATE and
   DELETE on `audit_log`. Do not remove them.
 - **Proofs** are streamed only by `GET /api/admin/orders/:ref/proof`, with
@@ -246,7 +261,8 @@ must hold:
   Sending to customers needs the Workers Paid plan and an onboarded sending
   domain. Do not switch it on without both. Only the first customer email
   (items held) carries the private order link, and the body is cleared from
-  `outbox` once sent.
+  `outbox` once sent. An email about Mark paid, Reject or Cancel waits out
+  the undo window (`send_after`), and an undo withdraws it.
 - Logs record why a send failed, never who it was to or what it said.
 - Without the `EMAIL` binding everything waits in `outbox` and the portal
   home says alerts are off. These are order emails only: no marketing.

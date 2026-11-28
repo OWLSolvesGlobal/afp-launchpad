@@ -104,6 +104,17 @@ export default function Home() {
         </p>
       )}
 
+      {/* Said only when paid orders have sat un-rung-up for more than a day. */}
+      {s && (s.loyverseOverdue ?? 0) > 0 && (
+        <p role="status" className="border border-dashed border-foreground/50 rounded-2xl px-5 py-4 text-sm">
+          {s.loyverseOverdue === 1 ? "One paid order has" : `${s.loyverseOverdue} paid orders have`} waited more than a day to be rung up in
+          Loyverse. Until then the shop shows fewer in stock than you have.{" "}
+          <Link to="/admin/orders" className="underline underline-offset-4 hover:text-accent">
+            See orders
+          </Link>
+        </p>
+      )}
+
       <section aria-labelledby="needs-you">
         <h2 id="needs-you" className="eyebrow text-graphite mb-4">
           Needs you

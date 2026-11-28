@@ -75,6 +75,11 @@ export interface AdminOrder {
   closedAt: string | null;
   hasProof: boolean;
   needsLoyverse: boolean;
+  /** Set only while the last Mark paid, Reject or Cancel can still be undone. */
+  undoUntil: string | null;
+  canReopen: boolean;
+  /** What she noted arriving in the bank, when it was not the order total. */
+  receivedCents: number | null;
   itemCount: number;
 }
 
@@ -86,6 +91,8 @@ export interface AdminOrderDetail extends AdminOrder {
   shippingCents: number;
   closedReason: string;
   marketingOptIn: boolean;
+  /** Other orders the very same proof file was sent for. */
+  sameProofAs: { ref: string; customerName: string }[];
   items: PricedLine[];
   history: { at: string; actor: string; action: string; detail: string | null }[];
 }
@@ -95,6 +102,8 @@ export interface Summary {
   toDeliver: number;
   heldUnpaid: number;
   needsLoyverse: number;
+  /** Paid more than a day ago and still not rung up in Loyverse. */
+  loyverseOverdue?: number;
   paidTodayCount: number;
   paidTodayCents: number;
   /** "off": email alerts not set up. "trouble": a recent alert could not be sent. */
@@ -166,6 +175,9 @@ export function describeAction(action: string): string {
     order_rejected: "Proof rejected",
     order_delivered: "Marked delivered",
     order_recorded_in_loyverse: "Rung up in Loyverse",
+    order_undone: "Undone: put back as it was",
+    order_reopened: "Reopened, items held again",
+    payment_noted: "Amount seen in the bank noted",
     proof_uploaded: "Proof of payment received",
     proof_replaced: "Proof of payment replaced",
     proof_refused: "An upload was refused",

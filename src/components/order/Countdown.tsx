@@ -48,6 +48,10 @@ export function Countdown({
   const mm = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
   const ss = String(totalSeconds % 60).padStart(2, "0");
   const urgent = ms <= 10 * 60_000;
+  // An order the shop reopened is held for hours, not minutes.
+  const long = totalSeconds >= 100 * 60;
+  const hours = Math.floor(totalSeconds / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
 
   return (
     <div className="flex items-center justify-between gap-4 border border-border rounded-2xl px-5 py-4 bg-card">
@@ -60,9 +64,9 @@ export function Countdown({
       {/* Fixed width so the digits never shift the layout. */}
       <div
         aria-hidden="true"
-        className={`font-serif text-4xl tabular-nums shrink-0 w-[5.5ch] text-right ${urgent ? "text-accent" : ""}`}
+        className={`font-serif tabular-nums shrink-0 text-right ${long ? "text-2xl" : "text-4xl w-[5.5ch]"} ${urgent ? "text-accent" : ""}`}
       >
-        {mm}:{ss}
+        {long ? `${hours}h ${String(mins).padStart(2, "0")}m` : `${mm}:${ss}`}
       </div>
       <span className="sr-only" role="status" aria-live="polite">
         {announcement}

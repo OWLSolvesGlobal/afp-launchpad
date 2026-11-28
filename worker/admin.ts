@@ -13,15 +13,21 @@
  *  - An order's status changes in ONE statement that re-checks its current
  *    status, so two taps, two admins or a stale screen cannot apply a change
  *    twice or skip a step. The audit line is written in the same transaction.
- *  - Only the moves in ADMIN_MOVES exist. "Mark paid" also needs the admin's
- *    explicit confirmation that the bank account was checked.
+ *  - Only the moves in ADMIN_MOVES exist, plus two ways to put a mistake
+ *    right: Undo (Mark paid, Reject or Cancel, for a few minutes) and Reopen
+ *    (an order that ran out of time). Both are single conditional statements
+ *    with their audit line, like every other move, and neither can bring an
+ *    order back unless its items can still be held. "Mark paid" also needs
+ *    the admin's explicit confirmation that the bank account was checked.
  *  - A proof is streamed from the private bucket with headers that stop a
  *    browser treating it as anything but a picture or a download.
  *  - Bank details are never written to the audit log or the logs, and the
  *    account number is only ever returned masked.
  */
+import { formatBbd, type CatalogSnapshot } from "../src/lib/catalog-core";
 import {
   ADMIN_MOVES,
+  ADMIN_RECOVERY,
   barbadosDate,
   maskAccountNumber,
   parseBankInput,
@@ -31,8 +37,8 @@ import {
   type PricedLine,
 } from "../src/lib/orders-core";
 import { verifyAccess, type AccessEnv, type KeyFetcher } from "./access";
-import { customerKindFor, notifyCustomer, orderForEmail, ownerEmailHealth, type EmailEnv } from "./email";
-import { json, loadBankDetails, loadPickupLocations, type OrdersDb, type OrdersEnv } from "./orders";
+import { customerKindFor, notifyCustomer, orderForEmail, ownerEmailHealth, withdrawCustomerEmail, type EmailEnv } from "./email";
+import { json, loadBankDetails, loadPickupLocations, roomToHoldAgain, stockMap, type OrdersDb, type OrdersEnv } from "./orders";
 
 /** The slice of the R2 API used to read a proof back for an admin. */
 export interface ProofReader {
@@ -41,7 +47,13 @@ export interface ProofReader {
 
 export interface AdminEnv extends OrdersEnv, AccessEnv {
   PROOFS?: ProofReader;
+  /** The catalog snapshot, read only to check stock before an order is brought back. */
+  AFP_CATALOG?: { get(key: string, type: "text"): Promise<string | null> };
 }
+
+const CATALOG_KEY = "catalog:v1";
+const UNDOABLE: readonly OrderStatus[] = ["paid", "rejected", "cancelled"];
+const MAX_RECEIVED_CENTS = 10_000_000;
 
 const ADMIN_LIMITS = { writesPerMinute: 30, maxBodyBytes: 8_000, listMax: 100 } as const;
 const REF = /^AFP-\d{8}-\d{3}$/;
@@ -79,6 +91,10 @@ interface AdminOrderRow {
   closed_reason: string | null;
   loyverse_receipt: string | null;
   marketing_opt_in: number;
+  undo_status: OrderStatus | null;
+  undo_until: string | null;
+  proof_hash: string | null;
+  received_cents: number | null;
   item_count?: number;
 }
 
@@ -102,6 +118,14 @@ function present(row: AdminOrderRow, nowIso: string) {
     hasProof: Boolean(row.proof_key),
     // Paid, but the sale is not in Loyverse yet: the owner rings it up at the till.
     needsLoyverse: (row.status === "paid" || row.status === "delivered") && !row.loyverse_receipt,
+    // Set only while the last Mark paid, Reject or Cancel can still be undone.
+    undoUntil:
+      UNDOABLE.includes(row.status) && row.undo_status && row.undo_until && row.undo_until > nowIso && !row.loyverse_receipt
+        ? row.undo_until
+        : null,
+    canReopen: status === "expired",
+    // What she noted arriving in the bank, when it was not the order total.
+    receivedCents: row.received_cents,
     itemCount: Number(row.item_count ?? 0),
   };
 }
@@ -161,17 +185,20 @@ async function summary(db: OrdersDb, env: EmailEnv, now: Date): Promise<Response
          SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) AS to_deliver,
          SUM(CASE WHEN status = 'reserved' AND expires_at > ?1 THEN 1 ELSE 0 END) AS held_unpaid,
          SUM(CASE WHEN status IN ('paid','delivered') AND loyverse_receipt IS NULL THEN 1 ELSE 0 END) AS needs_loyverse,
+         SUM(CASE WHEN status IN ('paid','delivered') AND loyverse_receipt IS NULL AND paid_at < ?3 THEN 1 ELSE 0 END) AS loyverse_overdue,
          SUM(CASE WHEN status IN ('paid','delivered') AND paid_at >= ?2 THEN 1 ELSE 0 END) AS paid_today_count,
          SUM(CASE WHEN status IN ('paid','delivered') AND paid_at >= ?2 THEN total_cents ELSE 0 END) AS paid_today_cents
        FROM orders`,
     )
-    .bind(nowIso, dayStart)
+    .bind(nowIso, dayStart, new Date(now.getTime() - 24 * 3600_000).toISOString())
     .first<Record<string, number | null>>();
   return json({
     proofsWaiting: Number(row?.proofs_waiting ?? 0),
     toDeliver: Number(row?.to_deliver ?? 0),
     heldUnpaid: Number(row?.held_unpaid ?? 0),
     needsLoyverse: Number(row?.needs_loyverse ?? 0),
+    // Paid more than a day ago and still not rung up: the shop is holding stock it need not.
+    loyverseOverdue: Number(row?.loyverse_overdue ?? 0),
     paidTodayCount: Number(row?.paid_today_count ?? 0),
     paidTodayCents: Number(row?.paid_today_cents ?? 0),
     // "off" = email alerts are not set up; "trouble" = a recent alert could not be sent.
@@ -189,6 +216,13 @@ async function orderDetail(db: OrdersDb, ref: string, nowIso: string): Promise<R
     .bind(ref)
     .first<AdminOrderRow>();
   if (!row) return notFound();
+  // The same file sent for another order: one payment may be being used twice.
+  const sameProof = row.proof_hash
+    ? await db
+        .prepare(`SELECT ref, customer_name AS customerName FROM orders WHERE proof_hash = ? AND ref <> ? ORDER BY id DESC LIMIT 3`)
+        .bind(row.proof_hash, ref)
+        .all<{ ref: string; customerName: string }>()
+    : { results: [] };
   const [items, history] = await Promise.all([
     db
       .prepare(`SELECT sku, name, size, quantity, price_cents AS priceCents FROM order_items WHERE order_id = ? ORDER BY id`)
@@ -209,6 +243,7 @@ async function orderDetail(db: OrdersDb, ref: string, nowIso: string): Promise<R
       shippingCents: row.shipping_cents,
       closedReason: row.closed_reason ?? "",
       marketingOptIn: row.marketing_opt_in === 1,
+      sameProofAs: sameProof.results,
       items: items.results,
       history: history.results,
     },
@@ -271,8 +306,15 @@ async function moveOrder(
   const from = rule.from.map((s) => `'${s}'`).join(",");
   const closing = move === "reject" || move === "cancel";
   const stamp = move === "paid" ? "paid_at" : "delivered_at";
-  const set = closing ? `status = '${rule.to}', closed_at = ?, closed_reason = ?` : `status = '${rule.to}', ${stamp} = ?`;
-  const setBinds: unknown[] = closing ? [nowIso, reason] : [nowIso];
+  // Mark paid, Reject and Cancel remember where the order was, so they can be
+  // undone for a few minutes. (In SQL, `undo_status = status` reads the status
+  // from before this statement.) Mark delivered ends any chance to undo.
+  const undoUntil = move === "delivered" ? null : new Date(Date.parse(nowIso) + ADMIN_RECOVERY.undoMinutes * 60_000).toISOString();
+  const remember = undoUntil ? `undo_status = status, undo_until = ?` : `undo_status = NULL, undo_until = ?`;
+  const set = closing
+    ? `status = '${rule.to}', closed_at = ?, closed_reason = ?, ${remember}`
+    : `status = '${rule.to}', ${stamp} = ?, ${remember}`;
+  const setBinds: unknown[] = closing ? [nowIso, reason, undoUntil] : [nowIso, undoUntil];
   // A reservation whose time has passed is already over, whatever its row says.
   const live = move === "cancel" ? `AND NOT (status = 'reserved' AND expires_at <= ?)` : "";
   const liveBinds: unknown[] = move === "cancel" ? [nowIso] : [];
@@ -299,7 +341,129 @@ async function moveOrder(
   // Tell the customer what changed (when customer emails are on).
   const kind = customerKindFor(rule.to);
   const forEmail = kind ? await orderForEmail(db, ref).catch(() => null) : null;
-  if (kind && forEmail) await notifyCustomer(env, kind, forEmail, new Date(nowIso));
+  // While the move can be undone, the email waits; an undo withdraws it.
+  if (kind && forEmail) await notifyCustomer(env, kind, forEmail, new Date(nowIso), undefined, undoUntil ?? undefined);
+  return orderDetail(db, ref, nowIso);
+}
+
+/** What Loyverse says is in stock, or null when the catalog cannot be read. */
+async function currentStock(env: AdminEnv): Promise<Map<string, number> | null> {
+  try {
+    const stored = await env.AFP_CATALOG?.get(CATALOG_KEY, "text");
+    if (!stored) return null;
+    return stockMap(JSON.parse(stored) as CatalogSnapshot);
+  } catch {
+    return null;
+  }
+}
+
+const orderLines = async (db: OrdersDb, orderId: number) =>
+  (await db.prepare(`SELECT sku, size FROM order_items WHERE order_id = ?`).bind(orderId).all<{ sku: string; size: string }>()).results;
+
+const SOLD_SINCE = "Some of these items have been sold or held for someone else since, so the order can't be brought back. Ask the customer to order again.";
+const NO_STOCK_CHECK = "We can't check the stock right now, so nothing was changed. Please try again in a few minutes.";
+
+/**
+ * Undo the last Mark paid, Reject or Cancel, within a few minutes of it.
+ * The order goes back to exactly where it was. Undoing a Reject or Cancel
+ * holds the items again, and is refused if they have gone in the meantime.
+ */
+async function undoMove(env: AdminEnv, db: OrdersDb, ref: string, email: string, nowIso: string): Promise<Response> {
+  const current = await db
+    .prepare(`SELECT id, status, undo_status, undo_until, loyverse_receipt FROM orders WHERE ref = ?`)
+    .bind(ref)
+    .first<{ id: number; status: OrderStatus; undo_status: OrderStatus | null; undo_until: string | null; loyverse_receipt: string | null }>();
+  if (!current) return notFound();
+  const open =
+    UNDOABLE.includes(current.status) && current.undo_status && current.undo_until && current.undo_until > nowIso && !current.loyverse_receipt;
+  if (!open) return json({ error: "The time to undo this has passed.", status: current.status }, 409);
+
+  // A paid order never stopped holding its items. A closed one let them go.
+  let room = { sql: "1 = 1", binds: [] as unknown[] };
+  if (current.status !== "paid") {
+    const stock = await currentStock(env);
+    if (!stock) return json({ error: NO_STOCK_CHECK }, 503);
+    room = roomToHoldAgain(await orderLines(db, current.id), stock, nowIso);
+  }
+  const results = await db.batch([
+    db
+      .prepare(
+        `UPDATE orders
+            SET status = undo_status,
+                paid_at = CASE WHEN status = 'paid' THEN NULL ELSE paid_at END,
+                closed_at = NULL, closed_reason = NULL, undo_status = NULL, undo_until = NULL
+          WHERE ref = ? AND status = ? AND undo_status IS NOT NULL AND undo_until > ?
+            AND loyverse_receipt IS NULL AND ${room.sql}`,
+      )
+      .bind(ref, current.status, nowIso, ...room.binds),
+    db
+      .prepare(`INSERT INTO audit_log (at, actor, action, order_ref, detail) SELECT ?, ?, 'order_undone', ?, ? WHERE changes() = 1`)
+      .bind(nowIso, email, ref, `${current.status} -> ${current.undo_status} (undo)`),
+  ]);
+  if (results[0].meta.changes !== 1) {
+    const latest = await db.prepare(`SELECT status, undo_until FROM orders WHERE ref = ?`).bind(ref).first<{ status: OrderStatus; undo_until: string | null }>();
+    const stillOpen = latest?.status === current.status && Boolean(latest.undo_until && latest.undo_until > nowIso);
+    return json({ error: stillOpen ? SOLD_SINCE : "This order has already moved on. The screen has been refreshed.", status: latest?.status ?? null }, 409);
+  }
+  const kind = customerKindFor(current.status);
+  if (kind) await withdrawCustomerEmail(env, ref, kind);
+  return orderDetail(db, ref, nowIso);
+}
+
+/**
+ * Reopen an order that ran out of time, for a customer who did pay. The
+ * items are held again (only if they are still there) and the customer's own
+ * order link works again, so they can send their proof. It is not a way to
+ * mark an order paid: that still needs a proof and the bank check.
+ */
+async function reopenOrder(env: AdminEnv, db: OrdersDb, ref: string, email: string, nowIso: string): Promise<Response> {
+  const current = await db.prepare(`SELECT id FROM orders WHERE ref = ?`).bind(ref).first<{ id: number }>();
+  if (!current) return notFound();
+  const stock = await currentStock(env);
+  if (!stock) return json({ error: NO_STOCK_CHECK }, 503);
+  const room = roomToHoldAgain(await orderLines(db, current.id), stock, nowIso);
+  const heldUntil = new Date(Date.parse(nowIso) + ADMIN_RECOVERY.reopenHours * 3600_000).toISOString();
+  const results = await db.batch([
+    db
+      .prepare(
+        `UPDATE orders
+            SET status = 'reserved', expires_at = ?, closed_at = NULL, closed_reason = NULL, undo_status = NULL, undo_until = NULL
+          WHERE ref = ? AND (status = 'expired' OR (status = 'reserved' AND expires_at <= ?)) AND ${room.sql}`,
+      )
+      .bind(heldUntil, ref, nowIso, ...room.binds),
+    db
+      .prepare(`INSERT INTO audit_log (at, actor, action, order_ref, detail) SELECT ?, ?, 'order_reopened', ?, ? WHERE changes() = 1`)
+      .bind(nowIso, email, ref, `expired -> reserved; items held until ${heldUntil}`),
+  ]);
+  if (results[0].meta.changes !== 1) {
+    const latest = await db.prepare(`SELECT status, expires_at FROM orders WHERE ref = ?`).bind(ref).first<{ status: OrderStatus; expires_at: string }>();
+    const stillExpired = latest?.status === "expired" || (latest?.status === "reserved" && latest.expires_at <= nowIso);
+    return json({ error: stillExpired ? SOLD_SINCE : "This order has already moved on. The screen has been refreshed.", status: latest?.status ?? null }, 409);
+  }
+  return orderDetail(db, ref, nowIso);
+}
+
+/**
+ * Note what actually arrived in the bank when it was not the order total.
+ * A record for the owner and the log. It never changes the order's status:
+ * marking paid is still its own, separate decision.
+ */
+async function noteReceived(db: OrdersDb, ref: string, body: Record<string, unknown>, email: string, nowIso: string): Promise<Response> {
+  const cents = body.amountCents;
+  if (typeof cents !== "number" || !Number.isInteger(cents) || cents < 0 || cents > MAX_RECEIVED_CENTS) {
+    return json({ error: "Type the amount you can see in the bank, for example 100.00.", field: "amountCents" }, 400);
+  }
+  const current = await db.prepare(`SELECT total_cents FROM orders WHERE ref = ?`).bind(ref).first<{ total_cents: number }>();
+  if (!current) return notFound();
+  const gap = cents - current.total_cents;
+  const words = gap === 0 ? "the full amount" : gap < 0 ? `${formatBbd(-gap)} short` : `${formatBbd(gap)} over`;
+  const results = await db.batch([
+    db.prepare(`UPDATE orders SET received_cents = ? WHERE ref = ? AND status IN ('proof_uploaded','paid')`).bind(cents, ref),
+    db
+      .prepare(`INSERT INTO audit_log (at, actor, action, order_ref, detail) SELECT ?, ?, 'payment_noted', ?, ? WHERE changes() = 1`)
+      .bind(nowIso, email, ref, `${formatBbd(cents)} seen in the bank for an order of ${formatBbd(current.total_cents)}: ${words}`),
+  ]);
+  if (results[0].meta.changes !== 1) return json({ error: "This order has already moved on. The screen has been refreshed." }, 409);
   return orderDetail(db, ref, nowIso);
 }
 
@@ -445,6 +609,9 @@ export async function handleAdmin(
   if (parts[0] === "orders" && REF.test(parts[1] ?? "") && parts.length === 3) {
     const action = parts[2];
     if (action === "recorded") return markRecorded(db, parts[1], admin.email, nowIso);
+    if (action === "undo") return undoMove(env, db, parts[1], admin.email, nowIso);
+    if (action === "reopen") return reopenOrder(env, db, parts[1], admin.email, nowIso);
+    if (action === "received") return noteReceived(db, parts[1], body, admin.email, nowIso);
     if (Object.prototype.hasOwnProperty.call(ADMIN_MOVES, action)) {
       return moveOrder(env, db, parts[1], action as AdminMove, body, admin.email, nowIso);
     }

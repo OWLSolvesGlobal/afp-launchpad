@@ -31,8 +31,10 @@ export default function OrderDetail() {
   const confirmId = useId();
   const reasonId = useId();
   const [confirmed, setConfirmed] = useState(false);
-  const [panel, setPanel] = useState<"none" | "reject" | "cancel">("none");
+  const amountId = useId();
+  const [panel, setPanel] = useState<"none" | "reject" | "cancel" | "amount">("none");
   const [reason, setReason] = useState("");
+  const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [proofFailed, setProofFailed] = useState(false);
@@ -52,6 +54,7 @@ export default function OrderDetail() {
       toast.success(done);
       setPanel("none");
       setReason("");
+      setAmount("");
       setConfirmed(false);
     } catch (e) {
       const err = e as AdminError;
@@ -98,6 +101,12 @@ export default function OrderDetail() {
   const pickup = o.fulfillment === "pickup";
   const proofUrl = `/api/admin/orders/${o.ref}/proof?v=${encodeURIComponent(o.proofUploadedAt ?? "")}`;
   const hello = `Hi ${o.customerName.split(" ")[0]}, this is Alo Fitness Pro about your order ${o.ref}.`;
+  // What she noted arriving, against the order total. Shown only when the two differ.
+  const received = o.receivedCents ?? null;
+  const gap = received === null ? 0 : received - o.totalCents;
+  const sameProof = o.sameProofAs ?? [];
+  const typedCents = /^\d{1,6}(\.\d{1,2})?$/.test(amount.trim()) ? Math.round(Number(amount.trim()) * 100) : null;
+  const undone = { paid: "Marked paid", rejected: "Rejected", cancelled: "Cancelled" }[o.status as string] ?? "";
 
   return (
     <div className="space-y-8">
@@ -146,6 +155,47 @@ export default function OrderDetail() {
                 </div>
               </dl>
 
+              {sameProof.length > 0 && (
+                <p role="status" className="border border-dashed border-foreground/50 rounded-2xl px-4 py-3 text-sm">
+                  This same file was also sent for{" "}
+                  {sameProof.map((other, i) => (
+                    <span key={other.ref}>
+                      {i > 0 && ", "}
+                      <Link to={`/admin/orders/${other.ref}`} className="underline underline-offset-4 hover:text-accent">
+                        {other.ref}
+                      </Link>{" "}
+                      ({other.customerName})
+                    </span>
+                  ))}
+                  . Check the bank shows a separate payment for each order.
+                </p>
+              )}
+
+              {received !== null && gap !== 0 && (
+                <div role="status" className="border border-dashed border-foreground/50 rounded-2xl px-4 py-3 text-sm space-y-2">
+                  <p>
+                    You noted <span className="font-semibold">{formatBbd(received)}</span> in the bank:{" "}
+                    <span className="font-semibold">
+                      {formatBbd(Math.abs(gap))} {gap < 0 ? "short" : "over"}
+                    </span>
+                    .{gap > 0 && " Agree with the customer how to return the extra."}
+                  </p>
+                  {gap < 0 && (
+                    <a
+                      href={whatsappLink(
+                        o.customerPhone,
+                        `${hello} We received ${formatBbd(received)}, which is ${formatBbd(-gap)} less than the order total of ${total}. Please send the ${formatBbd(-gap)} difference with the same reference, ${o.ref}, and we will confirm your order.`,
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={quietBtn}
+                    >
+                      <MessageCircle className="w-4 h-4" aria-hidden="true" /> Ask for the {formatBbd(-gap)} on WhatsApp
+                    </a>
+                  )}
+                </div>
+              )}
+
               {o.hasProof && (
                 <div className="space-y-3">
                   {/* A PDF cannot be drawn as a picture: it fails to load and the download button takes over. */}
@@ -179,6 +229,18 @@ export default function OrderDetail() {
             </h2>
             {error && <ErrorNote message={error} />}
 
+            {/* A slip of the thumb: shown only for a few minutes after the move. */}
+            {o.undoUntil && (
+              <div role="status" className="border border-dashed border-foreground/50 rounded-3xl p-5 md:p-6 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm">
+                  <span className="font-medium">{undone}.</span> Not what you meant? You can undo it until {when(o.undoUntil)}.
+                </p>
+                <button type="button" className={secondaryBtn} disabled={busy !== ""} onClick={() => void act("undo", {}, "Undone")}>
+                  {busy === "undo" ? "Undoing…" : "Undo"}
+                </button>
+              </div>
+            )}
+
             {o.status === "proof_uploaded" && panel === "none" && (
               <div className={`${card} p-5 md:p-6 space-y-4`}>
                 <label htmlFor={confirmId} className="flex items-start gap-3 cursor-pointer min-h-11">
@@ -206,8 +268,47 @@ export default function OrderDetail() {
                   <button type="button" className={quietBtn} onClick={() => setPanel("reject")}>
                     The money isn't there: reject
                   </button>
+                  <button type="button" className={quietBtn} onClick={() => setPanel("amount")}>
+                    A different amount arrived
+                  </button>
                   <button type="button" className={quietBtn} onClick={() => setPanel("cancel")}>
                     Cancel this order
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {panel === "amount" && (
+              <div className={`${card} p-5 md:p-6 space-y-4`}>
+                <h3 className="font-medium">A different amount arrived</h3>
+                <p className="text-sm text-graphite">
+                  Type what you can see in the bank for this order. It is kept as a note; the order stays as it is
+                  until you mark it paid or reject it.
+                </p>
+                <div>
+                  <label htmlFor={amountId} className="block text-sm font-medium mb-1.5">
+                    Amount in the bank (BDS $)
+                  </label>
+                  <input
+                    id={amountId}
+                    inputMode="decimal"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="100.00"
+                    className="w-full border border-border bg-background rounded-xl px-4 h-12 text-base tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                  <button
+                    type="button"
+                    className={secondaryBtn}
+                    disabled={typedCents === null || busy !== ""}
+                    onClick={() => void act("received", { amountCents: typedCents }, "Amount noted")}
+                  >
+                    {busy === "received" ? "Saving…" : "Save the note"}
+                  </button>
+                  <button type="button" className={quietBtn} onClick={() => setPanel("none")}>
+                    Go back
                   </button>
                 </div>
               </div>
@@ -252,7 +353,7 @@ export default function OrderDetail() {
             {panel === "cancel" && (
               <div className={`${card} p-5 md:p-6 space-y-4`}>
                 <h3 className="font-medium">Cancel this order?</h3>
-                <p className="text-sm text-graphite">The items go back on sale. This can't be undone.</p>
+                <p className="text-sm text-graphite">The items go back on sale. You'll have 10 minutes to undo it.</p>
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                   <button type="button" className={secondaryBtn} disabled={busy !== ""} onClick={() => void act("cancel", {}, "Order cancelled")}>
                     {busy === "cancel" ? "Cancelling…" : "Yes, cancel it"}
@@ -307,6 +408,17 @@ export default function OrderDetail() {
                     ? "No proof arrived within 60 minutes, so the items went back on sale."
                     : `Closed ${when(o.closedAt)}. The items are back on sale.`}
                 </p>
+                {o.canReopen && (
+                  <div className="mt-4 pt-4 border-t border-border space-y-3">
+                    <p className="text-sm text-graphite">
+                      Did the customer pay after all? Reopen the order: the items are held for them again for 24 hours and
+                      their order link works again, so they can send their proof.
+                    </p>
+                    <button type="button" className={secondaryBtn} disabled={busy !== ""} onClick={() => void act("reopen", {}, "Reopened: items held for 24 hours")}>
+                      {busy === "reopen" ? "Reopening…" : "Reopen this order"}
+                    </button>
+                  </div>
+                )}
                 {o.closedReason && o.status !== "expired" && (
                   <p className="text-sm text-graphite mt-2">
                     {o.status === "rejected" ? "Reason shown to the customer: " : "Note: "}

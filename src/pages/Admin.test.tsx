@@ -160,6 +160,67 @@ describe("checking a payment", () => {
   });
 });
 
+describe("putting a mistake right", () => {
+  it("shows nothing extra on an ordinary order", async () => {
+    mock(signedIn(() => json({ order: detail() })));
+    renderAt(`/admin/orders/${REF}`);
+    await screen.findByRole("button", { name: "Mark paid" });
+    expect(screen.queryByRole("button", { name: "Undo" })).toBeNull();
+    expect(screen.queryByText(/same file/)).toBeNull();
+    expect(screen.queryByText(/You noted/)).toBeNull();
+  });
+
+  it("offers Undo straight after a move, and sends it", async () => {
+    mock(
+      signedIn((url, init) =>
+        init?.method === "POST"
+          ? json({ order: detail({ status: "proof_uploaded", undoUntil: null }) })
+          : json({ order: detail({ status: "paid", paidAt: "2026-11-28T15:20:00.000Z", undoUntil: "2026-11-28T15:30:00.000Z" }) }),
+      ),
+    );
+    renderAt(`/admin/orders/${REF}`);
+    fireEvent.click(await screen.findByRole("button", { name: "Undo" }));
+    await screen.findByRole("button", { name: "Mark paid" });
+    const post = calls.find((c) => c.init?.method === "POST")!;
+    expect(post.url).toBe(`/api/admin/orders/${REF}/undo`);
+    expect(screen.queryByRole("button", { name: "Undo" })).toBeNull();
+  });
+
+  it("offers Reopen on an order that ran out of time", async () => {
+    mock(signedIn((url, init) => json({ order: detail(init?.method === "POST" ? { status: "reserved", hasProof: false } : { status: "expired", hasProof: false, canReopen: true }) })));
+    renderAt(`/admin/orders/${REF}`);
+    fireEvent.click(await screen.findByRole("button", { name: "Reopen this order" }));
+    await screen.findByText(/The customer is still paying/);
+    expect(calls.find((c) => c.init?.method === "POST")!.url).toBe(`/api/admin/orders/${REF}/reopen`);
+  });
+
+  it("points out a proof file used for another order, and a short payment with a way to ask for the rest", async () => {
+    mock(signedIn(() => json({ order: detail({ receivedCents: 10000, sameProofAs: [{ ref: "AFP-20261128-777", customerName: "Other Person" }] }) })));
+    renderAt(`/admin/orders/${REF}`);
+    expect(await screen.findByText(/same file was also sent/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "AFP-20261128-777" }).getAttribute("href")).toBe("/admin/orders/AFP-20261128-777");
+    expect(screen.getByText("BDS $45.00 short")).toBeTruthy();
+    const ask = screen.getByRole("link", { name: /Ask for the BDS \$45\.00 on WhatsApp/ });
+    expect(decodeURIComponent(ask.getAttribute("href")!)).toContain("Please send the BDS $45.00 difference with the same reference");
+  });
+
+  it("saves a different amount as cents, and refuses anything that is not money", async () => {
+    mock(signedIn((url, init) => json({ order: detail(init?.method === "POST" ? { receivedCents: 10050 } : {}) })));
+    renderAt(`/admin/orders/${REF}`);
+    fireEvent.click(await screen.findByRole("button", { name: "A different amount arrived" }));
+    const save = screen.getByRole("button", { name: "Save the note" }) as HTMLButtonElement;
+    const input = screen.getByLabelText("Amount in the bank (BDS $)");
+    fireEvent.change(input, { target: { value: "abc" } });
+    expect(save.disabled).toBe(true);
+    fireEvent.change(input, { target: { value: "100.50" } });
+    fireEvent.click(save);
+    await screen.findByText(/You noted/);
+    const post = calls.find((c) => c.init?.method === "POST")!;
+    expect(post.url).toBe(`/api/admin/orders/${REF}/received`);
+    expect(JSON.parse(String(post.init!.body))).toEqual({ amountCents: 10050 });
+  });
+});
+
 describe("portal helpers", () => {
   it("turn local phone numbers into WhatsApp links", () => {
     expect(whatsappLink("246 555 0100", "Hi")).toBe("https://wa.me/12465550100?text=Hi");

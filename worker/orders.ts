@@ -59,7 +59,7 @@ export interface OrdersDb {
  *    Loyverse's own stock count already reflects the sale).
  * `?` is the current time.
  */
-const HOLDS = `(
+export const HOLDS = `(
   (o.status = 'reserved' AND o.expires_at > ?)
   OR o.status = 'proof_uploaded'
   OR (o.status IN ('paid','delivered') AND o.loyverse_receipt IS NULL)
@@ -107,6 +107,43 @@ export function sameOrigin(request: Request): boolean {
 }
 
 /** Active holds per sku+size, as a lookup. Empty if the database is unavailable. */
+/** What Loyverse says is in stock, per item and size. */
+export function stockMap(snapshot: CatalogSnapshot): Map<string, number> {
+  const stock = new Map<string, number>();
+  for (const p of snapshot.products) {
+    for (const size of p.sizes) stock.set(holdKey(p.sku, size), sizeStock(p, size));
+  }
+  return stock;
+}
+
+/**
+ * A condition for an UPDATE on `orders`: true only when every line of that
+ * order can be held again, counting what other orders hold right now. Used
+ * when an order that had released its stock is brought back (undo, reopen),
+ * so bringing it back can never sell the same piece twice.
+ */
+export function roomToHoldAgain(
+  lines: { sku: string; size: string }[],
+  stock: Map<string, number>,
+  nowIso: string,
+): { sql: string; binds: unknown[] } {
+  const cases = lines.map(() => `WHEN ? THEN ?`).join(" ");
+  const binds: unknown[] = [];
+  for (const l of lines) binds.push(`${l.sku}|${l.size}`, stock.get(holdKey(l.sku, l.size)) ?? 0);
+  binds.push(nowIso);
+  return {
+    sql: `NOT EXISTS (
+            SELECT 1 FROM order_items mine
+             WHERE mine.order_id = orders.id
+               AND (CASE mine.sku || '|' || mine.size ${cases} ELSE 0 END)
+                   - (SELECT COALESCE(SUM(oi.quantity), 0)
+                        FROM order_items oi JOIN orders o ON o.id = oi.order_id
+                       WHERE oi.sku = mine.sku AND oi.size = mine.size AND o.id <> orders.id AND ${HOLDS})
+                   < mine.quantity)`,
+    binds,
+  };
+}
+
 export async function loadHolds(db: OrdersDb | undefined, now: Date): Promise<Map<string, number>> {
   const holds = new Map<string, number>();
   if (!db) return holds;
@@ -328,10 +365,7 @@ export async function createOrder(
   const token = randomToken();
   const tokenHash = await sha256Hex(token);
   const expiresAt = expiryFor(now);
-  const stockBySkuSize = new Map<string, number>();
-  for (const p of snapshot.products) {
-    for (const size of p.sizes) stockBySkuSize.set(holdKey(p.sku, size), sizeStock(p, size));
-  }
+  const stockBySkuSize = stockMap(snapshot);
 
   let ref = "";
   let results: { meta: { changes: number } }[] | null = null;

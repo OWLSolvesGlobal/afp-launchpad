@@ -419,6 +419,13 @@ export const ADMIN_MOVES = {
 } as const satisfies Record<string, { from: readonly OrderStatus[]; to: OrderStatus }>;
 export type AdminMove = keyof typeof ADMIN_MOVES;
 
+/**
+ * Putting a mistake right. Mark paid, Reject and Cancel can be undone for a
+ * few minutes; an order that ran out of time can be reopened so a customer
+ * who did pay can still send their proof.
+ */
+export const ADMIN_RECOVERY = { undoMinutes: 10, reopenHours: 24 } as const;
+
 /** The words the owner sees for each status. Never the internal code. */
 export const STATUS_LABELS: Record<OrderStatus, string> = {
   reserved: "Waiting for payment",
