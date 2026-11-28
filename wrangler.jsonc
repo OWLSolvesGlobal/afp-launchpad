@@ -33,7 +33,7 @@
   // secret. Left empty, every /api/admin/* request is refused.
   "vars": {
     "ACCESS_TEAM_DOMAIN": "https://alo-fitness-pro.cloudflareaccess.com",
-    "ACCESS_AUD": ""
+    "ACCESS_AUD": "26bf0052f5524595ff7addc6d06a56f964d5aaff69efc6263c7008ad7b2257d7"
   },
 
   "triggers": {
