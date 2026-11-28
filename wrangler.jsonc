@@ -32,7 +32,7 @@
   // Sign-in for the owner's portal (Cloudflare Access). Neither value is a
   // secret. Left empty, every /api/admin/* request is refused.
   "vars": {
-    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_TEAM_DOMAIN": "https://alo-fitness-pro.cloudflareaccess.com",
     "ACCESS_AUD": ""
   },
 
