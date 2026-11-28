@@ -10,7 +10,7 @@
  *    reserved comes from the server's copy of the order.
  */
 import type { CartItem } from "@/context/CartContext";
-import type { PaymentInfo, PaymentMethod, PublicOrder } from "@/lib/orders-core";
+import { DEFAULT_PICKUP_LOCATIONS, type PaymentInfo, type PaymentMethod, type PickupLocation, type PublicOrder } from "@/lib/orders-core";
 import type { Fulfillment } from "@/lib/pricing";
 
 const ACTIVE_KEY = "afp-order-v1";
@@ -153,6 +153,20 @@ export interface ReserveInput {
   fulfillment: Fulfillment;
   pickupLocation: string;
   customer: { name: string; phone: string; email: string; address: string };
+  /** True only if the customer ticked the marketing box. */
+  marketingOptIn: boolean;
+}
+
+/** Pickup locations the owner offers. Falls back to the built-in list if the shop can't be reached. */
+export async function fetchPickupLocations(): Promise<PickupLocation[]> {
+  try {
+    const res = await fetch("/api/checkout-config");
+    if (!res.ok) return DEFAULT_PICKUP_LOCATIONS;
+    const body = (await res.json()) as { pickupLocations?: PickupLocation[] };
+    return Array.isArray(body.pickupLocations) && body.pickupLocations.length > 0 ? body.pickupLocations : DEFAULT_PICKUP_LOCATIONS;
+  } catch {
+    return DEFAULT_PICKUP_LOCATIONS;
+  }
 }
 
 export async function reserveOrder(input: ReserveInput): Promise<ApiResult<OrderView & { token?: string }>> {

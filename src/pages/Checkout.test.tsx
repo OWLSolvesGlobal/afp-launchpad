@@ -65,6 +65,11 @@ const CATALOG = {
   ],
 };
 
+const PICKUP = [
+  { name: "Sheraton Mall", address: "Christ Church", hours: "Sat 10am to 2pm" },
+  { name: "AFP HQ — St Michael", address: "By appointment", hours: "" },
+];
+
 const order = (overrides: Partial<PublicOrder> = {}): PublicOrder => ({
   ref: REF,
   status: "reserved",
@@ -96,6 +101,7 @@ function mockFetch(handler: Handler) {
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url.startsWith("/api/catalog")) return json(CATALOG);
+      if (url.startsWith("/api/checkout-config")) return json({ pickupLocations: PICKUP });
       calls.push({ url, init });
       return handler(url, init);
     }),
@@ -196,6 +202,9 @@ describe("checkout: details step", () => {
     expect(sent.items).toEqual([{ sku: "LV-romper", size: "S", quantity: 1 }]);
     expect(JSON.stringify(sent)).not.toMatch(/price|total|cents/i);
     expect(sent.customer).toEqual({ name: "Test Customer", phone: "246 555 0100", email: "test@example.com", address: "" });
+    // Pickup uses the owner's list from Settings; the marketing box starts unticked.
+    expect(sent.pickupLocation).toBe("Sheraton Mall");
+    expect(sent.marketingOptIn).toBe(false);
 
     await act(async () => release(json({ order: order(), token: TOKEN, serverTime: new Date(NOW).toISOString(), payment: { bank: null } }, 201)));
     // Now on the Pay step, showing the server's total and reference.
@@ -206,6 +215,22 @@ describe("checkout: details step", () => {
     // The bag is emptied only after the order exists, and kept for a cancel.
     expect(JSON.parse(localStorage.getItem("afp-cart-v2")!)).toEqual([]);
     expect(loadActiveOrder()).toMatchObject({ ref: REF, token: TOKEN, bag: BAG });
+  });
+
+  it("sends the marketing choice only when the customer ticks the box, and the pickup place they chose", async () => {
+    mockFetch(() => json({ order: order(), token: TOKEN, serverTime: new Date(NOW).toISOString(), payment: { bank: null } }, 201));
+    renderAt("/checkout");
+    await screen.findByLabelText("Full name");
+    const box = screen.getByLabelText(/Email me about new drops and offers/);
+    expect(box).not.toBeChecked();
+    fillDetails();
+    fireEvent.click(await screen.findByRole("radio", { name: /AFP HQ — St Michael/ }));
+    fireEvent.click(box);
+    fireEvent.click(screen.getByRole("button", { name: "Reserve my items and pay" }));
+    await waitFor(() => expect(calls).toHaveLength(1));
+    const sent = JSON.parse(String(calls[0].init?.body));
+    expect(sent.marketingOptIn).toBe(true);
+    expect(sent.pickupLocation).toBe("AFP HQ — St Michael");
   });
 
   it("says exactly which item is short and lets the customer fix the bag", async () => {

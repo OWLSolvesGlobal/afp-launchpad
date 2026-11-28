@@ -26,9 +26,12 @@ There is no staging environment. Treat every push to `main` as a release.
 For anything non-trivial, work on a branch and open a PR rather than pushing
 straight to `main`.
 
-Config lives in `wrangler.jsonc`. The Worker script (`worker/index.ts`) exists
-for three jobs: serving `GET /api/catalog` from KV, serving item photos at
-`/api/image/*`, and running the catalog sync cron. `assets.run_worker_first` is scoped to `/api/*` so every
+Config lives in `wrangler.jsonc`. The Worker (`worker/index.ts`, deployed
+through the one-line `worker/entry.ts`) serves `GET /api/catalog` from KV and
+item photos at `/api/image/*`, runs the catalog sync cron, and handles orders
+(`/api/orders*`, `/api/checkout-config`) and the owner's portal
+(`/api/admin/*`). `worker/entry.ts` must export the handler and nothing else:
+the runtime rejects an entry module with other exports. `assets.run_worker_first` is scoped to `/api/*` so every
 other request is still served straight from edge cache without invoking the
 Worker. Widening that scope changes the billing and performance
 characteristics of the whole site — don't.
@@ -162,6 +165,47 @@ plus `expired`, `rejected`, `cancelled`. Rules that must hold:
 A customer may cancel while the order is reserved, and replace their proof
 while it is being checked (three uploads per order in all).
 
+**The owner's portal (`/admin`, `worker/admin.ts`, `src/admin/`).** Built for
+one person on her phone, around four questions: does anything need me, did
+this money arrive, what do I hand over, how is the shop doing. Rules that
+must hold:
+
+- **A hidden page is not a lock.** The `/admin` page is public code. The data
+  is protected: `handleAdmin` calls `verifyAccess` (`worker/access.ts`)
+  before anything else, on every `/api/admin/*` request. It checks the
+  Cloudflare Access token itself: RS256 signature against the team's
+  published keys, issuer, audience, expiry, and the email against
+  `ADMIN_EMAILS`. Every failure gets the same 403. Missing Access settings or
+  unreachable keys also mean 403: it fails closed. Never trust an email
+  header or the cookie alone.
+- The Access application must cover both `/admin*` and `/api/admin/*`. Its
+  team address and audience tag are the plain vars `ACCESS_TEAM_DOMAIN` and
+  `ACCESS_AUD` in `wrangler.jsonc`.
+- **GETs never change anything.** Changes are POSTs that must be same-origin
+  (an `Origin` header is required), JSON, and carry `x-afp-admin: 1`.
+- **Status moves are the four in `ADMIN_MOVES` and nothing else**, each one
+  conditional UPDATE that re-checks the current status, with its audit line
+  written in the same transaction (`WHERE changes() = 1`). Mark paid needs
+  `confirmed: true`: the admin's statement that she checked the bank account.
+  Reject needs a reason, which the customer sees.
+- **The audit log is append-only.** Database triggers refuse UPDATE and
+  DELETE on `audit_log`. Do not remove them.
+- **Proofs** are streamed only by `GET /api/admin/orders/:ref/proof`, with
+  `nosniff`, a `default-src 'none'; sandbox` policy, `no-store`, and a
+  download disposition for anything that is not an image.
+- **Bank details** are saved whole and returned masked (last four digits).
+  Their values never go in the audit log or the logs.
+- **"Not yet in Loyverse".** Marking paid does not write to Loyverse yet. The
+  owner rings the sale up at the till and presses "I've rung this up in
+  Loyverse", which releases the website's hold. Until she does, the stock is
+  held here AND still counted in Loyverse, so it is right; if she rings it up
+  and does not press the button, the shop shows one too few.
+- **Marketing consent** is stored per order (`marketing_opt_in`, unticked by
+  default). Only customers who ticked it may ever be exported for a campaign.
+- Pickup locations come from Settings (`/api/checkout-config`), with the old
+  two as the default. A pickup order must name one of them.
+- The portal is a lazy route and must stay out of the storefront bundle.
+
 **Product photos live in Loyverse.** The owner adds or changes an item's
 photo in Loyverse and the site follows on the next sync. The sync records
 each item's photo address in KV (`catalog:images`, private) and the Worker
@@ -273,6 +317,8 @@ Do not merge changes to these without a person reading them line by line:
   are the source of truth for whether an order was paid, because customers
   close tabs.
 - **`wrangler.jsonc` and `public/_headers`.** See gotchas above.
+- **`worker/access.ts` and `worker/admin.ts`.** They are the lock on the
+  owner's portal and the only code that can mark an order paid.
 - **`worker/orders.ts`, `worker/order-actions.ts`, `src/lib/orders-core.ts`
   and `migrations/`.** They decide what a customer is charged, what stock is
   held, and which uploads are accepted.
@@ -301,25 +347,24 @@ Order tests run against a real SQLite loaded from `migrations/`
 (`src/test/orders-db.ts`). Checkout and the status page have component tests
 (`src/pages/Checkout.test.tsx`).
 
-**Running the Worker locally.** `wrangler dev` refuses the entry file as it
-stands, because `worker/index.ts` exports constants and helpers alongside the
-handler. Production is unaffected. To run locally, point a temporary config at
-a one-line entry that re-exports only the default (`import worker from
-"./index"; export default worker;`). Tidying this properly means changing
-`main` in `wrangler.jsonc`, which needs review.
+**Running the Worker locally.** `npx wrangler dev --local` runs the real
+Worker with a local database and bucket (apply migrations with
+`npx wrangler d1 migrations apply afp-orders --local`). The portal's API
+refuses everything locally unless a test Access key is injected; the unit
+tests in `src/lib/admin.test.ts` sign real RS256 tokens instead.
 
 ---
 
 ## Outstanding work
 
-1. **Orders: owner's portal and after.** Customers can reserve, pay and
-   upload proof (phases 1 and 2). Still to build: the owner's portal at
-   `/admin` behind Cloudflare Access (orders list, view proof, mark paid /
-   reject / delivered / cancel, bank details and pickup locations in
-   Settings), email alerts to alofitnesspro@outlook.com and
-   brandonhlouis@outlook.com, and recording paid orders in Loyverse so stock
-   drops. Until the portal exists, proofs can only be checked in the
-   Cloudflare dashboard. Card payments via Fygaro come after.
+1. **Orders: what is left.** Customers can reserve, pay and upload proof, and
+   the owner's portal manages orders (phases 1 to 3). Still to build: email
+   alerts to alofitnesspro@outlook.com and brandonhlouis@outlook.com when a
+   proof arrives (phase 4); recording paid orders in Loyverse automatically,
+   replacing the "rung up at the till" button (phase 5); per-item show/hide
+   and section in the portal (needs a decision on how portal overrides
+   combine with `site-settings.json`); a marketing export for customers who
+   opted in. Card payments via Fygaro come after.
 2. **Product photos.** Items without a photo in Loyverse show a name tile.
    The owner adds photos in Loyverse.
 3. **Placeholder prices.** 15 items carry estimated prices entered in

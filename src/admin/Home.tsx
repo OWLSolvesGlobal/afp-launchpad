@@ -6,7 +6,7 @@ import { adminGet, ago, type AdminError, type AdminOrder, type Summary } from ".
 import { ErrorNote, ListSkeleton, Skeleton, StatusPill, card } from "./parts";
 
 /** What the owner should do next with an order that needs her. */
-export function nextStep(o: AdminOrder): string {
+function nextStep(o: AdminOrder): string {
   if (o.status === "proof_uploaded") return "Check the proof";
   if (o.status === "paid") return o.fulfillment === "pickup" ? "Hand over, then mark collected" : "Deliver, then mark delivered";
   if (o.needsLoyverse) return "Ring up in Loyverse";
@@ -51,7 +51,7 @@ function Tile({ label, value, hint }: { label: string; value: string; hint?: str
   return (
     <div className={`${card} p-4 md:p-5`}>
       <div className="text-[11px] text-graphite uppercase tracking-wider">{label}</div>
-      <div className="font-serif text-3xl tabular-nums mt-1">{value}</div>
+      <div className="font-serif text-2xl sm:text-3xl tabular-nums mt-1 whitespace-nowrap">{value}</div>
       {hint && <div className="text-xs text-graphite mt-1">{hint}</div>}
     </div>
   );
@@ -78,7 +78,7 @@ export default function Home() {
       <header>
         <div className="eyebrow text-graphite mb-2">{greeting()}</div>
         <h1 className="display-lg">
-          {needs.isLoading ? "Your orders." : orders.length === 0 ? "You're all caught up." : orders.length === 1 ? "One order needs you." : `${orders.length} orders need you.`}
+          {needs.isLoading || !needs.data ? "Your orders." : orders.length === 0 ? "You're all caught up." : orders.length === 1 ? "One order needs you." : `${orders.length} orders need you.`}
         </h1>
       </header>
 

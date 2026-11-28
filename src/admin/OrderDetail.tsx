@@ -97,7 +97,6 @@ export default function OrderDetail() {
   const total = formatBbd(o.totalCents);
   const pickup = o.fulfillment === "pickup";
   const proofUrl = `/api/admin/orders/${o.ref}/proof?v=${encodeURIComponent(o.proofUploadedAt ?? "")}`;
-  const isPdf = false; // decided by how the image loads: a PDF fails to draw and falls back to the download button
   const hello = `Hi ${o.customerName.split(" ")[0]}, this is Alo Fitness Pro about your order ${o.ref}.`;
 
   return (
@@ -129,13 +128,13 @@ export default function OrderDetail() {
                 {o.status === "proof_uploaded" ? "Check this payment" : "Payment"}
               </h2>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
-                <div>
+                <div className="col-span-2 sm:col-span-1">
                   <dt className="text-[11px] text-graphite uppercase tracking-wider">Amount to find</dt>
-                  <dd className="font-serif text-3xl tabular-nums">{total}</dd>
+                  <dd className="font-serif text-3xl tabular-nums whitespace-nowrap">{total}</dd>
                 </div>
-                <div>
+                <div className="col-span-2 sm:col-span-1">
                   <dt className="text-[11px] text-graphite uppercase tracking-wider">Reference to find</dt>
-                  <dd className="font-semibold text-lg tabular-nums break-all">{o.ref}</dd>
+                  <dd className="font-semibold text-lg tabular-nums whitespace-nowrap">{o.ref}</dd>
                 </div>
                 <div>
                   <dt className="text-[11px] text-graphite uppercase tracking-wider">Paid by</dt>
@@ -149,7 +148,8 @@ export default function OrderDetail() {
 
               {o.hasProof && (
                 <div className="space-y-3">
-                  {!proofFailed && !isPdf && (
+                  {/* A PDF cannot be drawn as a picture: it fails to load and the download button takes over. */}
+                  {!proofFailed && (
                     <a href={proofUrl} target="_blank" rel="noopener noreferrer" className="block bg-muted rounded-2xl overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40">
                       <img
                         src={proofUrl}

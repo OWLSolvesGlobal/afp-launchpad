@@ -10,6 +10,7 @@ import { waLink } from "@/lib/brand";
 import { calculateOrderTotal, FREE_SHIPPING_THRESHOLD_CENTS, type Fulfillment } from "@/lib/pricing";
 import {
   clearActiveOrder,
+  fetchPickupLocations,
   isFailure,
   lastOrder,
   loadActiveOrder,
@@ -20,6 +21,8 @@ import {
   type OrderView,
   type Unavailable,
 } from "@/lib/order-client";
+import { useQuery } from "@tanstack/react-query";
+import { DEFAULT_PICKUP_LOCATIONS } from "@/lib/orders-core";
 import { useOrder } from "@/hooks/useOrder";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { validateDetails, type DetailFields as Fields, type DetailErrors as FieldErrors } from "@/lib/checkout-details";
@@ -28,21 +31,6 @@ import { stepFor } from "@/components/order/status-copy";
 import { HelpLink, OrderSummary, Stepper } from "@/components/order/OrderParts";
 import { LogoLoader } from "@/components/site/LogoLoader";
 import { CardPaymentSection } from "@/components/checkout/CardPaymentSection";
-
-const PICKUP_LOCATIONS = [
-  {
-    id: "st-michael",
-    name: "AFP HQ — St Michael",
-    address: "By appointment · St Michael, Barbados",
-    hours: "Mon–Sat · 10am–6pm",
-  },
-  {
-    id: "bridgetown",
-    name: "AFP Drop — Bridgetown",
-    address: "Meet-up pickup arranged via WhatsApp",
-    hours: "Tue–Sat · 11am–5pm",
-  },
-];
 
 /**
  * Checkout: Details → Pay → Upload proof → Done.
@@ -231,7 +219,15 @@ function DetailsStep({ onReserved }: { onReserved: (view: OrderView, token: stri
   const { items, subtotal, count } = cart;
   const { data: catalog } = useCatalog();
   const [fulfillment, setFulfillment] = useState<Fulfillment>("delivery");
-  const [pickupLocation, setPickupLocation] = useState(PICKUP_LOCATIONS[0].id);
+  // Pickup locations are the owner's list, set in the portal.
+  const { data: pickupLocations = DEFAULT_PICKUP_LOCATIONS } = useQuery({
+    queryKey: ["checkout-config"],
+    queryFn: fetchPickupLocations,
+    staleTime: 60_000,
+  });
+  const [chosenPickup, setChosenPickup] = useState("");
+  const pickupLocation = pickupLocations.some((l) => l.name === chosenPickup) ? chosenPickup : (pickupLocations[0]?.name ?? "");
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [fields, setFields] = useState<Fields>({ name: "", phone: "", email: "", address: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
@@ -297,17 +293,17 @@ function DetailsStep({ onReserved }: { onReserved: (view: OrderView, token: stri
     inFlight.current = true;
     setSubmitting(true);
     const bag = items;
-    const pickup = PICKUP_LOCATIONS.find((l) => l.id === pickupLocation);
     const result = await reserveOrder({
       items: bag.map((i) => ({ sku: i.sku, size: i.size, quantity: i.quantity })),
       fulfillment,
-      pickupLocation: fulfillment === "pickup" ? (pickup?.name ?? "") : "",
+      pickupLocation: fulfillment === "pickup" ? pickupLocation : "",
       customer: {
         name: fields.name.trim(),
         phone: fields.phone.trim(),
         email: fields.email.trim(),
         address: fulfillment === "delivery" ? fields.address.trim() : "",
       },
+      marketingOptIn,
     });
     inFlight.current = false;
     setSubmitting(false);
@@ -461,15 +457,15 @@ function DetailsStep({ onReserved }: { onReserved: (view: OrderView, token: stri
 
             {fulfillment === "pickup" && (
               <div role="radiogroup" aria-label="Pickup location" className="space-y-3 mt-4">
-                {PICKUP_LOCATIONS.map((loc) => {
-                  const on = pickupLocation === loc.id;
+                {pickupLocations.map((loc) => {
+                  const on = pickupLocation === loc.name;
                   return (
                     <button
-                      key={loc.id}
+                      key={loc.name}
                       type="button"
                       role="radio"
                       aria-checked={on}
-                      onClick={() => setPickupLocation(loc.id)}
+                      onClick={() => setChosenPickup(loc.name)}
                       className={cn(
                         "w-full text-left border p-5 transition-colors flex items-start justify-between gap-4 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40",
                         on ? "border-foreground bg-foreground/[0.02]" : "border-border hover:border-foreground/40",
@@ -477,8 +473,8 @@ function DetailsStep({ onReserved }: { onReserved: (view: OrderView, token: stri
                     >
                       <div>
                         <div className="font-medium">{loc.name}</div>
-                        <div className="text-sm text-graphite mt-1">{loc.address}</div>
-                        <div className="text-[11px] text-graphite mt-2 uppercase tracking-wider">{loc.hours}</div>
+                        {loc.address && <div className="text-sm text-graphite mt-1">{loc.address}</div>}
+                        {loc.hours && <div className="text-[11px] text-graphite mt-2 uppercase tracking-wider">{loc.hours}</div>}
                       </div>
                       <Radio on={on} />
                     </button>
@@ -524,6 +520,20 @@ function DetailsStep({ onReserved }: { onReserved: (view: OrderView, token: stri
               <HelpLink />
             </div>
           )}
+
+          <label htmlFor="checkout-marketing" className="flex items-start gap-3 cursor-pointer min-h-11">
+            <input
+              id="checkout-marketing"
+              type="checkbox"
+              checked={marketingOptIn}
+              onChange={(e) => setMarketingOptIn(e.target.checked)}
+              className="mt-1 w-5 h-5 accent-[hsl(var(--foreground))]"
+            />
+            <span className="text-sm">
+              Email me about new drops and offers.
+              <span className="block text-xs text-graphite">Optional. You can unsubscribe at any time.</span>
+            </span>
+          </label>
 
           <div className="space-y-3">
             <button
