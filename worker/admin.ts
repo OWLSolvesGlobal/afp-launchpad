@@ -31,6 +31,7 @@ import {
   type PricedLine,
 } from "../src/lib/orders-core";
 import { verifyAccess, type AccessEnv, type KeyFetcher } from "./access";
+import { customerKindFor, notifyCustomer, orderForEmail, ownerEmailHealth, type EmailEnv } from "./email";
 import { json, loadBankDetails, loadPickupLocations, type OrdersDb, type OrdersEnv } from "./orders";
 
 /** The slice of the R2 API used to read a proof back for an admin. */
@@ -148,7 +149,7 @@ async function listOrders(db: OrdersDb, url: URL, nowIso: string): Promise<Respo
   return json({ orders: rows.results.map((r) => present(r, nowIso)), serverTime: nowIso });
 }
 
-async function summary(db: OrdersDb, now: Date): Promise<Response> {
+async function summary(db: OrdersDb, env: EmailEnv, now: Date): Promise<Response> {
   const nowIso = now.toISOString();
   // "Today" is the Barbados day (UTC-4), expressed as a UTC instant.
   const local = barbadosDate(now);
@@ -173,6 +174,8 @@ async function summary(db: OrdersDb, now: Date): Promise<Response> {
     needsLoyverse: Number(row?.needs_loyverse ?? 0),
     paidTodayCount: Number(row?.paid_today_count ?? 0),
     paidTodayCents: Number(row?.paid_today_cents ?? 0),
+    // "off" = email alerts are not set up; "trouble" = a recent alert could not be sent.
+    emailAlerts: await ownerEmailHealth(env, now),
     serverTime: nowIso,
   });
 }
@@ -243,6 +246,7 @@ const cleanText = (v: unknown, max: number): string =>
   typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, max) : "";
 
 async function moveOrder(
+  env: EmailEnv,
   db: OrdersDb,
   ref: string,
   move: AdminMove,
@@ -292,6 +296,10 @@ async function moveOrder(
       409,
     );
   }
+  // Tell the customer what changed (when customer emails are on).
+  const kind = customerKindFor(rule.to);
+  const forEmail = kind ? await orderForEmail(db, ref).catch(() => null) : null;
+  if (kind && forEmail) await notifyCustomer(env, kind, forEmail, new Date(nowIso));
   return orderDetail(db, ref, nowIso);
 }
 
@@ -386,7 +394,7 @@ export async function handleAdmin(
   // --- Reads. A GET never changes anything.
   if (method === "GET") {
     if (path === "me") return json({ email: admin.email });
-    if (path === "summary") return summary(db, now);
+    if (path === "summary") return summary(db, env, now);
     if (path === "orders") return listOrders(db, url, nowIso);
     if (path === "settings") return readSettings(db);
     if (path === "audit") return auditLog(db);
@@ -438,7 +446,7 @@ export async function handleAdmin(
     const action = parts[2];
     if (action === "recorded") return markRecorded(db, parts[1], admin.email, nowIso);
     if (Object.prototype.hasOwnProperty.call(ADMIN_MOVES, action)) {
-      return moveOrder(db, parts[1], action as AdminMove, body, admin.email, nowIso);
+      return moveOrder(env, db, parts[1], action as AdminMove, body, admin.email, nowIso);
     }
     return notFound();
   }

@@ -26,6 +26,7 @@ import {
   sniffProof,
   type OrderStatus,
 } from "../src/lib/orders-core";
+import { notifyCustomer, notifyOwnersOfProof, orderForEmail } from "./email";
 import {
   authoriseOrder,
   clientHashOf,
@@ -234,6 +235,13 @@ export async function uploadProof(
     ref,
     `${type.contentType}, ${bytes.byteLength} bytes, ${method}`,
   );
+
+  // Tell the owners there is a proof to check, and the customer that we have it.
+  const forEmail = await orderForEmail(db, ref).catch(() => null);
+  if (forEmail) {
+    await notifyOwnersOfProof(env, forEmail, replaced, now);
+    await notifyCustomer(env, "proof_received", forEmail, now);
+  }
 
   const fresh = await db.prepare(`SELECT * FROM orders WHERE id = ?`).bind(row.id).first<OrderRow>();
   return json({ order: await publicOrder(db, fresh!, "proof_uploaded"), serverTime: nowIso });

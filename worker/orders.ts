@@ -37,6 +37,8 @@ import {
   type PublicOrder,
 } from "../src/lib/orders-core";
 
+import { SITE_ORIGIN, notifyCustomer, orderForEmail, type EmailEnv } from "./email";
+
 /** The slice of the D1 API this file uses (lets tests supply a real SQLite). */
 export interface Statement {
   bind(...values: unknown[]): Statement;
@@ -226,7 +228,7 @@ export async function clientHashOf(request: Request): Promise<string> {
   return /^[0-9a-f]{32}$/.test(device) ? sha256Hex(`afp-device|${network}|${device}`) : network;
 }
 
-export interface OrdersEnv {
+export interface OrdersEnv extends EmailEnv {
   ORDERS_DB?: OrdersDb;
 }
 
@@ -431,6 +433,14 @@ export async function createOrder(
     .run();
 
   const row = await db.prepare(`SELECT * FROM orders WHERE ref = ?`).bind(ref).first<OrderRow>();
+  // The one moment the private link can be emailed: the token is never stored.
+  await notifyCustomer(
+    env,
+    "reserved",
+    { ref, customerName: input.customer.name, customerEmail: input.customer.email, totalCents: order.totalCents, fulfillment: input.fulfillment },
+    now,
+    `${SITE_ORIGIN}/order/${ref}#${token}`,
+  );
   return json(
     { order: await publicOrder(db, row!, "reserved"), token, serverTime: nowIso, payment: await paymentInfo(db) },
     201,
@@ -493,5 +503,9 @@ export async function expireOrders(env: OrdersEnv, now: Date = new Date()): Prom
         .bind(nowIso, r.ref),
     ),
   ]);
+  for (const r of due.results) {
+    const o = await orderForEmail(db, r.ref).catch(() => null);
+    if (o) await notifyCustomer(env, "expired", o, now);
+  }
   return due.results.length;
 }

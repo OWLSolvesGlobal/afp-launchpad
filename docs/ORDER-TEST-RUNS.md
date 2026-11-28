@@ -76,7 +76,27 @@ Reservation window: 60 minutes. Delivery: BDS $15, free at BDS $300 or more.
 - Marketing consent is a yes only when explicitly ticked.
 - A pickup order must name a location the owner offers.
 
+## Also covered by automated tests (phase 4, emails)
+
+- A proof emails both owners once, and again when it is replaced, with the
+  amount and reference to look for and a portal link. Never the proof, the
+  customer's private link or their token.
+- Customer-typed text is shown as text; a subject cannot carry a second line.
+- The mail service being down does not stop a proof being saved; the email
+  is retried, given up on after five tries or three days, and the log names
+  no person and no content.
+- With email not set up, alerts wait and go out once it is.
+- The morning summary goes once, between 8 and 9 am Barbados time, only when
+  something is waiting, with counts only.
+- The portal's line: "off" when not set up, "trouble" when an alert is stuck.
+- Customer emails: none queued while off; when on, one per status change,
+  the private link only in the first and cleared once sent.
+
 ## Hand runs that need the live site
+
+- After email setup: upload a proof on a test order and see the alert arrive
+  at both owner addresses within a minute; open its link and land on the
+  order after sign-in.
 
 - Sign in at /admin as each allowed address; be refused as any other.
 - Enter the real bank details in Settings and see bank transfer appear at
