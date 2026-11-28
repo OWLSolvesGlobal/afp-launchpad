@@ -162,6 +162,14 @@ plus `expired`, `rejected`, `cancelled`. Rules that must hold:
 - If D1 is unreachable the catalog still serves (without holds) and
   ordering returns 503. The shop must not white-screen.
 
+**Order limits are per device, with a higher ceiling per network.** The
+browser sends a random id it made up for itself (`x-afp-device`); phone
+networks put many customers behind one address, so counting by address alone
+would block real customers on a busy day. Per device: 6 orders in 10 minutes,
+3 unpaid at once. Per network: 40 and 15 (`ORDER_LIMITS`). Only hashes are
+stored. `/api/checkout-config` says whether bank transfer is on (yes/no, never
+the details) so checkout can name the payment methods before reserving.
+
 A customer may cancel while the order is reserved, and replace their proof
 while it is being checked (three uploads per order in all).
 

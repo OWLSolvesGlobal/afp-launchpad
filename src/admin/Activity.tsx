@@ -9,6 +9,9 @@ export default function Activity() {
   const entries = query.data?.entries ?? [];
   return (
     <div className="space-y-6 max-w-3xl">
+      <Link to="/admin/settings" className="inline-flex items-center gap-1.5 min-h-11 text-sm text-graphite underline underline-offset-4 hover:text-foreground">
+        Back to Settings
+      </Link>
       <div>
         <h1 className="display-lg">Activity.</h1>
         <p className="text-sm text-graphite mt-3">A permanent record of everything that happens to an order. It can't be edited or deleted.</p>

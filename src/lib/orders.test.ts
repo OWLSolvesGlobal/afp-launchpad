@@ -264,33 +264,73 @@ describe("reserving an order", () => {
   });
 });
 
-describe("limits per visitor", () => {
+describe("order limits: tight per device, loose per network", () => {
   let db: OrdersDb;
   let raw: DatabaseSync;
   beforeEach(() => ({ db, raw } = makeDb()));
   const loungie = body({ items: [{ sku: "LV-loungie", size: "S", quantity: 1 }] });
+  const big = snapshotOf(product({ sku: "LV-loungie", stock: { S: 500, M: 0, L: 0 } }));
+  const device = (n: number) => n.toString(16).padStart(32, "0");
+  const from = (deviceId: string | null, ip = "203.0.113.5", now = NOW) =>
+    createOrder(post(loungie, deviceId ? { "x-afp-device": deviceId } : {}, ip), { ORDERS_DB: db }, big, now);
 
-  it("stops a visitor holding more than three unpaid orders", async () => {
-    for (let i = 0; i < ORDER_LIMITS.maxOpenReservations; i += 1) {
-      expect((await reserve(db, loungie)).res.status).toBe(201);
-    }
-    const blocked = await reserve(db, loungie);
-    expect(blocked.res.status).toBe(429);
-    // Another visitor is not affected.
-    expect((await reserve(db, loungie, NOW, "198.51.100.7")).res.status).toBe(201);
+  it("stops one device holding more than three unpaid orders, without affecting another on the same network", async () => {
+    for (let i = 0; i < ORDER_LIMITS.maxOpenReservations; i += 1) expect((await from(device(1))).status).toBe(201);
+    expect((await from(device(1))).status).toBe(429);
+    // A second customer on the same phone network orders normally.
+    expect((await from(device(2))).status).toBe(201);
+    // So does a customer on another network.
+    expect((await from(device(1), "198.51.100.7")).status).toBe(201);
   });
 
-  it("slows down rapid order attempts and recovers after the window", async () => {
-    const big = snapshotOf(product({ sku: "LV-loungie", stock: { S: 50, M: 0, L: 0 } }));
+  it("slows one device's rapid attempts and recovers after the window", async () => {
     for (let i = 0; i < ORDER_LIMITS.maxOrdersPerWindow; i += 1) {
-      expect((await reserve(db, loungie, NOW, "203.0.113.5", big)).res.status).toBe(201);
+      expect((await from(device(1))).status).toBe(201);
       raw.exec("UPDATE orders SET status = 'cancelled'");
     }
-    const blocked = await reserve(db, loungie, NOW, "203.0.113.5", big);
-    expect(blocked.res.status).toBe(429);
-    expect(blocked.res.headers.get("retry-after")).toBe("600");
-    const after = await reserve(db, loungie, later(ORDER_LIMITS.windowMinutes + 1), "203.0.113.5", big);
-    expect(after.res.status).toBe(201);
+    const blocked = await from(device(1));
+    expect(blocked.status).toBe(429);
+    expect(blocked.headers.get("retry-after")).toBe("600");
+    expect((await from(device(1), "203.0.113.5", later(ORDER_LIMITS.windowMinutes + 1))).status).toBe(201);
+  });
+
+  it("a browser that sends no device id, or a malformed one, is counted by its network", async () => {
+    for (const id of [null, "not-hex", "abc"]) {
+      ({ db, raw } = makeDb());
+      for (let i = 0; i < ORDER_LIMITS.maxOpenReservations; i += 1) expect((await from(id)).status).toBe(201);
+      expect((await from(id)).status).toBe(429);
+    }
+  });
+
+  it("many customers on one network can all order, up to a far higher ceiling", async () => {
+    for (let n = 1; n <= ORDER_LIMITS.maxNetworkOpenReservations; n += 1) {
+      expect((await from(device(n))).status, `customer ${n}`).toBe(201);
+    }
+    const next = await from(device(999));
+    expect(next.status).toBe(429);
+    expect(((await next.json()) as { error: string }).error).toContain("very busy");
+    // Another network is untouched.
+    expect((await from(device(999), "198.51.100.7")).status).toBe(201);
+  });
+
+  it("fifty rapid attempts from one sender inventing new devices are stopped at the network ceiling", async () => {
+    let accepted = 0;
+    for (let n = 1; n <= 50; n += 1) {
+      const res = await from(device(n));
+      if (res.status === 201) accepted += 1;
+      raw.exec("UPDATE orders SET status = 'cancelled' WHERE status = 'reserved'"); // even if each is cancelled at once
+    }
+    expect(accepted).toBe(ORDER_LIMITS.maxNetworkOrdersPerWindow);
+  });
+
+  it("stores hashes, never the address or the device id", async () => {
+    await from(device(7));
+    const row = raw.prepare("SELECT client_hash, net_hash FROM orders").get() as Record<string, string>;
+    expect(row.client_hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(row.net_hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(row.client_hash).not.toBe(row.net_hash);
+    expect(JSON.stringify(row)).not.toContain("203.0.113.5");
+    expect(JSON.stringify(row)).not.toContain(device(7));
   });
 });
 

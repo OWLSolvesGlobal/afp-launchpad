@@ -1,9 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Minus, Plus, X, ShoppingBag, MessageCircle } from "lucide-react";
+import { Minus, Plus, X, ShoppingBag } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCart, formatMoney } from "@/context/CartContext";
-import { waLink } from "@/lib/brand";
 
 export const CartDrawer = () => {
   const { items, isOpen, closeCart, updateQuantity, removeItem, subtotal, count } = useCart();
@@ -13,18 +12,6 @@ export const CartDrawer = () => {
     closeCart();
     navigate("/checkout");
   };
-
-  const waMessage =
-    items.length === 0
-      ? "Hi AFP!"
-      : `Hi AFP! I'd like to order:\n${items
-          .map(
-            (i) =>
-              `• ${i.name} — ${i.color ? `${i.color} / ` : ""}${i.size} × ${i.quantity} (${formatMoney(
-                i.priceCents * i.quantity,
-              )})`,
-          )
-          .join("\n")}\n\nSubtotal: ${formatMoney(subtotal)}`;
 
   return (
     <Sheet open={isOpen} onOpenChange={(o) => (o ? null : closeCart())}>
@@ -61,12 +48,12 @@ export const CartDrawer = () => {
                     aria-label={`View ${item.name}`}
                     className="w-24 h-28 bg-muted overflow-hidden shrink-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
                   >
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
+                    {/* An item with no photo keeps its plain tile; never a broken picture. */}
+                    {item.image ? (
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <span className="sr-only">{item.name}</span>
+                    )}
                   </Link>
                   <div className="flex-1 min-w-0 flex flex-col">
                     <div className="flex items-start justify-between gap-2">
@@ -125,15 +112,6 @@ export const CartDrawer = () => {
               >
                 Checkout — {formatMoney(subtotal)}
               </button>
-              <a
-                href={waLink(waMessage)}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Order on WhatsApp (opens in a new tab)"
-                className="w-full inline-flex items-center justify-center gap-2 rounded-full px-6 h-11 text-xs font-semibold uppercase tracking-wider border border-foreground/20 hover:border-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40"
-              >
-                <MessageCircle aria-hidden="true" className="w-4 h-4" /> Order on WhatsApp
-              </a>
             </div>
           </>
         )}

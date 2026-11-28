@@ -14,15 +14,15 @@ const sections = [
     items: [
       {
         q: "How do I place an order?",
-        a: "Add your pieces to the bag and head to checkout — it builds a WhatsApp message with your items, totals, and an order reference. Press send and we confirm everything in chat, including payment and delivery details.",
+        a: "Add your pieces to the bag and head to checkout. Enter your details and we hold your items for 60 minutes. Pay from your own banking app, upload a screenshot of the payment, and you'll get a link to follow your order. We confirm once we've seen the payment in our account.",
       },
       {
         q: "How much is delivery?",
-        a: "Island-wide delivery across Barbados is BDS $15, and free on orders over BDS $300. We arrange the delivery day with you on WhatsApp after you order.",
+        a: "Island-wide delivery across Barbados is BDS $15, and free on orders over BDS $300. Once your payment is confirmed we message you to arrange the delivery day.",
       },
       {
         q: "Can I pick up instead?",
-        a: "Yes — pickup is free. Choose Store Pickup at checkout: AFP HQ in St Michael (by appointment) or a Bridgetown meet-up, both confirmed via WhatsApp.",
+        a: "Yes — pickup is free. Choose Pickup at checkout and pick one of the locations shown there. We message you to arrange the time once your payment is confirmed.",
       },
       {
         q: "Do you ship outside Barbados?",
@@ -110,7 +110,7 @@ export default function FAQ() {
     document.title = "FAQ — Alo Fitness Pro";
     const meta = document.querySelector('meta[name="description"]');
     const content =
-      "Frequently asked questions about Alo Fitness Pro — ordering on WhatsApp, delivery across Barbados, sizing, and care.";
+      "Frequently asked questions about Alo Fitness Pro — ordering, paying, delivery across Barbados, sizing, and care.";
     if (meta) meta.setAttribute("content", content);
   }, []);
 

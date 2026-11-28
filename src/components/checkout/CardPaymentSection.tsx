@@ -21,8 +21,8 @@ export function CardPaymentSection({ orderRef }: { orderRef: string }) {
         </div>
       </div>
       <p className="text-sm text-graphite">
-        Secure card checkout is on its way. Until it's live, order via WhatsApp
-        and quote <span className="font-medium text-foreground">{orderRef}</span>.
+        Secure card checkout is on its way. Until it's live, please pay with one of the
+        methods above for order <span className="font-medium text-foreground">{orderRef}</span>.
       </p>
     </div>
   );

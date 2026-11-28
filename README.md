@@ -155,8 +155,7 @@ A deploy does not apply migrations; apply a new one by hand:
 npx wrangler d1 migrations apply afp-orders --remote
 ```
 
-`0001_orders.sql`, `0002_proofs.sql` and `0003_portal.sql` were applied on
-28 Nov 2026.
+`0001_orders.sql` to `0004_network_limit.sql` were applied on 28 Nov 2026.
 
 ## Payment proofs
 
