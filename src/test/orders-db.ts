@@ -47,5 +47,17 @@ export function makeBucket() {
       files.delete(key);
     },
   };
-  return { bucket, files };
+  /** Read side, as the admin proof route uses it. */
+  const reader = {
+    get: async (key: string) => {
+      const f = files.get(key);
+      if (!f) return null;
+      return {
+        body: new Response(f.bytes).body as ReadableStream,
+        size: f.bytes.byteLength,
+        httpMetadata: { contentType: f.contentType },
+      };
+    },
+  };
+  return { bucket: Object.assign(bucket, reader), files };
 }

@@ -78,7 +78,7 @@ const reserve = async (size = "S", now = NOW, ip = "203.0.113.5") => {
       body: JSON.stringify({
         items: [{ sku: "LV-romper", size, quantity: 1 }],
         fulfillment: "pickup",
-        pickupLocation: "AFP HQ",
+        pickupLocation: "AFP HQ — St Michael",
         customer: { name: "Test Customer", phone: "2465550100", email: "test@example.com" },
       }),
     }),
