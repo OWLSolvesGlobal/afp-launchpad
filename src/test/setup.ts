@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom";
 
-Object.defineProperty(window, "matchMedia", {
+// Worker tests run without a browser (// @vitest-environment node).
+if (typeof window !== "undefined") Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: (query: string) => ({
     matches: false,

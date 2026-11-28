@@ -39,6 +39,20 @@
     { "binding": "AFP_CATALOG", "id": "78d73e1a5ae24b9fa708ce321de3ceba" }
   ],
 
+  // Orders database (D1), created 28 Nov 2026. Holds orders, their items,
+  // the audit log and owner-entered settings. Schema lives in ./migrations;
+  // apply new files with `npx wrangler d1 migrations apply afp-orders --remote`.
+  // If this binding is removed the shop still browses; ordering returns
+  // "not available right now".
+  "d1_databases": [
+    {
+      "binding": "ORDERS_DB",
+      "database_name": "afp-orders",
+      "database_id": "849c1ff1-5d66-4ac4-ae25-7ce84960839a",
+      "migrations_dir": "migrations"
+    }
+  ],
+
   // The Loyverse access token. It lives in the account's Secrets Store under
   // the name AFPWebsite; this binding is what lets the Worker read it
   // (`await env.AFPWebsite.get()`). The store id is not secret. If the token

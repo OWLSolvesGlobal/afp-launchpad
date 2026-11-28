@@ -25,6 +25,9 @@
  *
  * GET /api/catalog/status reports how the latest sync attempt went, so a
  * failed sync can be diagnosed without opening the Cloudflare dashboard.
+ *
+ * Orders (reserve, look up, expire) live in ./orders.ts; this file only
+ * routes to them and subtracts their holds from the catalog's stock.
  */
 import {
   buildLoyverseSnapshot,
@@ -33,6 +36,9 @@ import {
   type LoyverseItem,
   type SiteSettings,
 } from "../src/lib/loyverse-core";
+import { applyHolds } from "../src/lib/orders-core";
+import type { CatalogSnapshot } from "../src/lib/catalog-core";
+import { createOrder, expireOrders, getOrder, loadHolds, type OrdersDb } from "./orders";
 import seedCatalog from "../src/data/seed-catalog.json";
 import siteSettings from "../src/data/site-settings.json";
 
@@ -40,6 +46,8 @@ export interface Env {
   ASSETS: Fetcher;
   /** Optional so a deployment without the namespace still serves the seed. */
   AFP_CATALOG?: KVNamespace;
+  /** Orders database (D1). Optional so the shop still browses without it. */
+  ORDERS_DB?: OrdersDb;
   /**
    * Loyverse access token. It lives in the account's Secrets Store under the
    * name AFPWebsite and reaches the Worker through the `secrets_store_secrets`
@@ -103,13 +111,28 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === "/api/catalog") {
       const stored = await env.AFP_CATALOG?.get(KV_KEY, "text").catch(() => null);
-      return new Response(stored ?? JSON.stringify(seedCatalog), {
+      return new Response(await withHolds(stored, env), {
         headers: {
           "content-type": "application/json; charset=utf-8",
           "cache-control": "public, max-age=60",
           "x-afp-catalog-source": stored ? "kv" : "seed",
         },
       });
+    }
+    if (url.pathname === "/api/orders") {
+      if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
+      const stored = await env.AFP_CATALOG?.get(KV_KEY, "text").catch(() => null);
+      let snapshot: CatalogSnapshot | null = null;
+      try {
+        snapshot = stored ? (JSON.parse(stored) as CatalogSnapshot) : null;
+      } catch {
+        snapshot = null;
+      }
+      return createOrder(request, env, snapshot);
+    }
+    if (url.pathname.startsWith("/api/orders/")) {
+      if (request.method !== "GET") return new Response("Method not allowed", { status: 405 });
+      return getOrder(request, env, decodeURIComponent(url.pathname.slice("/api/orders/".length)));
     }
     if (url.pathname.startsWith("/api/image/")) {
       return serveItemImage(request, env, url);
@@ -126,10 +149,31 @@ export default {
 
   async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil(syncCatalog(env));
+    // Release stock held by orders nobody paid for within the pay window.
+    ctx.waitUntil(expireOrders(env).catch((err) => console.error(`order expiry failed: ${err}`)));
   },
 } satisfies ExportedHandler<Env>;
 
 type Fetch = typeof fetch;
+
+/**
+ * The catalog as customers should see it: Loyverse stock minus items held by
+ * open orders. If the orders database cannot be read, the plain catalog is
+ * served; reserving an order still checks stock properly, so the worst case
+ * is a size that looks available and then says "just sold out".
+ */
+export async function withHolds(stored: string | null | undefined, env: Env): Promise<string> {
+  if (!stored) return JSON.stringify(seedCatalog);
+  if (!env.ORDERS_DB) return stored;
+  try {
+    const holds = await loadHolds(env.ORDERS_DB, new Date());
+    if (holds.size === 0) return stored;
+    return JSON.stringify(applyHolds(JSON.parse(stored) as CatalogSnapshot, holds));
+  } catch (err) {
+    console.error(`catalog holds unavailable: ${err instanceof Error ? err.message : String(err)}`);
+    return stored;
+  }
+}
 
 /**
  * Serve a Loyverse item photo from this site's own address.
