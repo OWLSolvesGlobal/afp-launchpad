@@ -191,14 +191,15 @@ async function queue(
   db: OrdersDb,
   row: { dedupeKey: string; audience: "owner" | "customer"; kind: string; recipient: string; orderRef: string | null; draft: Draft },
   nowIso: string,
+  sendAfter: string | null = null,
 ): Promise<void> {
   const { subject, text, html } = render(row.draft);
   await db
     .prepare(
-      `INSERT OR IGNORE INTO outbox (dedupe_key, audience, kind, recipient, order_ref, subject, body_text, body_html, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT OR IGNORE INTO outbox (dedupe_key, audience, kind, recipient, order_ref, subject, body_text, body_html, created_at, send_after)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
-    .bind(row.dedupeKey, row.audience, row.kind, row.recipient, row.orderRef, subject, text, html, nowIso)
+    .bind(row.dedupeKey, row.audience, row.kind, row.recipient, row.orderRef, subject, text, html, nowIso, sendAfter)
     .run();
 }
 
@@ -228,14 +229,18 @@ export async function notifyOwnersOfProof(env: EmailEnv, o: OrderForEmail, repla
 }
 
 /** Tell a customer about their order, if customer emails are on. Never throws. */
-export async function notifyCustomer(env: EmailEnv, kind: CustomerKind, o: OrderForEmail, now: Date, link?: string): Promise<void> {
+/**
+ * `sendAfter`: hold the email until then. Used for a move the owner can still
+ * undo, so a customer is never told "paid" or "rejected" by a slip of the thumb.
+ */
+export async function notifyCustomer(env: EmailEnv, kind: CustomerKind, o: OrderForEmail, now: Date, link?: string, sendAfter?: string): Promise<void> {
   const db = env.ORDERS_DB;
   if (!db || !customerEmailsOn(env) || !o.customerEmail) return;
   try {
     const nowIso = now.toISOString();
     // proof_received can happen up to three times per order; the rest happen once.
     const dedupeKey = kind === "proof_received" ? `customer:${o.ref}:${kind}:${nowIso}` : `customer:${o.ref}:${kind}`;
-    await queue(db, { dedupeKey, audience: "customer", kind, recipient: o.customerEmail, orderRef: o.ref, draft: customerDraft(kind, o, link) }, nowIso);
+    await queue(db, { dedupeKey, audience: "customer", kind, recipient: o.customerEmail, orderRef: o.ref, draft: customerDraft(kind, o, link) }, nowIso, sendAfter ?? null);
   } catch (err) {
     console.error("email queue failed (customer):", err instanceof Error ? err.message : "unknown");
   }
@@ -310,6 +315,15 @@ export async function queueMorningSummary(env: EmailEnv, now: Date): Promise<boo
  * Send what is waiting in the outbox. Called after an order changes and by
  * the cron. Never throws. Returns how many were sent.
  */
+/** An undone move: the customer email about it, still waiting, is never sent. Never throws. */
+export async function withdrawCustomerEmail(env: EmailEnv, ref: string, kind: string): Promise<void> {
+  try {
+    await env.ORDERS_DB?.prepare(`DELETE FROM outbox WHERE order_ref = ? AND audience = 'customer' AND kind = ? AND status = 'pending'`).bind(ref, kind).run();
+  } catch (err) {
+    console.error("email withdraw failed:", err instanceof Error ? err.message : "unknown");
+  }
+}
+
 export async function flushOutbox(env: EmailEnv, now: Date = new Date()): Promise<number> {
   const db = env.ORDERS_DB;
   if (!db) return 0;
@@ -326,8 +340,8 @@ export async function flushOutbox(env: EmailEnv, now: Date = new Date()): Promis
     if (!sender || !from) return 0; // not set up yet: emails wait
 
     const due = await db
-      .prepare(`SELECT id, audience, recipient, subject, body_text, body_html FROM outbox WHERE status = 'pending' AND attempts < ? ORDER BY id LIMIT ?`)
-      .bind(MAX_ATTEMPTS, BATCH)
+      .prepare(`SELECT id, audience, recipient, subject, body_text, body_html FROM outbox WHERE status = 'pending' AND attempts < ? AND (send_after IS NULL OR send_after <= ?) ORDER BY id LIMIT ?`)
+      .bind(MAX_ATTEMPTS, nowIso, BATCH)
       .all<{ id: number; audience: string; recipient: string; subject: string; body_text: string; body_html: string }>();
 
     let sent = 0;

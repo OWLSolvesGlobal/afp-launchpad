@@ -204,6 +204,9 @@ export async function uploadProof(
   }
 
   // --- Store, then claim the order. The claim re-checks the order's state.
+  // A fingerprint of the file, so the same file sent for another order can be pointed out.
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const proofHash = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
   const key = randomKey(type.ext);
   await bucket.put(key, bytes, { httpMetadata: { contentType: type.contentType } });
 
@@ -211,12 +214,12 @@ export async function uploadProof(
     .prepare(
       `UPDATE orders
           SET status = 'proof_uploaded', payment_method = ?, proof_key = ?, proof_uploaded_at = ?,
-              proof_uploads = proof_uploads + 1
+              proof_hash = ?, proof_uploads = proof_uploads + 1
         WHERE id = ?
           AND proof_uploads < ?
           AND ((status = 'reserved' AND expires_at > ?) OR status = 'proof_uploaded')`,
     )
-    .bind(method, key, nowIso, row.id, PROOF_LIMITS.maxUploadsPerOrder, nowIso)
+    .bind(method, key, nowIso, proofHash, row.id, PROOF_LIMITS.maxUploadsPerOrder, nowIso)
     .run();
 
   if (claimed.meta.changes !== 1) {

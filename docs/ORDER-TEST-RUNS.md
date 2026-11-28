@@ -92,6 +92,25 @@ Reservation window: 60 minutes. Delivery: BDS $15, free at BDS $300 or more.
 - Customer emails: none queued while off; when on, one per status change,
   the private link only in the first and cleared once sent.
 
+## Also covered by automated tests (mistake recovery)
+
+- Undo after Mark paid, Reject and Cancel puts the order back exactly as it
+  was; it ends after ten minutes, on delivery, or once rung up in Loyverse.
+- Two taps or two admins undo once and log once. Undo and Reopen need a
+  verified admin and a same-site request; a customer's token is not enough.
+- Undoing a Reject or Cancel, and reopening, are refused when someone else
+  has taken the items since, or when the stock cannot be checked.
+- A reopened order holds its items for 24 hours, takes the customer's proof
+  through their own link, and is still not paid until an admin says so.
+- The same proof file on two orders is pointed out on both; the fingerprint
+  never leaves the server.
+- A different amount can be noted; it is logged, changes no status, and does
+  not replace the bank-check tick.
+- Paid orders left un-rung-up for more than a day are counted on the home
+  screen.
+- A customer email about a move waits out the undo window; an undo
+  withdraws it.
+
 ## Hand runs that need the live site
 
 - After email setup: upload a proof on a test order and see the alert arrive
