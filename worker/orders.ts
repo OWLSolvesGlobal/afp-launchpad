@@ -31,6 +31,7 @@ import {
   PROOF_LIMITS,
   isPaymentMethod,
   parseBankDetails,
+  parsePickupLocations,
   type PaymentInfo,
   type PricedLine,
   type PublicOrder,
@@ -171,6 +172,19 @@ export async function loadBankDetails(db: OrdersDb) {
   return parseBankDetails(row?.value);
 }
 
+/** Where customers can collect: the owner's saved list, or the defaults. */
+export async function loadPickupLocations(db: OrdersDb) {
+  const row = await db.prepare(`SELECT value FROM settings WHERE key = 'pickup_locations'`).first<{ value: string }>();
+  return parsePickupLocations(row?.value);
+}
+
+/** GET /api/checkout-config: what checkout needs before an order exists. Nothing private. */
+export async function checkoutConfig(env: OrdersEnv): Promise<Response> {
+  const db = env.ORDERS_DB;
+  const pickupLocations = db ? await loadPickupLocations(db).catch(() => parsePickupLocations(null)) : parsePickupLocations(null);
+  return json({ pickupLocations }, 200, { "cache-control": "public, max-age=60" });
+}
+
 /** Payment details for an order that is still waiting to be paid. */
 async function paymentInfo(db: OrdersDb): Promise<PaymentInfo> {
   return { bank: await loadBankDetails(db) };
@@ -232,6 +246,14 @@ export async function createOrder(
   const priced = priceOrder(parsed.value, snapshot);
   if (!priced.ok) return json({ error: priced.error, field: priced.field }, 409);
 
+  // A pickup order must name one of the places the owner actually offers.
+  if (parsed.value.fulfillment === "pickup") {
+    const places = await loadPickupLocations(db);
+    if (!places.some((p) => p.name === parsed.value.pickupLocation)) {
+      return json({ error: "Please choose a pickup location.", field: "pickupLocation" }, 400);
+    }
+  }
+
   // --- Rate limits, per visitor (hashed address; the address itself is not stored)
   const clientHash = await clientHashOf(request);
   const nowIso = now.toISOString();
@@ -284,8 +306,8 @@ export async function createOrder(
           `INSERT INTO orders
              (ref, token_hash, status, fulfillment, pickup_location, customer_name, customer_phone,
               customer_email, delivery_address, subtotal_cents, shipping_cents, total_cents,
-              created_at, expires_at, client_hash)
-           VALUES (?, ?, 'reserved', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              created_at, expires_at, client_hash, marketing_opt_in, marketing_opt_in_at)
+           VALUES (?, ?, 'reserved', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           ref,
@@ -302,6 +324,8 @@ export async function createOrder(
           nowIso,
           expiresAt,
           clientHash,
+          input.marketingOptIn ? 1 : 0,
+          input.marketingOptIn ? nowIso : null,
         ),
       ...order.lines.map((line) =>
         db

@@ -21,6 +21,8 @@ const Collection = lazy(() => import("./pages/Collection.tsx"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail.tsx"));
 const Checkout = lazy(() => import("./pages/Checkout.tsx"));
 const OrderStatus = lazy(() => import("./pages/OrderStatus.tsx"));
+// The owner's portal: its own chunk, never part of what shoppers download.
+const Admin = lazy(() => import("./pages/Admin.tsx"));
 const About = lazy(() => import("./pages/About.tsx"));
 const Contact = lazy(() => import("./pages/Contact.tsx"));
 const FAQ = lazy(() => import("./pages/FAQ.tsx"));
@@ -60,6 +62,7 @@ const App = () => (
               <Route path="/product/:slug" element={<ProductDetail />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/order/:ref" element={<OrderStatus />} />
+              <Route path="/admin/*" element={<Admin />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/faq" element={<FAQ />} />

@@ -52,6 +52,8 @@ export interface OrderInput {
   fulfillment: Fulfillment;
   pickupLocation: string;
   customer: { name: string; phone: string; email: string; address: string };
+  /** True only if the customer ticked "Email me about new drops and offers". */
+  marketingOptIn: boolean;
 }
 
 export interface PricedLine {
@@ -135,6 +137,8 @@ export function parseOrderInput(body: unknown): Result<OrderInput> {
       fulfillment,
       pickupLocation: fulfillment === "pickup" ? clean(b.pickupLocation, 60) : "",
       customer: { name, phone, email, address: fulfillment === "delivery" ? address : "" },
+      // Consent must be an explicit yes. Anything else is a no.
+      marketingOptIn: b.marketingOptIn === true,
     },
   };
 }
@@ -324,3 +328,99 @@ export interface PublicOrder {
 export interface PaymentInfo {
   bank: BankDetails | null;
 }
+
+// --- Owner's portal ----------------------------------------------------------
+
+export interface PickupLocation {
+  name: string;
+  address: string;
+  hours: string;
+}
+
+/** Used until the owner saves her own list in the portal's Settings. */
+export const DEFAULT_PICKUP_LOCATIONS: PickupLocation[] = [
+  { name: "AFP HQ — St Michael", address: "By appointment · St Michael, Barbados", hours: "Mon–Sat · 10am–6pm" },
+  { name: "AFP Drop — Bridgetown", address: "Meet-up pickup arranged via WhatsApp", hours: "Tue–Sat · 11am–5pm" },
+];
+
+export const SETTINGS_LIMITS = { maxPickupLocations: 6 } as const;
+
+/** Check a list of pickup locations typed into Settings. */
+export function parsePickupInput(body: unknown): Result<PickupLocation[]> {
+  const list = (body as { locations?: unknown } | null)?.locations;
+  if (!Array.isArray(list) || list.length === 0) return fail("Add at least one pickup location.", "locations");
+  if (list.length > SETTINGS_LIMITS.maxPickupLocations) {
+    return fail(`You can have up to ${SETTINGS_LIMITS.maxPickupLocations} pickup locations.`, "locations");
+  }
+  const out: PickupLocation[] = [];
+  const seen = new Set<string>();
+  for (const raw of list) {
+    const r = (raw ?? {}) as Record<string, unknown>;
+    const name = clean(r.name, 60);
+    if (name.length < 2) return fail("Every pickup location needs a name.", "locations");
+    if (seen.has(name.toLowerCase())) return fail("Two pickup locations have the same name.", "locations");
+    seen.add(name.toLowerCase());
+    out.push({ name, address: clean(r.address, 120), hours: clean(r.hours, 80) });
+  }
+  return { ok: true, value: out };
+}
+
+/** The stored pickup locations, or the defaults if none have been saved. */
+export function parsePickupLocations(stored: string | null | undefined): PickupLocation[] {
+  if (!stored) return DEFAULT_PICKUP_LOCATIONS;
+  try {
+    const parsed = parsePickupInput({ locations: JSON.parse(stored) });
+    return parsed.ok ? parsed.value : DEFAULT_PICKUP_LOCATIONS;
+  } catch {
+    return DEFAULT_PICKUP_LOCATIONS;
+  }
+}
+
+/** Check bank details typed into Settings. All five are sent together, in full. */
+export function parseBankInput(body: unknown): Result<BankDetails> {
+  const b = (body ?? {}) as Record<string, unknown>;
+  const details: BankDetails = {
+    bank: clean(b.bank, 80),
+    accountName: clean(b.accountName, 120),
+    accountNumber: clean(b.accountNumber, 40),
+    branch: clean(b.branch, 120),
+    swift: clean(b.swift, 20).toUpperCase(),
+  };
+  if (details.bank.length < 2) return fail("Enter the bank's name.", "bank");
+  if (details.accountName.length < 2) return fail("Enter the account name.", "accountName");
+  if (!/^[0-9][0-9 -]{3,38}$/.test(details.accountNumber)) {
+    return fail("Enter the account number, digits only.", "accountNumber");
+  }
+  if (details.swift && !/^[A-Z0-9]{8}([A-Z0-9]{3})?$/.test(details.swift)) {
+    return fail("A SWIFT code is 8 or 11 letters and numbers.", "swift");
+  }
+  return { ok: true, value: details };
+}
+
+/** An account number with everything but its last four digits hidden. */
+export function maskAccountNumber(accountNumber: string): string {
+  const digits = accountNumber.replace(/\D/g, "");
+  return digits.length <= 4 ? "••••" : `•••• ${digits.slice(-4)}`;
+}
+
+/** The only status moves an admin can make. Anything else is refused. */
+export const ADMIN_MOVES = {
+  paid: { from: ["proof_uploaded"], to: "paid" },
+  reject: { from: ["proof_uploaded"], to: "rejected" },
+  delivered: { from: ["paid"], to: "delivered" },
+  cancel: { from: ["reserved", "proof_uploaded"], to: "cancelled" },
+} as const satisfies Record<string, { from: readonly OrderStatus[]; to: OrderStatus }>;
+export type AdminMove = keyof typeof ADMIN_MOVES;
+
+/** The words the owner sees for each status. Never the internal code. */
+export const STATUS_LABELS: Record<OrderStatus, string> = {
+  reserved: "Waiting for payment",
+  proof_uploaded: "Proof to check",
+  paid: "Paid, to deliver",
+  delivered: "Delivered",
+  expired: "Ran out of time",
+  rejected: "Rejected",
+  cancelled: "Cancelled",
+};
+
+export const ADMIN_EMAILS = ["alofitnesspro@outlook.com", "brandonhlouis@outlook.com"] as const;

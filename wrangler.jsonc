@@ -8,7 +8,7 @@
   // 5-minute cron that copies the Loyverse item list into KV. Every other request
   // falls through to static assets via env.ASSETS.fetch(), so SPA routing
   // and edge caching behave exactly as before.
-  "main": "worker/index.ts",
+  "main": "worker/entry.ts",
 
   "assets": {
     "directory": "./dist",
@@ -29,6 +29,13 @@
   // Copies the Loyverse item list (items, sizes, prices, stock) into KV every
   // 5 minutes. Harmless until the AFPWebsite secret (the Loyverse access
   // token) is set: the sync logs that it is unconfigured and exits.
+  // Sign-in for the owner's portal (Cloudflare Access). Neither value is a
+  // secret. Left empty, every /api/admin/* request is refused.
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "https://alo-fitness-pro.cloudflareaccess.com",
+    "ACCESS_AUD": "26bf0052f5524595ff7addc6d06a56f964d5aaff69efc6263c7008ad7b2257d7"
+  },
+
   "triggers": {
     "crons": ["*/5 * * * *"]
   },
