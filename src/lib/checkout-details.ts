@@ -19,7 +19,8 @@ export function validateDetails(f: DetailFields, fulfillment: Fulfillment): Deta
   if (digits.length < 7 || digits.length > 15 || !/^[+\d][\d\s().-]*$/.test(f.phone.trim())) {
     errors.phone = "Please enter a phone number we can reach you on.";
   }
-  if (f.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(f.email.trim())) {
+  if (!f.email.trim()) errors.email = "Please enter your email address.";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(f.email.trim())) {
     errors.email = "That email address doesn't look right.";
   }
   if (fulfillment === "delivery" && f.address.trim().length < 8) {

@@ -120,7 +120,8 @@ export function parseOrderInput(body: unknown): Result<OrderInput> {
   if (digits.length < 7 || digits.length > 15 || !/^[+\d][\d\s().-]*$/.test(phone)) {
     return fail("Please enter a phone number we can reach you on.", "phone");
   }
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+  if (!email) return fail("Please enter your email address.", "email");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
     return fail("That email address doesn't look right.", "email");
   }
   if (fulfillment === "delivery" && address.length < 8) {

@@ -120,6 +120,7 @@ const renderAt = (path: string) =>
 const fillDetails = () => {
   fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Test Customer" } });
   fireEvent.change(screen.getByLabelText("Phone or WhatsApp number"), { target: { value: "246 555 0100" } });
+  fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
   fireEvent.click(screen.getByRole("radio", { name: /Pickup/ }));
 };
 
@@ -152,7 +153,7 @@ describe("order links and tokens", () => {
 });
 
 describe("details validation matches the server's", () => {
-  const ok = { name: "Test Customer", phone: "+1 246 555 0100", email: "", address: "12 Test Road, St Michael" };
+  const ok = { name: "Test Customer", phone: "+1 246 555 0100", email: "test@example.com", address: "12 Test Road, St Michael" };
   it("accepts good details and needs an address only for delivery", () => {
     expect(validateDetails(ok, "delivery")).toEqual({});
     expect(validateDetails({ ...ok, address: "" }, "pickup")).toEqual({});
@@ -162,6 +163,7 @@ describe("details validation matches the server's", () => {
     expect(validateDetails({ ...ok, name: "A" }, "pickup").name).toBeTruthy();
     expect(validateDetails({ ...ok, phone: "call me" }, "pickup").phone).toBeTruthy();
     expect(validateDetails({ ...ok, email: "nope" }, "pickup").email).toBeTruthy();
+    expect(validateDetails({ ...ok, email: "" }, "pickup").email).toBe("Please enter your email address.");
   });
 });
 
@@ -193,7 +195,7 @@ describe("checkout: details step", () => {
     const sent = JSON.parse(String(calls[0].init?.body));
     expect(sent.items).toEqual([{ sku: "LV-romper", size: "S", quantity: 1 }]);
     expect(JSON.stringify(sent)).not.toMatch(/price|total|cents/i);
-    expect(sent.customer).toEqual({ name: "Test Customer", phone: "246 555 0100", email: "", address: "" });
+    expect(sent.customer).toEqual({ name: "Test Customer", phone: "246 555 0100", email: "test@example.com", address: "" });
 
     await act(async () => release(json({ order: order(), token: TOKEN, serverTime: new Date(NOW).toISOString(), payment: { bank: null } }, 201)));
     // Now on the Pay step, showing the server's total and reference.

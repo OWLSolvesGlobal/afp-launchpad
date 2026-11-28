@@ -61,7 +61,7 @@ const later = (minutes: number) => new Date(NOW.getTime() + minutes * 60_000);
 const body = (overrides: Record<string, unknown> = {}) => ({
   items: [{ sku: "LV-romper", size: "S", quantity: 1 }],
   fulfillment: "delivery",
-  customer: { name: "Test Customer", phone: "+1 246 555 0100", email: "", address: "12 Test Road, St Michael" },
+  customer: { name: "Test Customer", phone: "+1 246 555 0100", email: "test@example.com", address: "12 Test Road, St Michael" },
   ...overrides,
 });
 
@@ -115,17 +115,19 @@ describe("parseOrderInput", () => {
       body({ items: [{ sku: "LV-romper", size: "S", quantity: 1.5 }] }),
       body({ items: [{ sku: "LV-romper", size: "S", quantity: "2" }] }),
       body({ fulfillment: "teleport" }),
-      body({ customer: { name: "A", phone: "+1 246 555 0100", address: "12 Test Road" } }),
-      body({ customer: { name: "Test", phone: "call me", address: "12 Test Road" } }),
+      body({ customer: { name: "A", phone: "+1 246 555 0100", email: "test@example.com", address: "12 Test Road" } }),
+      body({ customer: { name: "Test", phone: "call me", email: "test@example.com", address: "12 Test Road" } }),
       body({ customer: { name: "Test", phone: "+1 246 555 0100", email: "nope", address: "12 Test Road" } }),
-      body({ customer: { name: "Test", phone: "+1 246 555 0100", address: "" } }),
+      body({ customer: { name: "Test", phone: "+1 246 555 0100", email: "", address: "12 Test Road" } }),
+      body({ customer: { name: "Test", phone: "+1 246 555 0100", address: "12 Test Road" } }),
+      body({ customer: { name: "Test", phone: "+1 246 555 0100", email: "test@example.com", address: "" } }),
     ];
     for (const b of bad) expect(parseOrderInput(b).ok).toBe(false);
   });
 
   it("does not need an address for pickup, and drops one if sent", () => {
     const parsed = parseOrderInput(
-      body({ fulfillment: "pickup", pickupLocation: "st-michael", customer: { name: "Test", phone: "2465550100", address: "x" } }),
+      body({ fulfillment: "pickup", pickupLocation: "st-michael", customer: { name: "Test", phone: "2465550100", email: "test@example.com", address: "x" } }),
     );
     expect(parsed.ok && parsed.value.customer.address).toBe("");
     expect(parsed.ok && parsed.value.pickupLocation).toBe("st-michael");

@@ -409,7 +409,8 @@ function DetailsStep({ onReserved }: { onReserved: (view: OrderView, token: stri
               />
               <Field
                 id="checkout-email"
-                label="Email (optional)"
+                label="Email"
+                hint="For your order confirmation."
                 value={fields.email}
                 onChange={set("email")}
                 error={errors.email}
