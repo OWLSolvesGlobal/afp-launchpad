@@ -219,6 +219,86 @@ export function expiryFor(now: Date): string {
   return new Date(now.getTime() + PAY_WINDOW_MINUTES * 60 * 1000).toISOString();
 }
 
+// --- Payment proof ---------------------------------------------------------
+
+export const PROOF_LIMITS = {
+  /** Largest proof file accepted. */
+  maxBytes: 8 * 1024 * 1024,
+  /** Proofs one order may have accepted: the first plus two replacements. */
+  maxUploadsPerOrder: 3,
+  /** Upload attempts (accepted or refused) allowed on one order, ever. */
+  maxAttemptsPerOrder: 12,
+  /** Upload attempts allowed per visitor in the window below. */
+  maxAttemptsPerWindow: 12,
+  windowMinutes: 10,
+} as const;
+
+export const PAYMENT_METHODS = ["cibc_qr", "bank_transfer"] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export const isPaymentMethod = (v: unknown): v is PaymentMethod =>
+  typeof v === "string" && (PAYMENT_METHODS as readonly string[]).includes(v);
+
+export interface ProofType {
+  contentType: "image/jpeg" | "image/png" | "image/webp" | "application/pdf";
+  ext: "jpg" | "png" | "webp" | "pdf";
+}
+
+const startsWith = (bytes: Uint8Array, signature: number[], offset = 0): boolean =>
+  bytes.length >= offset + signature.length && signature.every((b, i) => bytes[offset + i] === b);
+
+/**
+ * What a file really is, from its first bytes. The file's name and the type
+ * the browser claims are never consulted: a renamed program or web page is
+ * refused because it does not begin the way a picture or PDF does.
+ * Returns null for anything that is not a JPEG, PNG, WebP or PDF.
+ */
+export function sniffProof(bytes: Uint8Array): ProofType | null {
+  if (startsWith(bytes, [0xff, 0xd8, 0xff])) return { contentType: "image/jpeg", ext: "jpg" };
+  if (startsWith(bytes, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) {
+    return { contentType: "image/png", ext: "png" };
+  }
+  // "RIFF" <4 size bytes> "WEBP"
+  if (startsWith(bytes, [0x52, 0x49, 0x46, 0x46]) && startsWith(bytes, [0x57, 0x45, 0x42, 0x50], 8)) {
+    return { contentType: "image/webp", ext: "webp" };
+  }
+  // "%PDF-"
+  if (startsWith(bytes, [0x25, 0x50, 0x44, 0x46, 0x2d])) return { contentType: "application/pdf", ext: "pdf" };
+  return null;
+}
+
+/** AFP's bank details, typed into the owner's portal. Never in the repo. */
+export interface BankDetails {
+  bank: string;
+  accountName: string;
+  accountNumber: string;
+  branch: string;
+  swift: string;
+}
+
+/**
+ * Read the stored bank details. Returns null unless the three fields a
+ * customer needs to make a transfer are all present, so the bank transfer
+ * option is hidden rather than shown half-filled.
+ */
+export function parseBankDetails(stored: string | null | undefined): BankDetails | null {
+  if (!stored) return null;
+  try {
+    const v = JSON.parse(stored) as Record<string, unknown>;
+    const details: BankDetails = {
+      bank: clean(v.bank, 80),
+      accountName: clean(v.accountName, 120),
+      accountNumber: clean(v.accountNumber, 40),
+      branch: clean(v.branch, 120),
+      swift: clean(v.swift, 20),
+    };
+    if (!details.bank || !details.accountName || !details.accountNumber) return null;
+    return details;
+  } catch {
+    return null;
+  }
+}
+
 /** What the customer may see about their own order. No internal fields. */
 export interface PublicOrder {
   ref: string;
@@ -226,8 +306,20 @@ export interface PublicOrder {
   createdAt: string;
   expiresAt: string;
   fulfillment: Fulfillment;
+  pickupLocation: string;
   items: PricedLine[];
   subtotalCents: number;
   shippingCents: number;
   totalCents: number;
+  paymentMethod: PaymentMethod | null;
+  proofUploadedAt: string | null;
+  /** How many more times the customer may send a proof for this order. */
+  proofUploadsLeft: number;
+  /** The owner's reason, shown only when a proof was rejected. */
+  rejectedReason: string | null;
+}
+
+/** How the customer pays. Sent only with a valid order token, while payment is due. */
+export interface PaymentInfo {
+  bank: BankDetails | null;
 }

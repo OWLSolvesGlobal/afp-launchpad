@@ -86,24 +86,29 @@ distinct values present, women-first (`deriveCategories`).
 **Currency is BBD only**, integer cents internally, displayed as
 `BDS $189.00` via `formatBbd`. No USD anywhere.
 
-**Payment paths are Config-gated.** Checkout always offers WhatsApp. The
-bank QR code section (`BankTransferSection.tsx`) renders when
-`paymentsTransferEnabled` is `true` in `src/data/site-settings.json`; it was
-switched on 25 Nov 2026. The card section is a stub until Fygaro and stays
-`false`. The Fygaro integration must touch only
-`src/components/checkout/CardPaymentSection.tsx`.
+**Checkout is four steps: Details → Pay → Upload proof → Done.** Details
+reserves the order on the server (items held 60 minutes). Pay shows the
+order reference, the amount and the payment method. Upload proof takes an
+image or PDF. Only then is the order submitted. There is no "order first,
+pay after" and no ordering by WhatsApp; one small "Need help? WhatsApp us"
+link remains, for help only. `/order/:ref` is the customer's status page.
 
-**How QR payment works.** AFP is paid into its CIBC account by 1st Pay.
-One code is shown, `qr-1stpay-cibc.png`, which only CIBC customers can pay.
-(The "1st Pay Plus" code for other banks did not work when tested on 25 Nov
-2026 and was removed.) The site takes no payment itself: the customer pays
-from their CIBC app, typing the amount and the `AFP-YYYYMMDD-XXX` reference
-(a bank QR code cannot carry either), then sends the order on WhatsApp. The
-owner confirms each payment against the bank record. Customers of any other
-bank order on WhatsApp and arrange payment with the owner directly; their
-items are held for 24 hours, a hold the owner keeps by hand. There is no
-server-side order record or automatic stock hold yet; that is the next piece
-of work. Keep the code large and on plain white so it scans off a screen.
+**Payment methods.** The site takes no payment itself; the customer pays
+from their own banking app.
+
+- **CIBC 1st Pay QR** (`qr-1stpay-cibc.png`), shown when
+  `paymentsTransferEnabled` is `true` in `src/data/site-settings.json`. Only
+  CIBC customers can pay it. A bank QR code cannot carry the amount or the
+  reference, so the customer types both; they are shown with copy buttons.
+  Keep the code large and on plain white so it scans off a screen. (The
+  "1st Pay Plus" code for other banks did not work when tested on 25 Nov 2026
+  and was removed.)
+- **Bank transfer**, shown only when an admin has entered AFP's bank details
+  in the portal (settings key `bank_details`). Hidden, never blank, until
+  then. The details are sent only to a customer holding a valid order token,
+  while that order is waiting for payment.
+- **Card** is a stub until Fygaro and stays `false`. The Fygaro integration
+  must touch only `src/components/checkout/CardPaymentSection.tsx`.
 
 **Prices include VAT.** Loyverse prices are VAT-inclusive, so the customer
 pays the shelf price online exactly as at the till. `taxCents` adds nothing
@@ -134,15 +139,28 @@ plus `expired`, `rejected`, `cancelled`. Rules that must hold:
   `x-order-token`). Only a hash of the token is stored. Wrong token and
   unknown reference give the same 404.
 - **Proof is evidence, never confirmation.** Only an admin marks an order
-  paid, after checking the bank account.
+  paid, after checking the bank account. After upload the customer is told
+  "We're checking your payment", never "Paid".
+- **Proofs are private.** They go to the R2 bucket `afp-order-proofs`
+  (binding `PROOFS`) under a random name; the original filename is not kept.
+  The type (JPEG, PNG, WebP, PDF) is decided from the file's first bytes
+  (`sniffProof`), never its name. 8 MB limit, enforced while reading. No
+  customer-facing route serves a proof back. The bucket must never get a
+  public URL or custom domain.
+- **Late uploads cannot revive an order.** The upload's status change
+  re-checks the order in the same statement (`worker/order-actions.ts`).
+- **The token never goes in a query string.** Links carry it after the `#`
+  (`statusPath`); requests carry it in the `x-order-token` header.
+- **Screens show the server's figures.** After an order is reserved, totals,
+  reference and time left all come from the order, and the countdown uses the
+  server's clock.
 - Bank details live in the `settings` table, typed in the owner's portal.
   Never in the repo, the logs or the browser bundle.
 - If D1 is unreachable the catalog still serves (without holds) and
   ordering returns 503. The shop must not white-screen.
 
-The older `OrderStatus` in catalog-core (`pending → paid → delivered →
-cancelled`) is unused by the orders system and goes when checkout moves over
-in phase 2.
+A customer may cancel while the order is reserved, and replace their proof
+while it is being checked (three uploads per order in all).
 
 **Product photos live in Loyverse.** The owner adds or changes an item's
 photo in Loyverse and the site follows on the next sync. The sync records
@@ -255,8 +273,9 @@ Do not merge changes to these without a person reading them line by line:
   are the source of truth for whether an order was paid, because customers
   close tabs.
 - **`wrangler.jsonc` and `public/_headers`.** See gotchas above.
-- **`worker/orders.ts`, `src/lib/orders-core.ts` and `migrations/`.** They
-  decide what a customer is charged and what stock is held.
+- **`worker/orders.ts`, `worker/order-actions.ts`, `src/lib/orders-core.ts`
+  and `migrations/`.** They decide what a customer is charged, what stock is
+  held, and which uploads are accepted.
 - **The render guards in `src/lib/catalog-core.ts` and the Loyverse mapping
   in `src/lib/loyverse-core.ts`.** They are what keeps unpriced or hidden
   products off the live site.
@@ -278,17 +297,29 @@ fallback (KV empty, endpoint unavailable), and the order-reference format.
 If you change semantics in `catalog-core.ts` or `loyverse-core.ts`, expect
 tests to fail, and update them deliberately.
 
+Order tests run against a real SQLite loaded from `migrations/`
+(`src/test/orders-db.ts`). Checkout and the status page have component tests
+(`src/pages/Checkout.test.tsx`).
+
+**Running the Worker locally.** `wrangler dev` refuses the entry file as it
+stands, because `worker/index.ts` exports constants and helpers alongside the
+handler. Production is unaffected. To run locally, point a temporary config at
+a one-line entry that re-exports only the default (`import worker from
+"./index"; export default worker;`). Tidying this properly means changing
+`main` in `wrangler.jsonc`, which needs review.
+
 ---
 
 ## Outstanding work
 
-1. **Orders and holds.** Checkout shows the bank QR codes but nothing is
-   recorded server-side: the order exists only as the customer's WhatsApp
-   message, and stock is not held. Next: save orders, hold stock for 24
-   hours, email the owner (alofitnesspro@outlook.com, with
-   brandonhlouis@outlook.com as the test address), an orders page to mark
-   paid / delivered / cancelled, and record paid orders in Loyverse so stock
-   drops. Card payments via Fygaro (First Atlantic Commerce) come after.
+1. **Orders: owner's portal and after.** Customers can reserve, pay and
+   upload proof (phases 1 and 2). Still to build: the owner's portal at
+   `/admin` behind Cloudflare Access (orders list, view proof, mark paid /
+   reject / delivered / cancel, bank details and pickup locations in
+   Settings), email alerts to alofitnesspro@outlook.com and
+   brandonhlouis@outlook.com, and recording paid orders in Loyverse so stock
+   drops. Until the portal exists, proofs can only be checked in the
+   Cloudflare dashboard. Card payments via Fygaro come after.
 2. **Product photos.** Items without a photo in Loyverse show a name tile.
    The owner adds photos in Loyverse.
 3. **Placeholder prices.** 15 items carry estimated prices entered in

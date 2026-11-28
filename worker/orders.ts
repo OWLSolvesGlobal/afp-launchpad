@@ -4,6 +4,8 @@
  *   POST /api/orders        reserve an order; items are held for 60 minutes
  *   GET  /api/orders/:ref   the customer's own order (needs their order token)
  *
+ * Proof upload and customer cancel are in ./order-actions.ts.
+ *
  * The database (D1, binding ORDERS_DB) is the only place orders live. The
  * rules that do not need a database are in src/lib/orders-core.ts.
  *
@@ -26,6 +28,10 @@ import {
   parseOrderInput,
   priceOrder,
   type OrderStatus,
+  PROOF_LIMITS,
+  isPaymentMethod,
+  parseBankDetails,
+  type PaymentInfo,
   type PricedLine,
   type PublicOrder,
 } from "../src/lib/orders-core";
@@ -56,7 +62,7 @@ const HOLDS = `(
   OR (o.status IN ('paid','delivered') AND o.loyverse_receipt IS NULL)
 )`;
 
-const json = (body: unknown, status = 200, extra: Record<string, string> = {}): Response =>
+export const json = (body: unknown, status = 200, extra: Record<string, string> = {}): Response =>
   new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -67,7 +73,7 @@ const json = (body: unknown, status = 200, extra: Record<string, string> = {}): 
     },
   });
 
-async function sha256Hex(text: string): Promise<string> {
+export async function sha256Hex(text: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
@@ -79,7 +85,7 @@ function randomToken(): string {
 }
 
 /** Compare two equal-length hex strings without leaking where they differ. */
-function sameHash(a: string, b: string): boolean {
+export function sameHash(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;
   for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
@@ -87,7 +93,7 @@ function sameHash(a: string, b: string): boolean {
 }
 
 /** A browser on another site must not be able to place orders for a visitor. */
-function sameOrigin(request: Request): boolean {
+export function sameOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
   if (!origin) return true; // non-browser clients send none; they carry no visitor cookies either
   try {
@@ -114,7 +120,7 @@ export async function loadHolds(db: OrdersDb | undefined, now: Date): Promise<Ma
   return holds;
 }
 
-interface OrderRow {
+export interface OrderRow {
   id: number;
   ref: string;
   token_hash: string;
@@ -125,9 +131,15 @@ interface OrderRow {
   total_cents: number;
   created_at: string;
   expires_at: string;
+  pickup_location: string | null;
+  payment_method: string | null;
+  proof_key: string | null;
+  proof_uploaded_at: string | null;
+  proof_uploads: number;
+  closed_reason: string | null;
 }
 
-async function publicOrder(db: OrdersDb, row: OrderRow, status: OrderStatus): Promise<PublicOrder> {
+export async function publicOrder(db: OrdersDb, row: OrderRow, status: OrderStatus): Promise<PublicOrder> {
   const items = await db
     .prepare(
       `SELECT sku, name, size, quantity, price_cents AS priceCents
@@ -141,11 +153,49 @@ async function publicOrder(db: OrdersDb, row: OrderRow, status: OrderStatus): Pr
     createdAt: row.created_at,
     expiresAt: row.expires_at,
     fulfillment: row.fulfillment,
+    pickupLocation: row.pickup_location ?? "",
     items: items.results,
     subtotalCents: row.subtotal_cents,
     shippingCents: row.shipping_cents,
     totalCents: row.total_cents,
+    paymentMethod: isPaymentMethod(row.payment_method) ? row.payment_method : null,
+    proofUploadedAt: row.proof_uploaded_at,
+    proofUploadsLeft: Math.max(0, PROOF_LIMITS.maxUploadsPerOrder - Number(row.proof_uploads ?? 0)),
+    rejectedReason: status === "rejected" ? row.closed_reason : null,
   };
+}
+
+/** AFP's bank details from the settings table, or null if not entered yet. */
+export async function loadBankDetails(db: OrdersDb) {
+  const row = await db.prepare(`SELECT value FROM settings WHERE key = 'bank_details'`).first<{ value: string }>();
+  return parseBankDetails(row?.value);
+}
+
+/** Payment details for an order that is still waiting to be paid. */
+async function paymentInfo(db: OrdersDb): Promise<PaymentInfo> {
+  return { bank: await loadBankDetails(db) };
+}
+
+/**
+ * Find the order a request is allowed to act on: the reference in the path
+ * must exist AND the x-order-token header must match it. Returns null in
+ * every other case, so callers answer a wrong token and a missing order alike.
+ */
+export async function authoriseOrder(request: Request, db: OrdersDb, ref: string): Promise<OrderRow | null> {
+  const token = (request.headers.get("x-order-token") ?? "").trim();
+  if (!/^AFP-\d{8}-\d{3}$/.test(ref) || !/^[0-9a-f]{64}$/.test(token)) return null;
+  const row = await db.prepare(`SELECT * FROM orders WHERE ref = ?`).bind(ref).first<OrderRow>();
+  // Hash even when there is no row, so both failures take the same path.
+  const given = await sha256Hex(token);
+  if (!row || !sameHash(given, row.token_hash)) return null;
+  return row;
+}
+
+export const orderNotFound = (): Response => json({ error: "We couldn't find that order." }, 404);
+
+/** A visitor's address, hashed. Used for rate limits; the address is never stored. */
+export async function clientHashOf(request: Request): Promise<string> {
+  return sha256Hex(`afp-client|${request.headers.get("cf-connecting-ip") ?? "unknown"}`);
 }
 
 export interface OrdersEnv {
@@ -183,8 +233,7 @@ export async function createOrder(
   if (!priced.ok) return json({ error: priced.error, field: priced.field }, 409);
 
   // --- Rate limits, per visitor (hashed address; the address itself is not stored)
-  const address = request.headers.get("cf-connecting-ip") ?? "unknown";
-  const clientHash = await sha256Hex(`afp-client|${address}`);
+  const clientHash = await clientHashOf(request);
   const nowIso = now.toISOString();
   const windowStart = new Date(now.getTime() - ORDER_LIMITS.windowMinutes * 60_000).toISOString();
 
@@ -322,7 +371,10 @@ export async function createOrder(
     .run();
 
   const row = await db.prepare(`SELECT * FROM orders WHERE ref = ?`).bind(ref).first<OrderRow>();
-  return json({ order: await publicOrder(db, row!, "reserved"), token }, 201);
+  return json(
+    { order: await publicOrder(db, row!, "reserved"), token, serverTime: nowIso, payment: await paymentInfo(db) },
+    201,
+  );
 }
 
 /** GET /api/orders/:ref  (header x-order-token) */
@@ -332,24 +384,24 @@ export async function getOrder(
   ref: string,
   now: Date = new Date(),
 ): Promise<Response> {
-  const notFound = () => json({ error: "We couldn't find that order." }, 404);
   const db = env.ORDERS_DB;
   if (!db) return json({ error: "Orders are not available right now." }, 503);
 
-  const token = (request.headers.get("x-order-token") ?? "").trim();
-  if (!/^AFP-\d{8}-\d{3}$/.test(ref) || !/^[0-9a-f]{64}$/.test(token)) return notFound();
-
-  const row = await db.prepare(`SELECT * FROM orders WHERE ref = ?`).bind(ref).first<OrderRow>();
-  // Hash even when there is no row, so both failures take the same path.
-  const given = await sha256Hex(token);
-  if (!row || !sameHash(given, row.token_hash)) return notFound();
+  const row = await authoriseOrder(request, db, ref);
+  if (!row) return orderNotFound();
 
   let status = row.status;
   if (status === "reserved" && row.expires_at <= now.toISOString()) {
     await expireOrders(env, now);
     status = "expired";
   }
-  return json({ order: await publicOrder(db, row, status) });
+  return json({
+    order: await publicOrder(db, row, status),
+    serverTime: now.toISOString(),
+    // Bank details go only to the customer who holds this order's token, and
+    // only while a payment is still expected.
+    ...(status === "reserved" ? { payment: await paymentInfo(db) } : {}),
+  });
 }
 
 /** Close reservations whose pay window has passed. Run by the cron. */
@@ -361,6 +413,12 @@ export async function expireOrders(env: OrdersEnv, now: Date = new Date()): Prom
     .prepare(`SELECT ref FROM orders WHERE status = 'reserved' AND expires_at <= ?`)
     .bind(nowIso)
     .all<{ ref: string }>();
+  // Rate-limit records are only needed for a short while.
+  await db
+    .prepare(`DELETE FROM rate_events WHERE at < ?`)
+    .bind(new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString())
+    .run()
+    .catch(() => undefined);
   if (due.results.length === 0) return 0;
   await db.batch([
     db

@@ -50,10 +50,6 @@ export interface CatalogConfig {
   transferInstructions: string;
 }
 
-/** Order lifecycle vocabulary. */
-export const ORDER_STATUSES = ["pending", "paid", "delivered", "cancelled"] as const;
-export type OrderStatus = (typeof ORDER_STATUSES)[number];
-
 export interface CatalogSnapshot {
   generatedAt: string;
   products: CatalogProduct[];
@@ -102,8 +98,8 @@ export function slugify(input: string): string {
 }
 
 /**
- * Order reference quoted in the WhatsApp checkout message so the owner can
- * match the order to the sale: AFP-YYYYMMDD-XXX.
+ * Format of an order reference: AFP-YYYYMMDD-XXX. References are issued by
+ * the server when an order is reserved (newOrderRef in orders-core).
  */
 export function makeOrderId(date: Date, seq: number): string {
   const y = date.getFullYear();
@@ -111,10 +107,6 @@ export function makeOrderId(date: Date, seq: number): string {
   const d = String(date.getDate()).padStart(2, "0");
   const suffix = String(Math.abs(Math.trunc(seq)) % 1000).padStart(3, "0");
   return `AFP-${y}${m}${d}-${suffix}`;
-}
-
-export function newOrderId(date: Date = new Date()): string {
-  return makeOrderId(date, Math.floor(Math.random() * 1000));
 }
 
 // ---------------------------------------------------------------------------

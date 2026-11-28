@@ -27,6 +27,8 @@ interface CartContextValue {
   removeItem: (id: string) => void;
   updateQuantity: (id: string, qty: number) => void;
   clear: () => void;
+  /** Swap the whole bag: used to correct prices and to restore a bag after a cancelled order. */
+  replaceAll: (items: CartItem[]) => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -105,6 +107,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             : prev.map((i) => (i.id === id ? { ...i, quantity: qty } : i))
         ),
       clear: () => setItems([]),
+      replaceAll: (next) => setItems(next),
     };
   }, [items, isOpen]);
 
@@ -122,6 +125,7 @@ const noopCart: CartContextValue = {
   removeItem: () => {},
   updateQuantity: () => {},
   clear: () => {},
+  replaceAll: () => {},
 };
 
 export const useCart = () => {

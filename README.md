@@ -155,5 +155,14 @@ A deploy does not apply migrations; apply a new one by hand:
 npx wrangler d1 migrations apply afp-orders --remote
 ```
 
-`0001_orders.sql` was applied on 28 Nov 2026. The rules the orders code must
+`0001_orders.sql` and `0002_proofs.sql` were applied on 28 Nov 2026.
+
+## Payment proofs
+
+Customers' proofs of payment are stored in the private R2 bucket
+`afp-order-proofs`, bound to the Worker as `PROOFS`. The bucket has no public
+access and no custom domain, and must stay that way: proofs are read only by
+the Worker, for a signed-in admin. R2 has to be enabled on the Cloudflare
+account (it asks for a payment card) before the bucket can exist; a deploy
+fails if the bucket is missing. The rules the orders code must
 keep are in `CLAUDE.md`; the acceptance runs are in `docs/ORDER-TEST-RUNS.md`.

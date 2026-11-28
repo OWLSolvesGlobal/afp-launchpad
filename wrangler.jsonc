@@ -58,6 +58,12 @@
   // (`await env.AFPWebsite.get()`). The store id is not secret. If the token
   // is ever replaced, update the secret's value in the Secrets Store; nothing
   // here changes.
+  // Private bucket for customers' payment proofs. No public access and no
+  // custom domain: files are only ever read by the Worker, for an admin.
+  "r2_buckets": [
+    { "binding": "PROOFS", "bucket_name": "afp-order-proofs" }
+  ],
+
   "secrets_store_secrets": [
     {
       "binding": "AFPWebsite",

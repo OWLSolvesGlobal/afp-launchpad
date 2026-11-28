@@ -20,6 +20,7 @@ const Shop = lazy(() => import("./pages/Shop.tsx"));
 const Collection = lazy(() => import("./pages/Collection.tsx"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail.tsx"));
 const Checkout = lazy(() => import("./pages/Checkout.tsx"));
+const OrderStatus = lazy(() => import("./pages/OrderStatus.tsx"));
 const About = lazy(() => import("./pages/About.tsx"));
 const Contact = lazy(() => import("./pages/Contact.tsx"));
 const FAQ = lazy(() => import("./pages/FAQ.tsx"));
@@ -58,6 +59,7 @@ const App = () => (
               <Route path="/collection/:slug" element={<Collection />} />
               <Route path="/product/:slug" element={<ProductDetail />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/order/:ref" element={<OrderStatus />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/faq" element={<FAQ />} />
