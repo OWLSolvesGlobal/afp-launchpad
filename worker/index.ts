@@ -5,9 +5,10 @@
  *                                                    │
  *   GET /api/catalog ◄── fetch() ────────────────────┘  (seed JSON if empty)
  *
- * Loyverse is the source of truth for items, sizes, prices and stock.
- * Website-only details (photo, section, show/hide) come from
- * src/data/site-settings.json, bundled at build time.
+ * Loyverse is the source of truth for items, sizes, prices, stock and each
+ * item's photo. Other website-only details (section, show/hide) come from
+ * src/data/site-settings.json, bundled at build time. Photos are served
+ * from this site at /api/image/<item id>.
  *
  * Everything that is not /api/catalog falls through to static assets, so SPA
  * routing (`assets.not_found_handling`) behaves exactly as before.
@@ -67,6 +68,8 @@ export async function resolveToken(env: Env): Promise<string | null> {
 export const KV_KEY = "catalog:v1";
 /** Outcome of the most recent sync attempt, readable at /api/catalog/status. */
 export const STATUS_KEY = "catalog:status";
+/** Loyverse item id -> photo address at Loyverse. Private to the Worker. */
+export const IMAGES_KEY = "catalog:images";
 
 export interface SyncStatus {
   at: string;
@@ -74,6 +77,10 @@ export interface SyncStatus {
   detail: string;
   loyverseItems?: number;
   liveProducts?: number;
+  /** How many Loyverse items carry a photo. */
+  photos?: number;
+  /** Field names Loyverse sent for an item (names only), to diagnose a zero photo count. */
+  itemFields?: string[];
   notes?: string[];
 }
 
@@ -104,6 +111,9 @@ export default {
         },
       });
     }
+    if (url.pathname.startsWith("/api/image/")) {
+      return serveItemImage(request, env, url);
+    }
     if (url.pathname === "/api/catalog/status") {
       const status = await env.AFP_CATALOG?.get(STATUS_KEY, "text").catch(() => null);
       return new Response(
@@ -120,6 +130,54 @@ export default {
 } satisfies ExportedHandler<Env>;
 
 type Fetch = typeof fetch;
+
+/**
+ * Serve a Loyverse item photo from this site's own address.
+ *
+ * The browser asks for /api/image/<item id>; the Worker looks up where that
+ * photo lives at Loyverse (a list written by the sync, never taken from the
+ * request) and passes it through. So the site never depends on the browser
+ * reaching Loyverse, and nobody can make this route fetch an address of
+ * their choosing.
+ */
+export async function serveItemImage(
+  request: Request,
+  env: Env,
+  url: URL,
+  fetchImpl: Fetch = fetch,
+): Promise<Response> {
+  const notFound = () =>
+    new Response("Not found", { status: 404, headers: { "cache-control": "public, max-age=60" } });
+  if (request.method !== "GET" && request.method !== "HEAD") return notFound();
+
+  let itemId = "";
+  try {
+    itemId = decodeURIComponent(url.pathname.slice("/api/image/".length));
+  } catch {
+    return notFound();
+  }
+  if (!itemId || itemId.includes("/")) return notFound();
+
+  const sources = (await env.AFP_CATALOG?.get(IMAGES_KEY, "json").catch(() => null)) as
+    | Record<string, string>
+    | null;
+  const source = sources?.[itemId];
+  if (!source || !source.startsWith("https://")) return notFound();
+
+  const upstream = await fetchImpl(source, { headers: { accept: "image/*" } }).catch(() => null);
+  const type = upstream?.headers.get("content-type") ?? "";
+  if (!upstream || !upstream.ok || !type.toLowerCase().startsWith("image/")) return notFound();
+
+  return new Response(request.method === "HEAD" ? null : upstream.body, {
+    headers: {
+      "content-type": type,
+      // The address carries a fingerprint of the photo (?v=…), so a changed
+      // photo gets a new address and this copy can be kept for a long time.
+      "cache-control": "public, max-age=604800",
+      "x-content-type-options": "nosniff",
+    },
+  });
+}
 
 /** Read every page of one Loyverse list endpoint. */
 export async function fetchAllPages<T>(
@@ -191,7 +249,7 @@ export async function syncCatalog(env: Env, fetchImpl: Fetch = fetch): Promise<v
       return;
     }
 
-    const { snapshot, warnings } = buildLoyverseSnapshot(
+    const { snapshot, warnings, imageSources } = buildLoyverseSnapshot(
       items,
       categories,
       inventory,
@@ -217,6 +275,9 @@ export async function syncCatalog(env: Env, fetchImpl: Fetch = fetch): Promise<v
       return;
     }
 
+    // Photo list first, so a snapshot never points at a photo the Worker
+    // cannot yet look up.
+    await env.AFP_CATALOG.put(IMAGES_KEY, JSON.stringify(imageSources));
     await env.AFP_CATALOG.put(KV_KEY, JSON.stringify(snapshot));
     console.log(
       `catalog sync ok: ${items.length} Loyverse items, ${live} live on site, ` +
@@ -227,6 +288,10 @@ export async function syncCatalog(env: Env, fetchImpl: Fetch = fetch): Promise<v
       detail: "Catalog copied from Loyverse.",
       loyverseItems: items.length,
       liveProducts: live,
+      photos: Object.keys(imageSources).length,
+      ...(Object.keys(imageSources).length === 0
+        ? { itemFields: Object.keys(items[0] ?? {}).sort() }
+        : {}),
       notes: warnings.slice(0, 60),
     });
   } catch (err) {
